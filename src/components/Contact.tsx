@@ -32,9 +32,9 @@ export function Contact() {
 
         <div className="grid md:grid-cols-2 gap-10">
           <div className="space-y-6">
-            <ContactItem icon={<Phone size={20} />} label="+998 71 200 30 40" />
-            <ContactItem icon={<Mail size={20} />} label="hello@peltanera.uz" />
-            <ContactItem icon={<MapPin size={20} />} label="Tashkent, Amir Temur St. 12" />
+            <ContactItem icon={<Phone size={20} />} label="+998 90 939 12 16" />
+            <ContactItem icon={<Mail size={20} />} label="peltanera@gmail.com" />
+            <ContactItem icon={<MapPin size={20} />} label="Tashkent, Amir Temur St." />
           </div>
 
           <form onSubmit={submit} className="space-y-4">
