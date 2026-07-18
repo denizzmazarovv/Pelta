@@ -208,7 +208,7 @@ export function Contact() {
     try {
       // Используем режим no-cors для обхода CORS
       const res = await fetch(
-        "https://script.google.com/macros/s/AKfycbzQ1V8RdvlCK5yVZqfyJNSoOoTqb6sDOHfoDv3VmsTrYPt-5xg13DTxPQK46w6qclrCRA/exec",
+        "https://script.google.com/macros/library/d/13v-crKcOMeshhLn13rJS5KVuQJpt-rNyo1enDk-DBrat6Jt-zo1UhS9s/2",
         {
           method: "POST",
           headers: {
