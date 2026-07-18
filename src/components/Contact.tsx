@@ -126,6 +126,17 @@ export function Contact() {
     return isMobile ? "Mobile Device" : "Desktop Device";
   };
 
+  const resetForm = () => {
+    setPhone('');
+    setEmail('');
+    setAgree(false);
+    setSent(false);
+    setStatusMessage('');
+    // Сбрасываем поля формы
+    const form = document.querySelector('form');
+    if (form) form.reset();
+  };
+
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
@@ -206,42 +217,36 @@ export function Contact() {
     setStatusMessage("⏳ Отправка...");
 
     try {
-      // Используем режим no-cors для обхода CORS
       const res = await fetch(
-        "https://script.google.com/macros/library/d/13v-crKcOMeshhLn13rJS5KVuQJpt-rNyo1enDk-DBrat6Jt-zo1UhS9s/2",
+        "https://script.google.com/macros/s/AKfycbzQ1V8RdvlCK5yVZqfyJNSoOoTqb6sDOHfoDv3VmsTrYPt-5xg13DTxPQK46w6qclrCRA/exec",
         {
           method: "POST",
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-          mode: 'no-cors', // Обход CORS
+          mode: 'no-cors',
           body: formData.toString(),
         }
       );
 
-      // При режиме no-cors мы не можем прочитать ответ
-      // Поэтому считаем, что отправка успешна, если нет ошибки
       setStatusMessage("✅ Успешно отправлено!");
       recordSubmission();
-      form.reset();
-      setPhone('');
-      setEmail('');
-      setAgree(false);
       setSent(true);
-      setTimeout(() => setSent(false), 5000);
+      
+      // Сбрасываем форму через 2 секунды
+      setTimeout(() => {
+        resetForm();
+      }, 2000);
 
     } catch (err) {
       console.error("Ошибка:", err);
-      // При ошибке тоже считаем, что отправка могла пройти
-      // (из-за особенности no-cors)
       setStatusMessage("✅ Успешно отправлено!");
       recordSubmission();
-      form.reset();
-      setPhone('');
-      setEmail('');
-      setAgree(false);
       setSent(true);
-      setTimeout(() => setSent(false), 5000);
+      
+      setTimeout(() => {
+        resetForm();
+      }, 2000);
     } finally {
       setBusy(false);
     }
@@ -291,101 +296,123 @@ export function Contact() {
           </div>
 
           <form onSubmit={submit} className="space-y-4">
-            <input
-              name="name"
-              maxLength={40}
-              required
-              placeholder={t('contact.name')}
-              className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300"
-            />
-
-            {/* Поле телефона с PhoneInput */}
-            <div className="relative">
-              <PhoneInput
-                country="uz"
-                value={phone}
-                onChange={(value) => {
-                  // value содержит только цифры (без +)
-                  setPhone(value);
-                }}
-                enableSearch
-                countryCodeEditable={false}
-                placeholder={t('contact.phone')}
-                containerStyle={{
-                  width: '100%',
-                }}
-                inputStyle={{
-                  width: '100%',
-                  height: '56px',
-                  background: '#fffdfb',
-                  border: '1px solid #8aa9e0',
-                  borderRadius: '12px',
-                  color: '#0f0404',
-                  fontSize: '16px',
-                  paddingLeft: '60px',
-                  boxSizing: 'border-box',
-                  transition: 'all .2s ease',
-                }}
-                buttonStyle={{
-                  background: '#fffdfb',
-                  border: '1px solid #8aa9e0',
-                  borderRight: 'none',
-                  borderRadius: '12px 0 0 12px',
-                  width: '48px',
-                }}
-              />
-            </div>
-
-            {/* Поле email */}
-            <input
-              type="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email (необязательно)"
-              className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300"
-            />
-
-            <textarea
-              name="message"
-              required
-              rows={6}
-              maxLength={500}
-              placeholder={t('contact.message')}
-              className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300 resize-none"
-            />
-
-            {/* Чекбокс согласия с политикой */}
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                id="policy"
-                checked={agree}
-                onChange={(e) => setAgree(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-brand-300 text-brand-500 focus:ring-brand-400"
-              />
-              <label htmlFor="policy" className="text-sm text-wine-700 leading-snug cursor-pointer">
-                Я согласен(на) с{' '}
-                <a
-                  href="/privacy.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-brand-500 hover:underline font-medium"
+            {sent ? (
+              // Блок после успешной отправки
+              <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+                <div className="flex justify-center mb-3">
+                  <CheckCircle2 size={48} className="text-green-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-green-700 mb-2">
+                  ✅ Сообщение отправлено!
+                </h3>
+                <p className="text-green-600 mb-4">
+                  Мы свяжемся с вами в ближайшее время
+                </p>
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all hover:shadow-lg hover:shadow-green-500/25"
                 >
-                  политикой конфиденциальности
-                </a>
-              </label>
-            </div>
+                  📝 Отправить еще
+                </button>
+              </div>
+            ) : (
+              // Форма
+              <>
+                <input
+                  name="name"
+                  maxLength={40}
+                  required
+                  placeholder={t('contact.name')}
+                  className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300"
+                />
 
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-cream py-3.5 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25 disabled:opacity-60"
-            >
-              {busy ? <Loader2 size={18} className="animate-spin" /> : sent ? <CheckCircle2 size={18} /> : <Send size={18} />}
-              {sent ? t('contact.sent') : t('contact.send')}
-            </button>
-            {statusMessage && (
+                <div className="relative">
+                  <PhoneInput
+                    country="uz"
+                    value={phone}
+                    onChange={(value) => {
+                      setPhone(value);
+                    }}
+                    enableSearch
+                    countryCodeEditable={false}
+                    placeholder={t('contact.phone')}
+                    containerStyle={{
+                      width: '100%',
+                    }}
+                    inputStyle={{
+                      width: '100%',
+                      height: '56px',
+                      background: '#fffdfb',
+                      border: '1px solid #8aa9e0',
+                      borderRadius: '12px',
+                      color: '#0f0404',
+                      fontSize: '16px',
+                      paddingLeft: '60px',
+                      boxSizing: 'border-box',
+                      transition: 'all .2s ease',
+                    }}
+                    buttonStyle={{
+                      background: '#fffdfb',
+                      border: '1px solid #8aa9e0',
+                      borderRight: 'none',
+                      borderRadius: '12px 0 0 12px',
+                      width: '48px',
+                    }}
+                  />
+                </div>
+
+                <input
+                  type="email"
+                  name="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email (необязательно)"
+                  className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300"
+                />
+
+                <textarea
+                  name="message"
+                  required
+                  rows={6}
+                  maxLength={500}
+                  placeholder={t('contact.message')}
+                  className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300 resize-none"
+                />
+
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="policy"
+                    checked={agree}
+                    onChange={(e) => setAgree(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-brand-300 text-brand-500 focus:ring-brand-400"
+                  />
+                  <label htmlFor="policy" className="text-sm text-wine-700 leading-snug cursor-pointer">
+                    Я согласен(на) с{' '}
+                    <a
+                      href="/privacy.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-brand-500 hover:underline font-medium"
+                    >
+                      политикой конфиденциальности
+                    </a>
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-cream py-3.5 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25 disabled:opacity-60"
+                >
+                  {busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                  {busy ? 'Отправка...' : t('contact.send')}
+                </button>
+              </>
+            )}
+
+            {statusMessage && !sent && (
               <div className={`text-center text-sm mt-2 ${statusMessage.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
                 {statusMessage}
               </div>
