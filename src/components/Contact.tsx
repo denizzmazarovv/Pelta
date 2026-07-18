@@ -90,24 +90,31 @@ const [phone, setPhone] = useState('');
             }}
             enableSearch
             countryCodeEditable={false}
+            placeholder={t('contact.phone')}
             containerStyle={{
               width: '100%',
             }}
             inputStyle={{
               width: '100%',
               height: '56px',
+              background: '#fffdfb',          // cream-50
+              border: '1px solid #8aa9e0',    // brand-200
               borderRadius: '12px',
-              border: '1px solid #02307a',
-              
+              color: '#0f0404',               // wine-900
               fontSize: '16px',
-              paddingLeft: '52px',
+              paddingLeft: '60px',
+              boxSizing: 'border-box',
+              transition: 'all .2s ease',
+              
             }}
             buttonStyle={{
-              border: '1px solid #02307a',
+              background: '#fffdfb',
+              border: '1px solid #8aa9e0',
+              borderRight: 'none',
               borderRadius: '12px 0 0 12px',
-              background: '#faf8f3',
+              width: '48px',
             }}
-            />
+          />
             <textarea
               required
               rows={4}

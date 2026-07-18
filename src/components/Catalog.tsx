@@ -31,7 +31,7 @@ export function Catalog() {
     <section id="catalog" className="py-24 sm:py-32 bg-cream relative">
       <div
         ref={ref}
-        className={`max-w-7xl mx-auto px-5 sm:px-8 reveal ${visible ? 'is-visible' : ''}`}
+        className={`max-w-7xl mx-auto px-0 sm:px-8 reveal ${visible ? 'is-visible' : ''}`}
       >
         <div className="text-center mb-14">
           <p className="text-brand-500 text-sm uppercase tracking-[0.3em] mb-3">Pelta Nera</p>
@@ -46,7 +46,7 @@ export function Catalog() {
             <button
               key={c.key}
               onClick={() => setActive(c.key)}
-              className={`px-6 py-2.5 rounded-full text-sm font-medium tracking-wide transition-all duration-300 ${
+              className={`px-6 py-2.5  text-sm font-medium tracking-wide transition-all duration-300 ${
                 active === c.key
                   ? 'bg-brand-500 text-cream shadow-lg shadow-brand-500/25 scale-105'
                   : 'bg-brand-50 text-wine-600 hover:bg-brand-100 hover:scale-105'
@@ -90,7 +90,7 @@ function ProductCard({
   return (
     <div
       ref={ref}
-      className={`group bg-cream-50 rounded-2xl overflow-hidden border border-brand-100 hover:border-brand-300 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-900/10 hover:-translate-y-1 reveal ${visible ? 'is-visible' : ''}`}
+      className={`group bg-cream-50  overflow-hidden border border-brand-100 hover:border-brand-300 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-900/10 hover:-translate-y-1 reveal ${visible ? 'is-visible' : ''}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       <div className="relative h-72 overflow-hidden bg-brand-50">
@@ -114,7 +114,7 @@ function ProductCard({
           <span className="text-brand-500 text-2xl font-serif font-semibold">
             {t('product.from')} {t('common.currency')}{product.price}
           </span>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500 text-cream text-sm font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/25 active:scale-95">
+          <button className="flex items-center gap-2 px-4 py-2  bg-brand-500 text-cream text-sm font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/25 active:scale-95">
             <ShoppingBag size={16} />
             {t('product.order')}
           </button>

@@ -71,7 +71,7 @@ export function Navbar({ onOpenAuth, onOpenAccount }: { onOpenAuth: () => void; 
             {langOpen && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setLangOpen(false)} />
-                <div className="absolute right-0 mt-5 w-36 bg-cream  shadow-xl border  overflow-hidden z-20 animate-scale-in">
+                <div className="absolute right-0 mt-5 w-40 glass  shadow-xl shadow-brand-900/10 border border-white/20 overflow-hidden z-20 animate-scale-in backdrop-blur-xl">
                   {LANGS.map((l) => (
                     <button
                       key={l.code}
