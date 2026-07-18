@@ -8,6 +8,8 @@ import 'react-phone-input-2/lib/style.css';
 
 export function Contact() {
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [agree, setAgree] = useState(false);
   const { t } = useLang();
   const { ref, visible } = useReveal<HTMLDivElement>();
   const [sent, setSent] = useState(false);
@@ -18,13 +20,17 @@ export function Contact() {
   const sanitizeText = (value: string) =>
     value.replace(/[<>[\]{}"'\\/|;:=]/g, "");
 
-  // Проверка телефона (узбекский)
+  // Проверка email
+  const validateEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  // Проверка телефона: принимает только цифры, допускает 9 или 12 цифр (узбекский)
   const validatePhone = (phone: string) => {
     const digits = phone.replace(/\D/g, "");
     return /^(998\d{9}|9\d{8})$/.test(digits);
   };
 
-  // Форматирование телефона
+  // Форматирование телефона для отображения (не используется в PhoneInput)
   const formatPhone = (value: string) => {
     const d = value.replace(/\D/g, "");
     if (d.length <= 2) return d;
@@ -136,31 +142,54 @@ export function Contact() {
 
     const form = e.currentTarget;
     const nameInput = form.querySelector("input[name='name']") as HTMLInputElement;
-    const phoneInput = form.querySelector("input[name='phone']") as HTMLInputElement;
     const messageInput = form.querySelector("textarea[name='message']") as HTMLTextAreaElement;
 
     const rawName = nameInput?.value?.trim() || '';
-    const rawPhone = phoneInput?.value?.trim() || '';
     const rawMessage = messageInput?.value?.trim() || '';
+
+    // Получаем телефон из состояния (уже содержит цифры)
+    const rawPhone = phone.replace(/\D/g, '');
+    const rawEmail = email.trim();
 
     let valid = true;
 
-    // Проверка имени (только буквы и пробелы)
+    // Проверка имени
     const nameRegex = /^[A-Za-zА-Яа-яЁё\s]{2,}$/;
     if (!nameRegex.test(rawName)) {
       setStatusMessage("⚠️ Имя должно содержать только буквы и пробелы (мин. 2 символа)");
       valid = false;
     }
 
-    // Проверка телефона
-    if (!validatePhone(rawPhone)) {
-      setStatusMessage("⚠️ Телефон в формате: 9xxxxxxxx или 998xxxxxxxxx");
-      valid = false;
-    }
-
     // Проверка сообщения
     if (rawMessage.length < 2) {
       setStatusMessage("⚠️ Сообщение должно содержать минимум 2 символа");
+      valid = false;
+    }
+
+    // Проверка: должен быть указан телефон ИЛИ email (или оба)
+    const hasPhone = rawPhone.length > 0 && validatePhone(rawPhone);
+    const hasEmail = rawEmail.length > 0 && validateEmail(rawEmail);
+
+    if (!hasPhone && !hasEmail) {
+      setStatusMessage("⚠️ Укажите телефон или email (или оба)");
+      valid = false;
+    }
+
+    // Если указан телефон, но невалидный
+    if (rawPhone.length > 0 && !validatePhone(rawPhone)) {
+      setStatusMessage("⚠️ Неверный формат телефона. Должно быть 9 или 12 цифр (998...)");
+      valid = false;
+    }
+
+    // Если указан email, но невалидный
+    if (rawEmail.length > 0 && !validateEmail(rawEmail)) {
+      setStatusMessage("⚠️ Неверный формат email");
+      valid = false;
+    }
+
+    // Проверка согласия
+    if (!agree) {
+      setStatusMessage("⚠️ Необходимо согласие с политикой конфиденциальности");
       valid = false;
     }
 
@@ -178,7 +207,8 @@ export function Contact() {
 
     const formData = new URLSearchParams();
     formData.append("name", sanitizeText(rawName));
-    formData.append("phone", rawPhone);
+    formData.append("phone", rawPhone); // только цифры
+    formData.append("email", rawEmail);
     formData.append("message", sanitizeText(rawMessage));
     formData.append("device", getDeviceModel());
 
@@ -200,6 +230,8 @@ export function Contact() {
         recordSubmission();
         form.reset();
         setPhone('');
+        setEmail('');
+        setAgree(false);
         setSent(true);
         setTimeout(() => setSent(false), 5000);
       } else {
@@ -264,18 +296,15 @@ export function Contact() {
               placeholder={t('contact.name')}
               className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300"
             />
+
+            {/* Поле телефона с PhoneInput */}
             <div className="relative">
               <PhoneInput
                 country="uz"
                 value={phone}
-                onChange={(value, country: any) => {
-                  const maxLength = country?.format
-                    ? country.format.replace(/\D/g, '').length
-                    : 15;
-
-                  if (value.length <= maxLength) {
-                    setPhone(value);
-                  }
+                onChange={(value) => {
+                  // value содержит только цифры (без +)
+                  setPhone(value);
                 }}
                 enableSearch
                 countryCodeEditable={false}
@@ -303,8 +332,18 @@ export function Contact() {
                   width: '48px',
                 }}
               />
-              <input type="hidden" name="phone" value={phone} />
             </div>
+
+            {/* Поле email */}
+            <input
+              type="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email (необязательно)"
+              className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300"
+            />
+
             <textarea
               name="message"
               required
@@ -313,6 +352,29 @@ export function Contact() {
               placeholder={t('contact.message')}
               className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300 resize-none"
             />
+
+            {/* Чекбокс согласия с политикой */}
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="policy"
+                checked={agree}
+                onChange={(e) => setAgree(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-brand-300 text-brand-500 focus:ring-brand-400"
+              />
+              <label htmlFor="policy" className="text-sm text-wine-700 leading-snug cursor-pointer">
+                Я согласен(на) с{' '}
+                <a
+                  href="/privacy.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-500 hover:underline font-medium"
+                >
+                  политикой конфиденциальности
+                </a>
+              </label>
+            </div>
+
             <button
               type="submit"
               disabled={busy}
@@ -322,7 +384,7 @@ export function Contact() {
               {sent ? t('contact.sent') : t('contact.send')}
             </button>
             {statusMessage && (
-              <div className="text-center text-sm mt-2">
+              <div className="text-center text-sm mt-2 text-red-600">
                 {statusMessage}
               </div>
             )}
