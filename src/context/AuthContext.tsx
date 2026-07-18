@@ -77,8 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { data: { full_name: name.trim() } },
     });
     if (error) {
-      if (error.message.toLowerCase().includes('already')) return { error: t('auth.error.exists') };
-      return { error: t('auth.error.generic') };
+      const msg = error.message.toLowerCase();
+      if (msg.includes('already') || msg.includes('registered')) return { error: t('auth.error.exists') };
+      if (msg.includes('password')) return { error: error.message };
+      return { error: error.message };
     }
     if (data.user && !data.session) {
       return { error: null, needsConfirmation: true };
