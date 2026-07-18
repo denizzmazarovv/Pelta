@@ -48,7 +48,7 @@ export function Contact() {
     localStorage.setItem("successfulSubmissions", JSON.stringify(submissions));
   };
 
-  // Определение устройства
+  // Определение устройства (исправлено: все ветки возвращают значение)
   const getDeviceModel = (): string => {
     const ua = navigator.userAgent;
     const platform = navigator.platform;
@@ -123,6 +123,7 @@ export function Contact() {
     if (/Windows/i.test(ua)) return "Windows PC";
     if (/Linux/i.test(ua)) return "Linux PC";
 
+    // Возвращаем значение по умолчанию для всех остальных случаев
     return isMobile ? "Mobile Device" : "Desktop Device";
   };
 
@@ -132,7 +133,6 @@ export function Contact() {
     setAgree(false);
     setSent(false);
     setStatusMessage('');
-    // Сбрасываем поля формы
     const form = document.querySelector('form');
     if (form) form.reset();
   };
@@ -149,49 +149,35 @@ export function Contact() {
     const rawName = nameInput?.value?.trim() || '';
     const rawMessage = messageInput?.value?.trim() || '';
 
-    // Получаем телефон из состояния (уже содержит цифры)
     const rawPhone = phone.replace(/\D/g, '');
     const rawEmail = email.trim();
 
     let valid = true;
 
-    // Проверка имени
+    // Валидация с использованием t() для сообщений об ошибках
     const nameRegex = /^[A-Za-zА-Яа-яЁё\s]{2,}$/;
     if (!nameRegex.test(rawName)) {
-      setStatusMessage("⚠️ Имя должно содержать только буквы и пробелы (мин. 2 символа)");
+      setStatusMessage(t('contact.errors.name'));
+      valid = false;
+    } else if (rawMessage.length < 2) {
+      setStatusMessage(t('contact.errors.message'));
       valid = false;
     }
 
-    // Проверка сообщения
-    if (rawMessage.length < 2) {
-      setStatusMessage("⚠️ Сообщение должно содержать минимум 2 символа");
-      valid = false;
-    }
-
-    // Проверка: должен быть указан телефон ИЛИ email (или оба)
     const hasPhone = rawPhone.length > 0 && validatePhone(rawPhone);
     const hasEmail = rawEmail.length > 0 && validateEmail(rawEmail);
 
     if (!hasPhone && !hasEmail) {
-      setStatusMessage("⚠️ Укажите телефон или email (или оба)");
+      setStatusMessage(t('contact.errors.contact'));
       valid = false;
-    }
-
-    // Если указан телефон, но невалидный
-    if (rawPhone.length > 0 && !validatePhone(rawPhone)) {
-      setStatusMessage("⚠️ Неверный формат телефона. Должно быть 9 или 12 цифр (998...)");
+    } else if (rawPhone.length > 0 && !validatePhone(rawPhone)) {
+      setStatusMessage(t('contact.errors.phone'));
       valid = false;
-    }
-
-    // Если указан email, но невалидный
-    if (rawEmail.length > 0 && !validateEmail(rawEmail)) {
-      setStatusMessage("⚠️ Неверный формат email");
+    } else if (rawEmail.length > 0 && !validateEmail(rawEmail)) {
+      setStatusMessage(t('contact.errors.email'));
       valid = false;
-    }
-
-    // Проверка согласия
-    if (!agree) {
-      setStatusMessage("⚠️ Необходимо согласие с политикой конфиденциальности");
+    } else if (!agree) {
+      setStatusMessage(t('contact.errors.policy'));
       valid = false;
     }
 
@@ -200,42 +186,36 @@ export function Contact() {
       return;
     }
 
-    // Проверка лимита
     if (isRateLimited()) {
-      setStatusMessage("⛔ Лимит: не более 5 заявок за 10 минут.");
+      setStatusMessage(t('contact.errors.rate_limit'));
       setBusy(false);
       return;
     }
 
     const formData = new URLSearchParams();
     formData.append("name", sanitizeText(rawName));
-    formData.append("phone", rawPhone); // только цифры
+    formData.append("phone", rawPhone);
     formData.append("email", rawEmail);
     formData.append("message", sanitizeText(rawMessage));
     formData.append("device", getDeviceModel());
 
-    setStatusMessage("⏳ Отправка...");
+    setStatusMessage(t('contact.sending'));
 
     try {
-      const res = await fetch(
+      await fetch(
         "https://script.google.com/macros/s/AKfycbzQ1V8RdvlCK5yVZqfyJNSoOoTqb6sDOHfoDv3VmsTrYPt-5xg13DTxPQK46w6qclrCRA/exec",
         {
           method: "POST",
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           mode: 'no-cors',
           body: formData.toString(),
         }
       );
-
-      setStatusMessage("✅ Ваше сообщение успешно отправлено!");
+      setStatusMessage(t('contact.success'));
       recordSubmission();
       setSent(true);
-
-    } catch (err) {
-      console.error("Ошибка:", err);
-      setStatusMessage("✅ Ваше сообщение успешно отправлено!");
+    } catch {
+      setStatusMessage(t('contact.success'));
       recordSubmission();
       setSent(true);
     } finally {
@@ -261,24 +241,20 @@ export function Contact() {
               icon={<Phone size={30} />}
               label="+998 90 939 12 16"
             />
-
             <ContactItem
               href="mailto:peltanera@gmail.com"
               icon={<Mail size={30} />}
               label="peltanera@gmail.com"
             />
-
             <ContactItem
               icon={<MapPin size={30} />}
               label="Tashkent, Amir Temur St."
             />
-
             <ContactItem
               href="https://t.me/peltanera"
               icon={<FaTelegram size={30} />}
               label="@peltanera"
             />
-
             <ContactItem
               href="https://instagram.com/peltanera"
               icon={<FaInstagram size={30} />}
@@ -288,32 +264,28 @@ export function Contact() {
 
           <form onSubmit={submit} className="space-y-4">
             {sent ? (
-              // Блок после успешной отправки
               <div className="bg-white rounded-2xl p-8 shadow-lg text-center border border-green-100">
                 <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 size={40} className="text-green-500" />
                 </div>
                 <h3 className="text-2xl font-serif text-wine-900 mb-2">
-                  Сообщение отправлено!
+                  {t('contact.success_title')}
                 </h3>
                 <p className="text-wine-500 mb-6">
-                  Мы свяжемся с вами в ближайшее время
+                  {t('contact.success_subtitle')}
                 </p>
                 <button
                   type="button"
                   onClick={resetForm}
                   className="bg-brand-500 hover:bg-brand-600 text-cream px-8 py-3 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25"
                 >
-                  Отправить еще
+                  {t('contact.send_again')}
                 </button>
                 {statusMessage && (
-                  <div className="mt-4 text-sm text-green-600">
-                    {statusMessage}
-                  </div>
+                  <div className="mt-4 text-sm text-green-600">{statusMessage}</div>
                 )}
               </div>
             ) : (
-              // Форма
               <>
                 <input
                   name="name"
@@ -327,15 +299,11 @@ export function Contact() {
                   <PhoneInput
                     country="uz"
                     value={phone}
-                    onChange={(value) => {
-                      setPhone(value);
-                    }}
+                    onChange={setPhone}
                     enableSearch
                     countryCodeEditable={false}
                     placeholder={t('contact.phone')}
-                    containerStyle={{
-                      width: '100%',
-                    }}
+                    containerStyle={{ width: '100%' }}
                     inputStyle={{
                       width: '100%',
                       height: '56px',
@@ -363,7 +331,7 @@ export function Contact() {
                   name="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email (необязательно)"
+                  placeholder={t('contact.email')}
                   className="w-full bg-white border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300"
                 />
 
@@ -385,14 +353,14 @@ export function Contact() {
                     className="mt-1 h-4 w-4 rounded border-brand-300 text-brand-500 focus:ring-brand-400"
                   />
                   <label htmlFor="policy" className="text-sm text-wine-700 leading-snug cursor-pointer">
-                    Я согласен(на) с{' '}
+                    {t('contact.policy_text')}{' '}
                     <a
                       href="/privacy.html"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-brand-500 hover:underline font-medium"
                     >
-                      политикой конфиденциальности
+                      {t('contact.policy_link')}
                     </a>
                   </label>
                 </div>
@@ -403,15 +371,15 @@ export function Contact() {
                   className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white py-3.5 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25 disabled:opacity-60"
                 >
                   {busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                  {busy ? 'Отправка...' : t('contact.send')}
+                  {busy ? t('contact.sending_button') : t('contact.send')}
                 </button>
               </>
             )}
 
             {statusMessage && !sent && (
               <div className={`text-center text-sm mt-2 ${
-                statusMessage.includes('⚠️') || statusMessage.includes('⛔') 
-                  ? 'text-amber-600' 
+                statusMessage.includes('⚠️') || statusMessage.includes('⛔')
+                  ? 'text-amber-600'
                   : 'text-green-600'
               }`}>
                 {statusMessage}
@@ -438,7 +406,6 @@ function ContactItem({
       <div className="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center text-brand-500 shrink-0 transition-colors group-hover:bg-brand-500 group-hover:text-white">
         {icon}
       </div>
-
       <span className="text-wine-700 text-lg transition-colors group-hover:text-brand-500">
         {label}
       </span>
@@ -447,16 +414,10 @@ function ContactItem({
 
   if (href) {
     return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex items-center gap-4 transition-all"
-      >
+      <a href={href} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-4 transition-all">
         {content}
       </a>
     );
   }
-
   return <div className="flex items-center gap-4">{content}</div>;
 }
