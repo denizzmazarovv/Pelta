@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Phone, User, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Mail, User, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 
@@ -36,10 +36,10 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
 
         <div className="p-6 space-y-5">
           <div>
-            <span className="text-xs uppercase tracking-wider text-wine-400 mb-1.5 block">{t('account.phone')}</span>
+            <span className="text-xs uppercase tracking-wider text-wine-400 mb-1.5 block">{t('account.email')}</span>
             <div className="flex items-center gap-2.5 border border-brand-200 rounded-xl px-3.5 py-3 bg-brand-50/50">
-              <Phone size={18} className="text-brand-500" />
-              <span className="text-wine-700">{profile?.phone}</span>
+              <Mail size={18} className="text-brand-500" />
+              <span className="text-wine-700">{profile?.email}</span>
             </div>
           </div>
 
