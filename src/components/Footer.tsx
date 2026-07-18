@@ -28,9 +28,11 @@ export function Footer() {
           <div>
             <h4 className="text-cream text-sm uppercase tracking-wider mb-4">{t('nav.contact')}</h4>
             <ul className="space-y-2 text-sm text-cream/60">
-              <li>+998 90 939 12 1</li>
-              <li>peltanera@gmail.com</li>
-              <li>Tashkent, Amir Temur St.</li>
+              <li><a href="tel:+998909391216" className="hover:text-cream transition-colors">+998 90 939 12 16</a></li>
+              <li><a href="https://t.me/peltanera" className="hover:text-cream transition-colors" target="_blank" rel="noopener noreferrer">Telegram</a></li>
+              <li><a href="https://instagram.com/peltanera" className="hover:text-cream transition-colors" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+              <li><a href="mailto:peltanera@gmail.com" className="hover:text-cream transition-colors">peltanera@gmail.com</a></li>
+              <li><a href="https://maps.google.com/?q=Tashkent,+Amir+Temur+St." className="hover:text-cream transition-colors" target="_blank" rel="noopener noreferrer">Tashkent, Amir Temur St.</a></li>
             </ul>
           </div>
         </div>

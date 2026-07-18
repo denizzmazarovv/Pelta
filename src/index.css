@@ -70,3 +70,52 @@
 .animate-marquee {
   animation: marquee 28s linear infinite;
 }
+
+.phone-input {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: #faf8f3;
+  border: 1px solid #d9c7b5;
+  border-radius: 12px;
+  transition: .2s;
+}
+
+.phone-input:focus-within {
+  border-color: #9d6b53;
+}
+
+.phone-input .PhoneInputCountry {
+  margin-left: 16px;
+  margin-right: 12px;
+}
+
+.phone-input input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 14px 16px 14px 0;
+  outline: none;
+  color: #3b2b25;
+  font-size: 16px;
+}
+
+.phone-input input::placeholder {
+  color: #a28d84;
+}
+
+.phone-input .PhoneInputCountrySelect {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.phone-input .PhoneInputCountryIcon {
+  width: 24px;
+  height: 18px;
+}
+
+.phone-input .PhoneInputCountryIconImg {
+  border-radius: 3px;
+}

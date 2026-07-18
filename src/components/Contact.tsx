@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import { Send, Phone, MapPin, Mail, Loader2, CheckCircle2 } from 'lucide-react';
+import {FaTelegram, FaInstagram} from 'react-icons/fa';
 import { useLang } from '../context/LangContext';
 import { useReveal } from '../hooks/useReveal';
 
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
+
+
 export function Contact() {
+const [phone, setPhone] = useState('');
+
   const { t } = useLang();
   const { ref, visible } = useReveal<HTMLDivElement>();
   const [sent, setSent] = useState(false);
@@ -32,22 +39,74 @@ export function Contact() {
 
         <div className="grid md:grid-cols-2 gap-10">
           <div className="space-y-6">
-            <ContactItem icon={<Phone size={20} />} label="+998 90 939 12 16" />
-            <ContactItem icon={<Mail size={20} />} label="peltanera@gmail.com" />
-            <ContactItem icon={<MapPin size={20} />} label="Tashkent, Amir Temur St." />
-          </div>
+  <ContactItem
+    href="tel:+998909391216"
+    icon={<Phone size={30} />}
+    label="+998 90 939 12 16"
+  />
+
+  <ContactItem
+    href="mailto:peltanera@gmail.com"
+    icon={<Mail size={30} />}
+    label="peltanera@gmail.com"
+  />
+
+  <ContactItem
+    icon={<MapPin size={30} />}
+    label="  Tashkent, Amir Temur St."
+  />
+
+  <ContactItem
+    href="https://t.me/peltanera"
+    icon={<FaTelegram size={30} />}
+    label="@peltanera"
+  />
+
+  <ContactItem
+    href="https://instagram.com/peltanera"
+    icon={<FaInstagram size={30} />}
+    label="@peltanera"
+  />
+</div>
 
           <form onSubmit={submit} className="space-y-4">
             <input
+              maxLength={20}
               required
               placeholder={t('contact.name')}
               className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300"
             />
-            <input
-              required
-              type="tel"
-              placeholder={t('contact.phone')}
-              className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300"
+            <PhoneInput
+            country="uz"
+            value={phone}
+            onChange={(value, country: any) => {
+              const maxLength = country?.format
+                ? country.format.replace(/\D/g, '').length
+                : 15;
+
+              if (value.length <= maxLength) {
+                setPhone(value);
+              }
+            }}
+            enableSearch
+            countryCodeEditable={false}
+            containerStyle={{
+              width: '100%',
+            }}
+            inputStyle={{
+              width: '100%',
+              height: '56px',
+              borderRadius: '12px',
+              border: '1px solid #02307a',
+              
+              fontSize: '16px',
+              paddingLeft: '52px',
+            }}
+            buttonStyle={{
+              border: '1px solid #02307a',
+              borderRadius: '12px 0 0 12px',
+              background: '#faf8f3',
+            }}
             />
             <textarea
               required
@@ -70,13 +129,39 @@ export function Contact() {
   );
 }
 
-function ContactItem({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <div className="flex items-center gap-4">
-      <div className="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center text-brand-500 shrink-0">
+function ContactItem({
+  icon,
+  label,
+  href,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  href?: string;
+}) {
+  const content = (
+    <>
+      <div className="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center text-brand-500 shrink-0 transition-colors group-hover:bg-brand-500 group-hover:text-white">
         {icon}
       </div>
-      <span className="text-wine-700 text-lg">{label}</span>
-    </div>
+
+      <span className="text-wine-700 text-lg transition-colors group-hover:text-brand-500">
+        {label}
+      </span>
+    </>
   );
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex items-center gap-4 transition-all"
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return <div className="flex items-center">{content}</div>;
 }
