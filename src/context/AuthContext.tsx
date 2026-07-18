@@ -8,8 +8,10 @@ type AuthContextType = {
   profile: Profile | null;
   loading: boolean;
   emailConfirmed: boolean;
-  signUp: (email: string, password: string, name?: string) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
+  verifyOtp: (email: string, token: string) => Promise<{ error: string | null }>;
+  resendOtp: (email: string) => Promise<{ error: string | null }>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   updateProfile: (name: string) => Promise<{ error: string | null }>;
@@ -63,15 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  async function signUp(email: string, password: string, name?: string) {
+  async function signUp(email: string, password: string, name: string) {
     const trimmed = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return { error: t('auth.error.email') };
     if (password.length < 6) return { error: t('auth.error.weak') };
+    if (!name.trim()) return { error: t('auth.name.required') };
 
     const { data, error } = await supabase.auth.signUp({
       email: trimmed,
       password,
-      options: { data: { full_name: name ?? '' } },
+      options: { data: { full_name: name.trim() } },
     });
     if (error) {
       if (error.message.toLowerCase().includes('already')) return { error: t('auth.error.exists') };
@@ -81,9 +84,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null, needsConfirmation: true };
     }
     if (data.user && data.session) {
-      await ensureProfile(data.user.id, trimmed, name);
+      await ensureProfile(data.user.id, trimmed, name.trim());
     }
     return { error: null, needsConfirmation: false };
+  }
+
+  async function verifyOtp(email: string, token: string) {
+    const trimmed = email.trim().toLowerCase();
+    const { data, error } = await supabase.auth.verifyOtp({ email: trimmed, token, type: 'signup' });
+    if (error) return { error: t('auth.code.error') };
+    if (data.user) await ensureProfile(data.user.id, trimmed, undefined);
+    return { error: null };
+  }
+
+  async function resendOtp(email: string) {
+    const trimmed = email.trim().toLowerCase();
+    const { error } = await supabase.auth.resend({ type: 'signup', email: trimmed });
+    if (error) return { error: t('auth.error.generic') };
+    return { error: null };
   }
 
   async function signIn(email: string, password: string) {
@@ -125,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, emailConfirmed, signUp, signIn, resetPassword, signOut, updateProfile }}>
+    <AuthContext.Provider value={{ session, profile, loading, emailConfirmed, signUp, signIn, verifyOtp, resendOtp, resetPassword, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
