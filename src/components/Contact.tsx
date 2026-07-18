@@ -14,21 +14,23 @@ export function Contact() {
   const [busy, setBusy] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
-  // Функция для экранирования HTML (защита от XSS)
-  const escapeHtml = (unsafe: string) => {
-    if (typeof unsafe !== "string") return unsafe;
-    return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  };
+  // Санитизация текста
+  const sanitizeText = (value: string) =>
+    value.replace(/[<>[\]{}"'\\/|;:=]/g, "");
 
   // Проверка телефона (узбекский)
   const validatePhone = (phone: string) => {
     const digits = phone.replace(/\D/g, "");
     return /^(998\d{9}|9\d{8})$/.test(digits);
+  };
+
+  // Форматирование телефона
+  const formatPhone = (value: string) => {
+    const d = value.replace(/\D/g, "");
+    if (d.length <= 2) return d;
+    if (d.length <= 5) return `${d.slice(0, 2)} ${d.slice(2)}`;
+    if (d.length <= 7) return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`;
+    return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5, 7)} ${d.slice(7, 9)}`;
   };
 
   // Проверка лимита отправок (5 за 10 минут)
@@ -47,6 +49,84 @@ export function Contact() {
     const submissions = stored ? JSON.parse(stored) : [];
     submissions.push(now);
     localStorage.setItem("successfulSubmissions", JSON.stringify(submissions));
+  };
+
+  // Определение устройства
+  const getDeviceModel = (): string => {
+    const ua = navigator.userAgent;
+    const platform = navigator.platform;
+    const dpr = window.devicePixelRatio || 1;
+
+    const width = screen.width * dpr;
+    const height = screen.height * dpr;
+    const resolution = `${width}x${height}`;
+
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isMac = /Mac/i.test(platform);
+    const isIPad = /iPad/i.test(ua) || (isMac && navigator.maxTouchPoints > 1);
+    const isMobile = /Mobi/i.test(ua);
+
+    if (isIOS && !isIPad && isMobile) {
+      const map: Record<string, string> = {
+        "1290x2796": "iPhone 15-16-17 Pro Max",
+        "1179x2556": "iPhone 15-16 Pro",
+        "1170x2532": "iPhone 13-14-15",
+        "1284x2778": "iPhone 11-12-13-14 Pro Max",
+        "1792x828": "iPhone (XR-11)",
+        "1334x750": "iPhone (6-7-8)",
+        "1080x2340": "iPhone 13 mini",
+        "750x1334": "iPhone SE (2022/2024)",
+      };
+      return map[resolution] || "iPhone";
+    }
+
+    if (isIPad) {
+      const map: Record<string, string> = {
+        "2208x3200": 'iPad Pro M4 13"',
+        "2156x3036": 'iPad Pro M4 11"',
+        "2048x2732": 'iPad Pro 12.9"',
+        "1668x2388": 'iPad Pro 11"',
+        "1640x2360": "iPad Air M2",
+        "1620x2160": "iPad 10 / 11",
+        "1488x2266": "iPad mini",
+      };
+      return map[resolution] || "iPad";
+    }
+
+    if (isMac && !isMobile) {
+      const map: Record<string, string> = {
+        "3456x2234": 'MacBook Pro 16"',
+        "3024x1964": 'MacBook Pro 16"',
+        "3024x1890": 'MacBook Pro 14"',
+        "2880x1800": 'MacBook Pro 14"',
+        "2880x1864": 'MacBook Air 15"',
+        "2560x1664": 'MacBook Air 13"',
+      };
+
+      let model = map[resolution] || "Mac";
+
+      try {
+        const gl = document.createElement("canvas").getContext("webgl");
+        const dbg = gl?.getExtension("WEBGL_debug_renderer_info");
+        const r = dbg && gl?.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
+        if (r?.includes("M3")) model += " M3";
+        else if (r?.includes("M2")) model += " M2";
+        else if (r?.includes("M1")) model += " M1";
+      } catch {}
+
+      return model;
+    }
+
+    if (/Android/i.test(ua)) {
+      const match = ua.match(/Android.*; ([^;)]+)/i);
+      if (match?.[1]) return match[1].replace("Build", "").trim();
+      return "Android Phone";
+    }
+
+    if (/Windows/i.test(ua)) return "Windows PC";
+    if (/Linux/i.test(ua)) return "Linux PC";
+
+    return isMobile ? "Mobile Device" : "Desktop Device";
   };
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -78,6 +158,12 @@ export function Contact() {
       valid = false;
     }
 
+    // Проверка сообщения
+    if (rawMessage.length < 2) {
+      setStatusMessage("⚠️ Сообщение должно содержать минимум 2 символа");
+      valid = false;
+    }
+
     if (!valid) {
       setBusy(false);
       return;
@@ -90,10 +176,11 @@ export function Contact() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("name", escapeHtml(rawName));
-    formData.append("phone", escapeHtml(rawPhone));
-    formData.append("message", escapeHtml(rawMessage));
+    const formData = new URLSearchParams();
+    formData.append("name", sanitizeText(rawName));
+    formData.append("phone", rawPhone);
+    formData.append("message", sanitizeText(rawMessage));
+    formData.append("device", getDeviceModel());
 
     setStatusMessage("⏳ Отправка...");
 
@@ -102,7 +189,7 @@ export function Contact() {
         "https://script.google.com/macros/s/AKfycbzQ1V8RdvlCK5yVZqfyJNSoOoTqb6sDOHfoDv3VmsTrYPt-5xg13DTxPQK46w6qclrCRA/exec",
         {
           method: "POST",
-          body: new URLSearchParams(formData as any),
+          body: formData,
         }
       );
 
@@ -172,7 +259,7 @@ export function Contact() {
           <form onSubmit={submit} className="space-y-4">
             <input
               name="name"
-              maxLength={20}
+              maxLength={40}
               required
               placeholder={t('contact.name')}
               className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300"
@@ -216,13 +303,13 @@ export function Contact() {
                   width: '48px',
                 }}
               />
-              {/* Скрытое поле для отправки телефона */}
               <input type="hidden" name="phone" value={phone} />
             </div>
             <textarea
               name="message"
               required
-              rows={4}
+              rows={6}
+              maxLength={500}
               placeholder={t('contact.message')}
               className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300 resize-none"
             />
@@ -235,7 +322,7 @@ export function Contact() {
               {sent ? t('contact.sent') : t('contact.send')}
             </button>
             {statusMessage && (
-              <div id="status" className="text-center text-sm mt-2">
+              <div className="text-center text-sm mt-2">
                 {statusMessage}
               </div>
             )}
