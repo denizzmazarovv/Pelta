@@ -229,24 +229,15 @@ export function Contact() {
         }
       );
 
-      setStatusMessage("✅ Успешно отправлено!");
+      setStatusMessage("✅ Ваше сообщение успешно отправлено!");
       recordSubmission();
       setSent(true);
-      
-      // Сбрасываем форму через 2 секунды
-      setTimeout(() => {
-        resetForm();
-      }, 2000);
 
     } catch (err) {
       console.error("Ошибка:", err);
-      setStatusMessage("✅ Успешно отправлено!");
+      setStatusMessage("✅ Ваше сообщение успешно отправлено!");
       recordSubmission();
       setSent(true);
-      
-      setTimeout(() => {
-        resetForm();
-      }, 2000);
     } finally {
       setBusy(false);
     }
@@ -298,23 +289,28 @@ export function Contact() {
           <form onSubmit={submit} className="space-y-4">
             {sent ? (
               // Блок после успешной отправки
-              <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-                <div className="flex justify-center mb-3">
-                  <CheckCircle2 size={48} className="text-green-500" />
+              <div className="bg-white rounded-2xl p-8 shadow-lg text-center border border-green-100">
+                <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 size={40} className="text-green-500" />
                 </div>
-                <h3 className="text-xl font-semibold text-green-700 mb-2">
-                  ✅ Сообщение отправлено!
+                <h3 className="text-2xl font-serif text-wine-900 mb-2">
+                  Сообщение отправлено!
                 </h3>
-                <p className="text-green-600 mb-4">
+                <p className="text-wine-500 mb-6">
                   Мы свяжемся с вами в ближайшее время
                 </p>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all hover:shadow-lg hover:shadow-green-500/25"
+                  className="bg-brand-500 hover:bg-brand-600 text-cream px-8 py-3 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25"
                 >
-                  📝 Отправить еще
+                  Отправить еще
                 </button>
+                {statusMessage && (
+                  <div className="mt-4 text-sm text-green-600">
+                    {statusMessage}
+                  </div>
+                )}
               </div>
             ) : (
               // Форма
@@ -324,7 +320,7 @@ export function Contact() {
                   maxLength={40}
                   required
                   placeholder={t('contact.name')}
-                  className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300"
+                  className="w-full bg-white border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300"
                 />
 
                 <div className="relative">
@@ -343,7 +339,7 @@ export function Contact() {
                     inputStyle={{
                       width: '100%',
                       height: '56px',
-                      background: '#fffdfb',
+                      background: '#ffffff',
                       border: '1px solid #8aa9e0',
                       borderRadius: '12px',
                       color: '#0f0404',
@@ -353,7 +349,7 @@ export function Contact() {
                       transition: 'all .2s ease',
                     }}
                     buttonStyle={{
-                      background: '#fffdfb',
+                      background: '#ffffff',
                       border: '1px solid #8aa9e0',
                       borderRight: 'none',
                       borderRadius: '12px 0 0 12px',
@@ -368,7 +364,7 @@ export function Contact() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email (необязательно)"
-                  className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300"
+                  className="w-full bg-white border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300"
                 />
 
                 <textarea
@@ -377,7 +373,7 @@ export function Contact() {
                   rows={6}
                   maxLength={500}
                   placeholder={t('contact.message')}
-                  className="w-full bg-cream-50 border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 transition-colors text-wine-900 placeholder-wine-300 resize-none"
+                  className="w-full bg-white border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300 resize-none"
                 />
 
                 <div className="flex items-start gap-3">
@@ -404,7 +400,7 @@ export function Contact() {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-cream py-3.5 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25 disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white py-3.5 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25 disabled:opacity-60"
                 >
                   {busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                   {busy ? 'Отправка...' : t('contact.send')}
@@ -413,7 +409,11 @@ export function Contact() {
             )}
 
             {statusMessage && !sent && (
-              <div className={`text-center text-sm mt-2 ${statusMessage.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-center text-sm mt-2 ${
+                statusMessage.includes('⚠️') || statusMessage.includes('⛔') 
+                  ? 'text-amber-600' 
+                  : 'text-green-600'
+              }`}>
                 {statusMessage}
               </div>
             )}
