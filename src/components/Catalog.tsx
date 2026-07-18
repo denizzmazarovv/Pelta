@@ -1,28 +1,15 @@
-import { useState, useEffect } from 'react';
-import { ShoppingBag, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { ShoppingBag } from 'lucide-react';
 import { useLang } from '../context/LangContext';
 import { useReveal } from '../hooks/useReveal';
-import { supabase, Product } from '../lib/supabase';
+import { products, Product } from '../lib/products';
 
 type Category = 'all' | 'cardholder' | 'bag' | 'belt';
 
 export function Catalog() {
   const { t, lang } = useLang();
   const { ref, visible } = useReveal<HTMLDivElement>();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [active, setActive] = useState<Category>('all');
-
-  useEffect(() => {
-    supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: true })
-      .then(({ data }) => {
-        setProducts((data as Product[]) ?? []);
-        setLoading(false);
-      });
-  }, []);
 
   const cats: { key: Category; label: string }[] = [
     { key: 'all', label: t('cat.all') },
@@ -70,23 +57,17 @@ export function Catalog() {
           ))}
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 size={32} className="animate-spin text-brand-500" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {filtered.map((p, i) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                name={name(p)}
-                desc={desc(p)}
-                delay={i * 80}
-              />
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {filtered.map((p, i) => (
+            <ProductCard
+              key={p.id}
+              product={p}
+              name={name(p)}
+              desc={desc(p)}
+              delay={i * 80}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -114,7 +95,7 @@ function ProductCard({
     >
       <div className="relative h-72 overflow-hidden bg-brand-50">
         <img
-          src={product.image_url}
+          src={product.image}
           alt={name}
           loading="lazy"
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

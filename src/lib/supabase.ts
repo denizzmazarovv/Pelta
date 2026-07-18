@@ -11,21 +11,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-export type Product = {
-  id: string;
-  category: 'cardholder' | 'bag' | 'belt';
-  name_ru: string;
-  name_uz: string;
-  name_en: string;
-  desc_ru: string;
-  desc_uz: string;
-  desc_en: string;
-  price: number;
-  image_url: string;
-  featured: boolean;
-  created_at: string;
-};
-
 export type Profile = {
   id: string;
   phone: string;
