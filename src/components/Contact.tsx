@@ -24,13 +24,13 @@ export function Contact() {
   const validateEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  // Проверка телефона: принимает только цифры, допускает 9 или 12 цифр (узбекский)
+  // Проверка телефона
   const validatePhone = (phone: string) => {
     const digits = phone.replace(/\D/g, "");
     return /^(998\d{9}|9\d{8})$/.test(digits);
   };
 
-  // Проверка лимита отправок (5 за 10 минут)
+  // Проверка лимита отправок
   const isRateLimited = () => {
     const now = Date.now();
     const windowMs = 10 * 60 * 1000;
@@ -48,7 +48,7 @@ export function Contact() {
     localStorage.setItem("successfulSubmissions", JSON.stringify(submissions));
   };
 
-  // Определение устройства (исправлено: все ветки возвращают значение)
+  // Определение устройства
   const getDeviceModel = (): string => {
     const ua = navigator.userAgent;
     const platform = navigator.platform;
@@ -123,7 +123,6 @@ export function Contact() {
     if (/Windows/i.test(ua)) return "Windows PC";
     if (/Linux/i.test(ua)) return "Linux PC";
 
-    // Возвращаем значение по умолчанию для всех остальных случаев
     return isMobile ? "Mobile Device" : "Desktop Device";
   };
 
@@ -154,7 +153,6 @@ export function Contact() {
 
     let valid = true;
 
-    // Валидация с использованием t() для сообщений об ошибках
     const nameRegex = /^[A-Za-zА-Яа-яЁё\s]{2,}$/;
     if (!nameRegex.test(rawName)) {
       setStatusMessage(t('contact.errors.name'));
@@ -264,9 +262,10 @@ export function Contact() {
 
           <form onSubmit={submit} className="space-y-4">
             {sent ? (
-              <div className="bg-white rounded-2xl p-8 shadow-lg text-center border border-green-100">
-                <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 size={40} className="text-green-500" />
+              // Блок после успешной отправки - без зелёного цвета
+              <div className="bg-white rounded-2xl p-8 shadow-lg text-center border border-brand-100">
+                <div className="w-20 h-20 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 size={40} className="text-brand-500" />
                 </div>
                 <h3 className="text-2xl font-serif text-wine-900 mb-2">
                   {t('contact.success_title')}
@@ -282,10 +281,11 @@ export function Contact() {
                   {t('contact.send_again')}
                 </button>
                 {statusMessage && (
-                  <div className="mt-4 text-sm text-green-600">{statusMessage}</div>
+                  <div className="mt-4 text-sm text-wine-600">{statusMessage}</div>
                 )}
               </div>
             ) : (
+              // Форма
               <>
                 <input
                   name="name"
@@ -368,7 +368,7 @@ export function Contact() {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white py-3.5 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25 disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-cream py-3.5 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25 disabled:opacity-60"
                 >
                   {busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                   {busy ? t('contact.sending_button') : t('contact.send')}
@@ -380,7 +380,7 @@ export function Contact() {
               <div className={`text-center text-sm mt-2 ${
                 statusMessage.includes('⚠️') || statusMessage.includes('⛔')
                   ? 'text-amber-600'
-                  : 'text-green-600'
+                  : 'text-wine-600'
               }`}>
                 {statusMessage}
               </div>
