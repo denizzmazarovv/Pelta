@@ -245,6 +245,7 @@ export function Contact() {
               label="peltanera@gmail.com"
             />
             <ContactItem
+              href="#"
               icon={<MapPin size={30} />}
               label="Tashkent, Amir Temur St."
             />
