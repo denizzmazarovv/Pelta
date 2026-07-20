@@ -263,8 +263,8 @@ export function Contact() {
           <form onSubmit={submit} className="space-y-4">
             {sent ? (
               // Блок после успешной отправки - без зелёного цвета
-              <div className="bg-white rounded-2xl p-8 shadow-lg text-center border border-brand-100">
-                <div className="w-20 h-20 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="bg-white  -2xl p-8 shadow-lg text-center border border-brand-100">
+                <div className="w-20 h-20 bg-brand-50  -full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 size={40} className="text-brand-500" />
                 </div>
                 <h3 className="text-2xl font-serif text-wine-900 mb-2">
@@ -276,7 +276,7 @@ export function Contact() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="bg-brand-500 hover:bg-brand-600 text-cream px-8 py-3 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25"
+                  className="bg-brand-500 hover:bg-brand-600 text-cream px-8 py-3  -xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25"
                 >
                   {t('contact.send_again')}
                 </button>
@@ -292,7 +292,7 @@ export function Contact() {
                   maxLength={40}
                   required
                   placeholder={t('contact.name')}
-                  className="w-full bg-white border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300"
+                  className="w-full bg-white border border-brand-200  -xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300"
                 />
 
                 <div className="relative">
@@ -332,7 +332,7 @@ export function Contact() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t('contact.email')}
-                  className="w-full bg-white border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300"
+                  className="w-full bg-white border border-brand-200  -xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300"
                 />
 
                 <textarea
@@ -341,7 +341,7 @@ export function Contact() {
                   rows={6}
                   maxLength={500}
                   placeholder={t('contact.message')}
-                  className="w-full bg-white border border-brand-200 rounded-xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300 resize-none"
+                  className="w-full bg-white border border-brand-200  -xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300 resize-none"
                 />
 
                 <div className="flex items-start gap-3">
@@ -350,7 +350,7 @@ export function Contact() {
                     id="policy"
                     checked={agree}
                     onChange={(e) => setAgree(e.target.checked)}
-                    className="mt-1 h-4 w-4 rounded border-brand-300 text-brand-500 focus:ring-brand-400"
+                    className="mt-1 h-4 w-4 border-brand-300 text-brand-500 focus:ring-brand-400"
                   />
                   <label htmlFor="policy" className="text-sm text-wine-700 leading-snug cursor-pointer">
                     {t('contact.policy_text')}{' '}
@@ -368,7 +368,7 @@ export function Contact() {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-cream py-3.5 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25 disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-cream py-3.5  -xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25 disabled:opacity-60"
                 >
                   {busy ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                   {busy ? t('contact.sending_button') : t('contact.send')}
@@ -403,7 +403,7 @@ function ContactItem({
 }) {
   const content = (
     <>
-      <div className="w-12 h-12 rounded-full bg-brand-50 flex items-center justify-center text-brand-500 shrink-0 transition-colors group-hover:bg-brand-500 group-hover:text-white">
+      <div className="w-12 h-12 bg-brand-50 flex items-center justify-center text-brand-500 shrink-0 transition-colors group-hover:bg-brand-500 group-hover:text-white">
         {icon}
       </div>
       <span className="text-wine-700 text-lg transition-colors group-hover:text-brand-500">
