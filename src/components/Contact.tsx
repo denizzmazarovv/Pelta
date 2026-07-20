@@ -321,7 +321,6 @@ export function Contact() {
                       background: '#ffffff',
                       border: '1px solid #8aa9e0',
                       borderRight: 'none',
-                      borderRadius: '12px 0 0 12px',
                       width: '48px',
                     }}
                   />
