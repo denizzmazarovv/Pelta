@@ -80,7 +80,7 @@
     height: 56px !important;
     background: #fffdfb !important;
     border: 1px solid #8aa9e0 !important;
-    border-radius: 12px !important;
+
     color: #0f0404 !important;
     padding-left: 58px !important;
     transition: border-color .2s ease !important;
@@ -90,7 +90,6 @@
     background: #fffdfb !important;
     border: 1px solid #8aa9e0 !important;
     border-right: none !important;
-    border-radius: 12px 0 0 12px !important;
     transition: border-color .2s ease !important;
 }
 .react-tel-input:focus-within .form-control,
