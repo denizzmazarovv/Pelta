@@ -23,7 +23,7 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-wine-900/60 backdrop-blur-sm animate-fade-in" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-cream rounded-2xl shadow-2xl border border-brand-200 overflow-hidden animate-scale-in">
+      <div className="relative w-full max-w-md bg-cream  -2xl shadow-2xl border border-brand-200 overflow-hidden animate-scale-in">
         <div className="bg-brand-500 px-6 py-5 flex items-center justify-between">
           <div>
             <p className="text-cream/70 text-xs uppercase tracking-[0.25em]">Pelta Nera</p>
@@ -37,7 +37,7 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
         <div className="p-6 space-y-5">
           <div>
             <span className="text-xs uppercase tracking-wider text-wine-400 mb-1.5 block">{t('account.email')}</span>
-            <div className="flex items-center gap-2.5 border border-brand-200 rounded-xl px-3.5 py-3 bg-brand-50/50">
+            <div className="flex items-center gap-2.5 border border-brand-200  -xl px-3.5 py-3 bg-brand-50/50">
               <Mail size={18} className="text-brand-500" />
               <span className="text-wine-700">{profile?.email}</span>
             </div>
@@ -45,7 +45,7 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
 
           <div>
             <span className="text-xs uppercase tracking-wider text-wine-400 mb-1.5 block">{t('account.name')}</span>
-            <div className="flex items-center gap-2.5 border border-brand-200 rounded-xl px-3.5 py-3 focus-within:border-brand-500 transition-colors">
+            <div className="flex items-center gap-2.5 border border-brand-200  -xl px-3.5 py-3 focus-within:border-brand-500 transition-colors">
               <User size={18} className="text-brand-500" />
               <input
                 value={name}
@@ -59,7 +59,7 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
           <button
             onClick={save}
             disabled={busy}
-            className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-cream py-3.5 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25 disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-cream py-3.5  -xl font-medium transition-all hover:shadow-lg hover:shadow-brand-500/25 disabled:opacity-60"
           >
             {busy ? <Loader2 size={18} className="animate-spin" /> : saved ? <CheckCircle2 size={18} /> : null}
             {saved ? t('account.saved') : t('account.save')}
