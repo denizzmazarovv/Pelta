@@ -111,7 +111,7 @@ export function Navbar({ onOpenAuth, onOpenAccount }: { onOpenAuth: () => void; 
           ) : (
             <button
               onClick={onOpenAuth}
-              className="hidden lg:flex items-center gap-2 px-5 py-2 rounded-full bg-brand-500 text-cream text-sm font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/30"
+              className="hidden lg:flex items-center gap-2 px-5 py-2  -full bg-brand-500 text-cream text-sm font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/30"
             >
               <User size={16} />
               {t('nav.login')}
@@ -165,7 +165,7 @@ export function Navbar({ onOpenAuth, onOpenAccount }: { onOpenAuth: () => void; 
                     onOpenAuth();
                     setMobileOpen(false);
                   }}
-                  className="flex items-center gap-2 px-5 py-2 rounded-full bg-brand-500 text-cream text-sm font-medium"
+                  className="flex items-center gap-2 px-5 py-2  -full bg-brand-500 text-cream text-sm font-medium"
                 >
                   <User size={16} />
                   {t('nav.login')}
@@ -177,7 +177,7 @@ export function Navbar({ onOpenAuth, onOpenAccount }: { onOpenAuth: () => void; 
                 <button
                   key={l.code}
                   onClick={() => setLang(l.code as Lang)}
-                  className={`px-3 py-1 rounded-lg text-sm ${lang === l.code ? 'bg-brand-500 text-cream' : 'bg-brand-50 text-wine-600'}`}
+                  className={`px-3 py-1  -lg text-sm ${lang === l.code ? 'bg-brand-500 text-cream' : 'bg-brand-50 text-wine-600'}`}
                 >
                   {l.short}
                 </button>

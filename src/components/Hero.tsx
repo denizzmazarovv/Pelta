@@ -14,8 +14,8 @@ export function Hero() {
             'radial-gradient(circle at 20% 30%, rgba(250,242,232,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(76,20,19,0.25) 0%, transparent 50%)',
         }}
       />
-      <div className="absolute top-1/4 left-10 w-64 h-64 rounded-full bg-cream/5 blur-3xl animate-float" />
-      <div className="absolute bottom-1/4 right-10 w-80 h-80 rounded-full bg-wine-500/10 blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-1/4 left-10 w-64 h-64  -full bg-cream/5 blur-3xl animate-float" />
+      <div className="absolute bottom-1/4 right-10 w-80 h-80  -full bg-wine-500/10 blur-3xl animate-float" style={{ animationDelay: '2s' }} />
 
       <div className="relative z-10 text-center px-6 max-w-4xl">
         <p className="text-cream/60 text-sm sm:text-base uppercase tracking-[0.4em] mb-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
@@ -29,7 +29,7 @@ export function Hero() {
         </p>
         <a
           href="#catalog"
-          className="inline-flex items-center gap-3 px-8 py-4 bg-cream text-brand-600 rounded-full font-medium tracking-wide hover:bg-cream-200 transition-all hover:shadow-2xl hover:shadow-cream/20 hover:scale-105 active:scale-100 animate-fade-up"
+          className="inline-flex items-center gap-3 px-8 py-4 bg-cream text-brand-600  -full font-medium tracking-wide hover:bg-cream-200 transition-all hover:shadow-2xl hover:shadow-cream/20 hover:scale-105 active:scale-100 animate-fade-up"
           style={{ animationDelay: '0.4s' }}
         >
           {t('hero.cta')}
