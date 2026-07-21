@@ -1,5 +1,14 @@
 export type Category = 'cardholder' | 'bag' | 'belt';
 
+export type Spec = {
+  material: string;
+  dimensions: string;
+  weight: string;
+  handmade: boolean;
+};
+
+export type ColorOption = { id: string; colorKey: string };
+
 export type Product = {
   id: string;
   category: Category;
@@ -11,8 +20,15 @@ export type Product = {
   desc_en: string;
   price: number;
   image: string;
+  gallery: string[];
+  colors: ColorOption[];
+  specs: Spec;
   featured: boolean;
 };
+
+const tan: ColorOption = { id: 'tan', colorKey: 'product.color_tan' };
+const black: ColorOption = { id: 'black', colorKey: 'product.color_black' };
+const cognac: ColorOption = { id: 'cognac', colorKey: 'product.color_cognac' };
 
 export const products: Product[] = [
   {
@@ -26,6 +42,13 @@ export const products: Product[] = [
     desc_en: 'Compact 6-card holder in vegetable-tanned leather.',
     price: 45,
     image: '/images/products/cardholder-nera.svg',
+    gallery: [
+      '/images/products/cardholder-nera.svg',
+      '/images/products/cardholder-pelta.svg',
+      '/images/products/belt-classic.svg',
+    ],
+    colors: [tan, cognac],
+    specs: { material: 'product.material_value', dimensions: '105 × 75 × 8 mm', weight: '48 g', handmade: true },
     featured: true,
   },
   {
@@ -39,6 +62,13 @@ export const products: Product[] = [
     desc_en: 'Minimalist cardholder with a bill compartment.',
     price: 55,
     image: '/images/products/cardholder-pelta.svg',
+    gallery: [
+      '/images/products/cardholder-pelta.svg',
+      '/images/products/cardholder-nera.svg',
+      '/images/products/belt-heritage.svg',
+    ],
+    colors: [black, tan],
+    specs: { material: 'product.material_value', dimensions: '110 × 80 × 10 mm', weight: '62 g', handmade: true },
     featured: false,
   },
   {
@@ -52,6 +82,13 @@ export const products: Product[] = [
     desc_en: 'Handcrafted city shoulder bag.',
     price: 180,
     image: '/images/products/bag-tashkent.svg',
+    gallery: [
+      '/images/products/bag-tashkent.svg',
+      '/images/products/bag-amir.svg',
+      '/images/products/belt-classic.svg',
+    ],
+    colors: [tan, cognac, black],
+    specs: { material: 'product.material_value', dimensions: '240 × 180 × 60 mm', weight: '420 g', handmade: true },
     featured: true,
   },
   {
@@ -65,6 +102,13 @@ export const products: Product[] = [
     desc_en: 'Roomy document portfolio bag.',
     price: 220,
     image: '/images/products/bag-amir.svg',
+    gallery: [
+      '/images/products/bag-amir.svg',
+      '/images/products/bag-tashkent.svg',
+      '/images/products/belt-heritage.svg',
+    ],
+    colors: [black, tan],
+    specs: { material: 'product.material_value', dimensions: '320 × 260 × 80 mm', weight: '680 g', handmade: true },
     featured: false,
   },
   {
@@ -78,6 +122,13 @@ export const products: Product[] = [
     desc_en: 'Classic belt in firm leather with a buckle.',
     price: 70,
     image: '/images/products/belt-classic.svg',
+    gallery: [
+      '/images/products/belt-classic.svg',
+      '/images/products/belt-heritage.svg',
+      '/images/products/cardholder-nera.svg',
+    ],
+    colors: [tan, black],
+    specs: { material: 'product.material_value', dimensions: '1100 × 35 × 4 mm', weight: '180 g', handmade: false },
     featured: true,
   },
   {
@@ -91,6 +142,13 @@ export const products: Product[] = [
     desc_en: 'Belt with a shaped buckle and hand stitching.',
     price: 85,
     image: '/images/products/belt-heritage.svg',
+    gallery: [
+      '/images/products/belt-heritage.svg',
+      '/images/products/belt-classic.svg',
+      '/images/products/cardholder-pelta.svg',
+    ],
+    colors: [cognac, black],
+    specs: { material: 'product.material_value', dimensions: '1100 × 38 × 4 mm', weight: '210 g', handmade: true },
     featured: false,
   },
 ];

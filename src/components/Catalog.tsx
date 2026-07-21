@@ -3,6 +3,7 @@ import { ShoppingBag } from 'lucide-react';
 import { useLang } from '../context/LangContext';
 import { useReveal } from '../hooks/useReveal';
 import { products, Product } from '../lib/products';
+import { ProductModal } from './ProductModal';
 
 type Category = 'all' | 'cardholder' | 'bag' | 'belt';
 
@@ -10,6 +11,7 @@ export function Catalog() {
   const { t, lang } = useLang();
   const { ref, visible } = useReveal<HTMLDivElement>();
   const [active, setActive] = useState<Category>('all');
+  const [selected, setSelected] = useState<Product | null>(null);
 
   const cats: { key: Category; label: string }[] = [
     { key: 'all', label: t('cat.all') },
@@ -65,10 +67,13 @@ export function Catalog() {
               name={name(p)}
               desc={desc(p)}
               delay={i * 80}
+              onOpen={() => setSelected(p)}
             />
           ))}
         </div>
       </div>
+
+      <ProductModal product={selected} onClose={() => setSelected(null)} />
     </section>
   );
 }
@@ -78,11 +83,13 @@ function ProductCard({
   name,
   desc,
   delay,
+  onOpen,
 }: {
   product: Product;
   name: string;
   desc: string;
   delay: number;
+  onOpen: () => void;
 }) {
   const { t } = useLang();
   const { ref, visible } = useReveal<HTMLDivElement>();
@@ -90,8 +97,9 @@ function ProductCard({
   return (
     <div
       ref={ref}
-      className={`group bg-cream-50  overflow-hidden border border-brand-100 hover:border-brand-300 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-900/10 hover:-translate-y-1 reveal ${visible ? 'is-visible' : ''}`}
+      className={`group bg-cream-50  overflow-hidden border border-brand-100 hover:border-brand-300 transition-all duration-500 hover:shadow-2xl hover:shadow-brand-900/10 hover:-translate-y-1 reveal cursor-pointer ${visible ? 'is-visible' : ''}`}
       style={{ transitionDelay: `${delay}ms` }}
+      onClick={onOpen}
     >
       <div className="relative h-72 overflow-hidden bg-brand-50">
         <img
@@ -105,6 +113,7 @@ function ProductCard({
             ★
           </span>
         )}
+        <div className="absolute inset-0 bg-wine-900/0 group-hover:bg-wine-900/10 transition-colors duration-500" />
       </div>
 
       <div className="p-6">
@@ -114,7 +123,10 @@ function ProductCard({
           <span className="text-brand-500 text-2xl font-serif font-semibold">
             {t('product.from')} {t('common.currency')}{product.price}
           </span>
-          <button className="flex items-center gap-2 px-4 py-2  bg-brand-500 text-cream text-sm font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/25 active:scale-95">
+          <button
+            onClick={(e) => { e.stopPropagation(); onOpen(); }}
+            className="flex items-center gap-2 px-4 py-2  bg-brand-500 text-cream text-sm font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/25 active:scale-95"
+          >
             <ShoppingBag size={16} />
             {t('product.order')}
           </button>
