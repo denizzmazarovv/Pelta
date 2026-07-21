@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, ShoppingBag, Check } from 'lucide-react';
 import { useLang } from '../context/LangContext';
+import { useCart } from '../context/CartContext';
 import type { Product } from '../lib/products';
 
 export function ProductModal({
@@ -11,6 +12,7 @@ export function ProductModal({
   onClose: () => void;
 }) {
   const { t, lang } = useLang();
+  const { add } = useCart();
   const [slide, setSlide] = useState(0);
   const [color, setColor] = useState(0);
   const [added, setAdded] = useState(false);
@@ -54,6 +56,7 @@ export function ProductModal({
   }
 
   function addToCart() {
+    add(product!, color);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   }

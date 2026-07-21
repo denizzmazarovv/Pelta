@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LangProvider } from './context/LangContext';
 import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { Marquee } from './components/Marquee';
@@ -10,6 +11,7 @@ import { Contact } from './components/Contact';
 import { Footer } from './components/Footer';
 import { AuthModal } from './components/AuthModal';
 import { AccountModal } from './components/AccountModal';
+import { CartDrawer } from './components/CartDrawer';
 
 function AppContent() {
   const [authOpen, setAuthOpen] = useState(false);
@@ -28,6 +30,7 @@ function AppContent() {
       <Footer />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
       <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
+      <CartDrawer />
     </div>
   );
 }
@@ -36,7 +39,9 @@ export default function App() {
   return (
     <LangProvider>
       <AuthProvider>
-        <AppContent />
+        <CartProvider>
+          <AppContent />
+        </CartProvider>
       </AuthProvider>
     </LangProvider>
   );

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, User, LogOut, Globe, ChevronDown } from 'lucide-react';
+import { Menu, X, User, LogOut, Globe, ChevronDown, ShoppingBag } from 'lucide-react';
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { LANGS, Lang } from '../lib/i18n';
 
 export function Navbar({ onOpenAuth, onOpenAccount }: { onOpenAuth: () => void; onOpenAccount: () => void }) {
   const { t, lang, setLang } = useLang();
   const { session, signOut } = useAuth();
+  const { count, open } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
@@ -118,6 +120,19 @@ export function Navbar({ onOpenAuth, onOpenAccount }: { onOpenAuth: () => void; 
               {t('nav.login')}
             </button>
           )}
+
+          <button
+            onClick={open}
+            className={`relative flex items-center transition-colors ${scrolled ? 'text-wine-700 hover:text-brand-500' : 'text-cream/90 hover:text-cream'}`}
+            aria-label="Cart"
+          >
+            <ShoppingBag size={20} />
+            {count > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-brand-500 text-cream rounded-full">
+                {count}
+              </span>
+            )}
+          </button>
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}

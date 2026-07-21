@@ -70,6 +70,20 @@
 .animate-marquee {
   animation: marquee 28s linear infinite;
 }
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+@keyframes scale-in {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.animate-scale-in {
+  animation: scale-in 0.25s ease-out;
+}
 /*  */
 .react-tel-input {
     width: 100%;
