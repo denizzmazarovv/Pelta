@@ -160,7 +160,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-wine-900/60 backdrop-blur-sm animate-fade-in" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-cream rounded-2xl shadow-2xl border border-brand-200 overflow-hidden animate-scale-in">
+      <div className="relative w-full max-w-md bg-cream  shadow-2xl border border-brand-200 overflow-hidden animate-scale-in">
         <div className="bg-brand-500 px-6 py-5 flex items-center justify-between">
           <div>
             <p className="text-cream/70 text-xs uppercase tracking-[0.25em]">Pelta Nera</p>
@@ -174,7 +174,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         {mode === 'code' ? (
           <div className="p-6 space-y-5">
             <div className="text-center">
-              <div className="mx-auto w-14 h-14 rounded-full bg-brand-50 flex items-center justify-center mb-3">
+              <div className="mx-auto w-14 h-14  -full bg-brand-50 flex items-center justify-center mb-3">
                 <MailCheck size={28} className="text-brand-500" />
               </div>
               <p className="text-wine-700 text-sm leading-relaxed">
@@ -193,18 +193,18 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                   onKeyDown={(e) => onCodeKey(i, e)}
                   inputMode="numeric"
                   maxLength={1}
-                  className="w-11 h-14 text-center text-xl font-semibold border border-brand-200 rounded-xl bg-white text-wine-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
+                  className="w-11 h-14 text-center text-xl font-semibold border border-brand-200  -xl bg-white text-wine-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
                 />
               ))}
             </div>
 
-            {error && <p className="text-wine-500 text-sm bg-wine-50 rounded-lg px-3 py-2 text-center animate-fade-in">{error}</p>}
-            {info && <p className="text-brand-600 text-sm bg-brand-50 rounded-lg px-3 py-2 text-center animate-fade-in">{info}</p>}
+            {error && <p className="text-wine-500 text-sm bg-wine-50  -lg px-3 py-2 text-center animate-fade-in">{error}</p>}
+            {info && <p className="text-brand-600 text-sm bg-brand-50  -lg px-3 py-2 text-center animate-fade-in">{info}</p>}
 
             <button
               onClick={verifyCode}
               disabled={busy}
-              className="w-full bg-brand-500 hover:bg-brand-600 text-cream py-3.5 rounded-xl font-medium tracking-wide transition-all hover:shadow-lg hover:shadow-brand-500/30 disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full bg-brand-500 hover:bg-brand-600 text-cream py-3.5  -xl font-medium tracking-wide transition-all hover:shadow-lg hover:shadow-brand-500/30 disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {busy && <Loader2 size={18} className="animate-spin" />}
               {t('auth.code.verify')}
@@ -288,13 +288,13 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
               </div>
             )}
 
-            {error && <p className="text-wine-500 text-sm bg-wine-50 rounded-lg px-3 py-2 animate-fade-in">{error}</p>}
-            {info && <p className="text-brand-600 text-sm bg-brand-50 rounded-lg px-3 py-2 animate-fade-in">{info}</p>}
+            {error && <p className="text-wine-500 text-sm bg-wine-50  -lg px-3 py-2 animate-fade-in">{error}</p>}
+            {info && <p className="text-brand-600 text-sm bg-brand-50  -lg px-3 py-2 animate-fade-in">{info}</p>}
 
             <button
               type="submit"
               disabled={busy}
-              className="w-full bg-brand-500 hover:bg-brand-600 text-cream py-3.5 rounded-xl font-medium tracking-wide transition-all hover:shadow-lg hover:shadow-brand-500/30 disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full bg-brand-500 hover:bg-brand-600 text-cream py-3.5  -xl font-medium tracking-wide transition-all hover:shadow-lg hover:shadow-brand-500/30 disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {busy && <Loader2 size={18} className="animate-spin" />}
               {mode === 'login' ? t('auth.signin')
@@ -341,7 +341,7 @@ function Field({
   return (
     <label className="block">
       <span className="text-xs uppercase tracking-wider text-wine-400 mb-1.5 block">{label}</span>
-      <div className="flex items-center gap-2.5 border border-brand-200 rounded-xl px-3.5 py-3 focus-within:border-brand-500 transition-colors">
+      <div className="flex items-center gap-2.5 border border-brand-200  -xl px-3.5 py-3 focus-within:border-brand-500 transition-colors">
         <span className="text-brand-500">{icon}</span>
         {children}
         {trailing}

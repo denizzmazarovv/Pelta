@@ -310,7 +310,6 @@ export function Contact() {
                       height: '56px',
                       background: '#ffffff',
                       border: '1px solid #8aa9e0',
-                      borderRadius: '12px',
                       color: '#0f0404',
                       fontSize: '16px',
                       paddingLeft: '60px',
