@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useLang } from '../context/LangContext';
 
 // Google Apps Script Web App URL — replace with your deployment URL
-const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbx3placeholder/exec';
+const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwcTc8QsfEVx3440DozhVa7sbB5ZZRbgRN2iI2BMxCRuihZS72EZQCXfd1C_eZd7Nm7Jw/exec';
 
 export function CartDrawer() {
   const { t, lang } = useLang();
