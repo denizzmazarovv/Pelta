@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Send, Phone, MapPin, Mail, Loader2, CheckCircle2 } from 'lucide-react';
-import { FaTelegram, FaInstagram } from 'react-icons/fa';
+import { Send, Phone, MapPin, Mail, Loader as Loader2, CircleCheck as CheckCircle2, Camera } from 'lucide-react';
 import { useLang } from '../context/LangContext';
 import { useReveal } from '../hooks/useReveal';
 import PhoneInput from 'react-phone-input-2';
@@ -251,12 +250,12 @@ export function Contact() {
             />
             <ContactItem
               href="https://t.me/peltanera"
-              icon={<FaTelegram size={30} />}
+              icon={<Send size={30} />}
               label="@peltanera"
             />
             <ContactItem
               href="https://instagram.com/peltanera"
-              icon={<FaInstagram size={30} />}
+              icon={<Camera size={30} />}
               label="@peltanera"
             />
           </div>
