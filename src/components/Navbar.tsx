@@ -37,7 +37,7 @@ export function Navbar({ onOpenAuth, onOpenAccount }: { onOpenAuth: () => void; 
     >
       <nav className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between">
         <a href="#home" className="flex items-center gap-2 group">
-          <img src="/apple-touch-icon.png" alt="Pelta Nera Logo" className={`w-10 h-10 transition-transform ${scrolled ? 'scale-90 rotate-[90deg]' : 'scale-100 rotate-0'}`} />
+          <img src={scrolled ? "/vream-background-ellipse.png" : "/apple-touch-icon.png"} alt="Pelta Nera Logo" className={`w-10 h-10 transition-transform ${scrolled ? 'scale-90 rotate-[90deg]' : 'scale-100 rotate-0'}`} />
           <span className={`font-serif text-2xl sm:text-3xl font-semibold tracking-tight transition-colors ${scrolled ? 'text-brand-500' : 'text-cream'}`}>
             Pelta
           </span>
