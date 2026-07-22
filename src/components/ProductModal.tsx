@@ -62,16 +62,17 @@ export function ProductModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-6 h-[100dvh]">
       <div className="absolute inset-0 bg-wine-900/70 backdrop-blur-md animate-fade-in" onClick={onClose} />
 
-      <div className="relative w-full max-w-5xl bg-cream sm:rounded-2xl shadow-2xl overflow-hidden animate-scale-in max-h-screen sm:max-h-[92vh] overflow-y-auto">
+      <div className="relative w-full max-w-5xl bg-cream sm:rounded-2xl shadow-2xl overflow-hidden animate-scale-in max-h-[100dvh] sm:max-h-[92vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-cream/90 hover:bg-cream flex items-center justify-center text-wine-700 shadow-lg transition-colors"
+          className="absolute top-3 right-3 z-30 w-11 h-11 rounded-full bg-cream/90 hover:bg-cream flex items-center justify-center text-wine-700 shadow-lg transition-colors"
           aria-label="Close"
+          style={{ top: 'max(0.75rem, env(safe-area-inset-top))', right: 'max(0.75rem, env(safe-area-inset-right))' }}
         >
-          <X size={20} />
+          <X size={22} />
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2">
@@ -118,7 +119,7 @@ export function ProductModal({
           </div>
 
           {/* Details */}
-          <div className="p-6 sm:p-8 lg:p-10 flex flex-col">
+          <div className="p-6 sm:p-8 lg:p-10 flex flex-col" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
             {product.featured && (
               <span className="inline-flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-brand-500 mb-3">
                 <span className="w-6 h-px bg-brand-500" /> Pelta Nera

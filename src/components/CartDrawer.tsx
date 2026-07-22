@@ -80,12 +80,12 @@ export function CartDrawer() {
   }
 
   return (
-    <div className="fixed inset-0 z-[110] flex justify-end">
+    <div className="fixed inset-0 z-[110] flex justify-end h-[100dvh]">
       <div className="absolute inset-0 bg-wine-900/60 backdrop-blur-sm animate-fade-in" onClick={close} />
 
       <div className="relative w-full max-w-md bg-cream shadow-2xl flex flex-col animate-slide-in-right h-full">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-brand-100">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-brand-100" style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top))' }}>
           <div className="flex items-center gap-3">
             {checkout && (
               <button onClick={() => setCheckout(false)} className="text-wine-500 hover:text-wine-700 transition-colors">
@@ -228,7 +228,7 @@ export function CartDrawer() {
             </div>
 
             {/* Footer with total + checkout */}
-            <div className="border-t border-brand-100 px-6 py-5 space-y-4">
+            <div className="border-t border-brand-100 px-6 py-5 space-y-4" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
               <div className="flex items-center justify-between">
                 <span className="text-wine-400 text-sm uppercase tracking-wider">{t('cart.total')}</span>
                 <span className="text-brand-500 text-3xl font-serif font-semibold">{t('common.currency')}{total}</span>
