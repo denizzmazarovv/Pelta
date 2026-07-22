@@ -68,13 +68,10 @@ export function ProductModal({
       <div className="relative w-full max-w-5xl bg-cream sm:rounded-2xl shadow-2xl overflow-hidden animate-scale-in max-h-screen sm:max-h-[92vh] overflow-y-auto">
         <button
           onClick={onClose}
+          className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-cream/90 hover:bg-cream flex items-center justify-center text-wine-700 shadow-lg transition-colors"
           aria-label="Close"
-          className="absolute right-4 z-[9999] w-12 h-12 rounded-full bg-cream/95 hover:bg-cream flex items-center justify-center text-wine-700 shadow-xl transition-colors"
-          style={{
-            top: 'calc(env(safe-area-inset-top) + 16px)',
-          }}
         >
-          <X size={24} />
+          <X size={20} />
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2">
