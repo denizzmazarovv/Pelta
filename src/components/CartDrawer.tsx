@@ -108,7 +108,7 @@ export function CartDrawer() {
         {/* Success state */}
         {status === 'success' ? (
           <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-            <div className="w-20 h-20 rounded-full bg-wine-100 flex items-center justify-center mb-6">
+            <div className="w-20 h-20  bg-wine-100 flex items-center justify-center mb-6">
               <CheckCircle2 size={40} className="text-wine-500" />
             </div>
             <p className="text-wine-700 text-lg font-medium mb-2">{t('cart.success')}</p>
@@ -150,7 +150,7 @@ export function CartDrawer() {
               </div>
 
               {/* Order summary */}
-              <div className="bg-brand-50 rounded-lg p-4 space-y-2">
+              <div className="bg-brand-50  p-4 space-y-2">
                 {items.map((i) => (
                   <div key={i.id} className="flex justify-between text-sm text-wine-600">
                     <span>{name(i.product)} ×{i.quantity}</span>
@@ -170,7 +170,7 @@ export function CartDrawer() {
               <button
                 onClick={submitOrder}
                 disabled={status === 'submitting'}
-                className="w-full py-4 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/30 disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-brand-500 text-cream  font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/30 disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {status === 'submitting' ? (
                   <><Loader2 size={18} className="animate-spin" /> {t('cart.submitting')}</>
@@ -183,7 +183,7 @@ export function CartDrawer() {
         ) : items.length === 0 ? (
           /* Empty cart */
           <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-            <div className="w-20 h-20 rounded-full bg-brand-50 flex items-center justify-center mb-6">
+            <div className="w-20 h-20  bg-brand-50 flex items-center justify-center mb-6">
               <ShoppingBag size={36} className="text-brand-300" />
             </div>
             <p className="text-wine-700 text-lg font-medium mb-1">{t('cart.empty')}</p>
