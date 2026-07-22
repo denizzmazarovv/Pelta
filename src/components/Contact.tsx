@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Send, Phone, MapPin, Mail, Loader as Loader2, CircleCheck as CheckCircle2, Camera } from 'lucide-react';
 import { useLang } from '../context/LangContext';
 import { useReveal } from '../hooks/useReveal';
+import { sanitizeText, sanitizeEmail, sanitizePhone, MAX_NAME, MAX_MESSAGE, MAX_EMAIL } from '../lib/sanitize';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 
@@ -16,8 +17,8 @@ export function Contact() {
   const [statusMessage, setStatusMessage] = useState('');
 
   // Санитизация текста
-  const sanitizeText = (value: string) =>
-    value.replace(/[<>[\]{}"'\\/|;:=]/g, "");
+  const sanitizeTextLocal = (value: string) =>
+    sanitizeText(value, MAX_MESSAGE);
 
   // Проверка email
   const validateEmail = (email: string) =>
@@ -144,11 +145,11 @@ export function Contact() {
     const nameInput = form.querySelector("input[name='name']") as HTMLInputElement;
     const messageInput = form.querySelector("textarea[name='message']") as HTMLTextAreaElement;
 
-    const rawName = nameInput?.value?.trim() || '';
-    const rawMessage = messageInput?.value?.trim() || '';
+    const rawName = sanitizeText(nameInput?.value?.trim() || '', MAX_NAME);
+    const rawMessage = sanitizeTextLocal(messageInput?.value?.trim() || '');
 
-    const rawPhone = phone.replace(/\D/g, '');
-    const rawEmail = email.trim();
+    const rawPhone = sanitizePhone(phone);
+    const rawEmail = sanitizeEmail(email.trim());
 
     let valid = true;
 
@@ -190,10 +191,10 @@ export function Contact() {
     }
 
     const formData = new URLSearchParams();
-    formData.append("name", sanitizeText(rawName));
+    formData.append("name", rawName);
     formData.append("phone", rawPhone);
     formData.append("email", rawEmail);
-    formData.append("message", sanitizeText(rawMessage));
+    formData.append("message", rawMessage);
     formData.append("device", getDeviceModel());
 
     setStatusMessage(t('contact.sending'));
@@ -289,7 +290,7 @@ export function Contact() {
               <>
                 <input
                   name="name"
-                  maxLength={40}
+                  maxLength={MAX_NAME}
                   required
                   placeholder={t('contact.name')}
                   className="w-full bg-white border border-brand-200  -xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300"
@@ -328,7 +329,8 @@ export function Contact() {
                   type="email"
                   name="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value.slice(0, MAX_EMAIL))}
+                  maxLength={MAX_EMAIL}
                   placeholder={t('contact.email')}
                   className="w-full bg-white border border-brand-200  -xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300"
                 />
@@ -337,7 +339,7 @@ export function Contact() {
                   name="message"
                   required
                   rows={6}
-                  maxLength={500}
+                  maxLength={MAX_MESSAGE}
                   placeholder={t('contact.message')}
                   className="w-full bg-white border border-brand-200  -xl px-4 py-3.5 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all text-wine-900 placeholder-wine-300 resize-none"
                 />

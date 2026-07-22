@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowLeft, Loader as Loader2, CircleCheck as CheckCircle2, Phone } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLang } from '../context/LangContext';
+import { sanitizeText, sanitizePhone, MAX_NAME, MAX_ADDRESS, MAX_COMMENT } from '../lib/sanitize';
 
 // Google Apps Script Web App URL — replace with your deployment URL
 const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwcTc8QsfEVx3440DozhVa7sbB5ZZRbgRN2iI2BMxCRuihZS72EZQCXfd1C_eZd7Nm7Jw/exec';
@@ -37,9 +38,9 @@ export function CartDrawer() {
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!form.name.trim()) e.name = t('cart.error_name');
-    if (!form.phone.trim()) e.phone = t('cart.error_phone');
-    if (!form.address.trim()) e.address = t('cart.error_address');
+    if (!sanitizeText(form.name, MAX_NAME)) e.name = t('cart.error_name');
+    if (!sanitizePhone(form.phone)) e.phone = t('cart.error_phone');
+    if (!sanitizeText(form.address, MAX_ADDRESS)) e.address = t('cart.error_address');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -47,12 +48,16 @@ export function CartDrawer() {
   async function submitOrder() {
     if (!validate()) return;
     setStatus('submitting');
+    const cleanName = sanitizeText(form.name, MAX_NAME);
+    const cleanPhone = sanitizePhone(form.phone);
+    const cleanAddress = sanitizeText(form.address, MAX_ADDRESS);
+    const cleanComment = sanitizeText(form.comment, MAX_COMMENT);
     const order = {
       timestamp: new Date().toISOString(),
-      customer_name: form.name,
-      phone: form.phone,
-      address: form.address,
-      comment: form.comment,
+      customer_name: cleanName,
+      phone: cleanPhone,
+      address: cleanAddress,
+      comment: cleanComment,
       total,
       items: items.map((i) => ({
         id: i.product.id,
@@ -123,7 +128,7 @@ export function CartDrawer() {
           /* Checkout form */
           <div className="flex-1 overflow-y-auto px-6 py-5">
             <div className="space-y-5">
-              <Field label={t('cart.name')} value={form.name} onChange={(v) => setForm({ ...form, name: v })} error={errors.name} />
+              <Field label={t('cart.name')} value={form.name} onChange={(v) => setForm({ ...form, name: sanitizeText(v, MAX_NAME) })} error={errors.name} />
               <div>
                 <label className="block text-xs uppercase tracking-wider text-wine-400 mb-2">{t('cart.phone')}</label>
                 <div className="relative">
@@ -131,20 +136,21 @@ export function CartDrawer() {
                   <input
                     type="tel"
                     value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    onChange={(e) => setForm({ ...form, phone: sanitizePhone(e.target.value) })}
                     className={`w-full pl-10 pr-4 py-3 bg-cream-50 border rounded-lg text-wine-800 placeholder-wine-300 focus:outline-none focus:ring-2 transition-all ${errors.phone ? 'border-wine-400 focus:ring-wine-400/20' : 'border-brand-200 focus:ring-brand-500/20'}`}
                     placeholder="+998 90 123 45 67"
                   />
                 </div>
                 {errors.phone && <p className="text-wine-500 text-xs mt-1">{errors.phone}</p>}
               </div>
-              <Field label={t('cart.address')} value={form.address} onChange={(v) => setForm({ ...form, address: v })} error={errors.address} />
+              <Field label={t('cart.address')} value={form.address} onChange={(v) => setForm({ ...form, address: sanitizeText(v, MAX_ADDRESS) })} error={errors.address} />
               <div>
                 <label className="block text-xs uppercase tracking-wider text-wine-400 mb-2">{t('cart.comment')}</label>
                 <textarea
                   value={form.comment}
-                  onChange={(e) => setForm({ ...form, comment: e.target.value })}
+                  onChange={(e) => setForm({ ...form, comment: sanitizeText(e.target.value, MAX_COMMENT) })}
                   rows={3}
+                  maxLength={MAX_COMMENT}
                   className="w-full px-4 py-3 bg-cream-50 border border-brand-200 rounded-lg text-wine-800 placeholder-wine-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
                 />
               </div>

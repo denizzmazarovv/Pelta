@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase, Profile } from '../lib/supabase';
 import { useLang } from './LangContext';
+import { sanitizeEmail, sanitizeText, MAX_NAME, MAX_PASSWORD_MIN } from '../lib/sanitize';
 import type { Session } from '@supabase/supabase-js';
 
 type AuthContextType = {
@@ -86,42 +87,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null, needsConfirmation: true };
     }
     if (data.user && data.session) {
-      await ensureProfile(data.user.id, trimmed, name.trim());
+      await ensureProfile(data.user.id, cleanEmail, cleanName);
     }
     return { error: null, needsConfirmation: false };
   }
 
   async function verifyOtp(email: string, token: string) {
-    const trimmed = email.trim().toLowerCase();
-    const { data, error } = await supabase.auth.verifyOtp({ email: trimmed, token, type: 'signup' });
+    const cleanEmail = sanitizeEmail(email);
+    if (!cleanEmail) return { error: t('auth.error.email') };
+    const cleanToken = sanitizeDigits(token, 6);
+    if (cleanToken.length !== 6) return { error: t('auth.code.error') };
+    const { data, error } = await supabase.auth.verifyOtp({ email: cleanEmail, token: cleanToken, type: 'signup' });
     if (error) return { error: t('auth.code.error') };
-    if (data.user) await ensureProfile(data.user.id, trimmed, undefined);
+    if (data.user) await ensureProfile(data.user.id, cleanEmail, undefined);
     return { error: null };
   }
 
   async function resendOtp(email: string) {
-    const trimmed = email.trim().toLowerCase();
-    const { error } = await supabase.auth.resend({ type: 'signup', email: trimmed });
+    const cleanEmail = sanitizeEmail(email);
+    if (!cleanEmail) return { error: t('auth.error.email') };
+    const { error } = await supabase.auth.resend({ type: 'signup', email: cleanEmail });
     if (error) return { error: t('auth.error.generic') };
     return { error: null };
   }
 
   async function signIn(email: string, password: string) {
-    const trimmed = email.trim().toLowerCase();
-    const { data, error } = await supabase.auth.signInWithPassword({ email: trimmed, password });
+    const cleanEmail = sanitizeEmail(email);
+    if (!cleanEmail) return { error: t('auth.error.email') };
+    const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
     if (error) {
       const msg = error.message.toLowerCase();
       if (msg.includes('email not confirmed')) return { error: t('auth.error.unconfirmed'), needsConfirmation: true };
       return { error: t('auth.error.invalid') };
     }
-    if (data.user) await ensureProfile(data.user.id, trimmed, undefined);
+    if (data.user) await ensureProfile(data.user.id, cleanEmail, undefined);
     return { error: null };
   }
 
   async function resetPassword(email: string) {
-    const trimmed = email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return { error: t('auth.error.email') };
-    const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+    const cleanEmail = sanitizeEmail(email);
+    if (!cleanEmail) return { error: t('auth.error.email') };
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
       redirectTo: window.location.origin,
     });
     if (error) return { error: t('auth.error.generic') };
@@ -135,12 +141,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function updateProfile(name: string) {
     if (!session) return { error: t('auth.error.generic') };
+    const cleanName = sanitizeText(name, MAX_NAME);
+    if (!cleanName) return { error: t('auth.name.required') };
     const { error } = await supabase
       .from('profiles')
-      .update({ full_name: name })
+      .update({ full_name: cleanName })
       .eq('id', session.user.id);
     if (error) return { error: t('auth.error.generic') };
-    setProfile((p) => (p ? { ...p, full_name: name } : p));
+    setProfile((p) => (p ? { ...p, full_name: cleanName } : p));
     return { error: null };
   }
 

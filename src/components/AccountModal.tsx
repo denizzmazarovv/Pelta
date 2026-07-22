@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { X, Mail, User, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Mail, User, Loader as Loader2, CircleCheck as CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
+import { sanitizeText, MAX_NAME } from '../lib/sanitize';
 
 export function AccountModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useLang();
@@ -49,7 +50,8 @@ export function AccountModal({ open, onClose }: { open: boolean; onClose: () => 
               <User size={18} className="text-brand-500" />
               <input
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(sanitizeText(e.target.value, MAX_NAME))}
+                maxLength={MAX_NAME}
                 className="w-full bg-transparent outline-none text-wine-900"
                 placeholder={t('auth.name')}
               />

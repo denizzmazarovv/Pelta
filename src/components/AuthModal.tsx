@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Mail, Lock, User, Loader2, ArrowLeft, MailCheck, Eye, EyeOff } from 'lucide-react';
+import { X, Mail, Lock, User, Loader as Loader2, ArrowLeft, MailCheck, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
+import { sanitizeText, sanitizeEmail, sanitizeDigits, MAX_NAME, MAX_EMAIL } from '../lib/sanitize';
 
 type Mode = 'login' | 'register' | 'reset' | 'code';
 
@@ -110,7 +111,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
 
   function onCodePaste(e: React.ClipboardEvent) {
     e.preventDefault();
-    const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6).split('');
+    const digits = sanitizeDigits(e.clipboardData.getData('text'), 6).split('');
     setCode((prev) => {
       const next = [...prev];
       for (let i = 0; i < 6; i++) next[i] = digits[i] ?? '';
@@ -189,7 +190,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                   key={i}
                   ref={(el) => { codeRefs.current[i] = el; }}
                   value={d}
-                  onChange={(e) => setDigit(i, e.target.value)}
+                  onChange={(e) => setDigit(i, sanitizeDigits(e.target.value, 1))}
                   onKeyDown={(e) => onCodeKey(i, e)}
                   inputMode="numeric"
                   maxLength={1}
@@ -224,8 +225,9 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
               <Field icon={<User size={18} />} label={t('auth.name')}>
                 <input
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => setName(sanitizeText(e.target.value, MAX_NAME))}
                   required
+                  maxLength={MAX_NAME}
                   className="w-full bg-transparent outline-none text-wine-900 placeholder-wine-300"
                   placeholder={t('auth.name')}
                 />
@@ -234,9 +236,10 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
             <Field icon={<Mail size={18} />} label={t('auth.email')}>
               <input
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(sanitizeEmail(e.target.value))}
                 type="email"
                 required
+                maxLength={MAX_EMAIL}
                 className="w-full bg-transparent outline-none text-wine-900 placeholder-wine-300"
                 placeholder="you@example.com"
               />
@@ -250,9 +253,10 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                 }>
                   <input
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e.target.value.slice(0, 128))}
                     type={showPw ? 'text' : 'password'}
                     required
+                    maxLength={128}
                     className="w-full bg-transparent outline-none text-wine-900 placeholder-wine-300"
                     placeholder="••••••"
                   />
@@ -265,9 +269,10 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                   }>
                     <input
                       value={confirm}
-                      onChange={(e) => setConfirm(e.target.value)}
+                      onChange={(e) => setConfirm(e.target.value.slice(0, 128))}
                       type={showConfirm ? 'text' : 'password'}
                       required
+                      maxLength={128}
                       className="w-full bg-transparent outline-none text-wine-900 placeholder-wine-300"
                       placeholder="••••••"
                     />
