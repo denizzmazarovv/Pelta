@@ -114,7 +114,7 @@ export function CartDrawer() {
             <p className="text-wine-700 text-lg font-medium mb-2">{t('cart.success')}</p>
             <button
               onClick={close}
-              className="mt-6 px-8 py-3 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-colors"
+              className="mt-6 px-8 py-3 bg-brand-500 text-cream   font-medium hover:bg-brand-600 transition-colors"
             >
               OK
             </button>
@@ -132,7 +132,7 @@ export function CartDrawer() {
                     type="tel"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className={`w-full pl-10 pr-4 py-3 bg-cream-50 border rounded-lg text-wine-800 placeholder-wine-300 focus:outline-none focus:ring-2 transition-all ${errors.phone ? 'border-wine-400 focus:ring-wine-400/20' : 'border-brand-200 focus:ring-brand-500/20'}`}
+                    className={`w-full pl-10 pr-4 py-3 bg-cream-50 border   text-wine-800 placeholder-wine-300 focus:outline-none focus:ring-2 transition-all ${errors.phone ? 'border-wine-400 focus:ring-wine-400/20' : 'border-brand-200 focus:ring-brand-500/20'}`}
                     placeholder="+998 90 123 45 67"
                   />
                 </div>
@@ -145,7 +145,7 @@ export function CartDrawer() {
                   value={form.comment}
                   onChange={(e) => setForm({ ...form, comment: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 bg-cream-50 border border-brand-200 rounded-lg text-wine-800 placeholder-wine-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
+                  className="w-full px-4 py-3 bg-cream-50 border border-brand-200   text-wine-800 placeholder-wine-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
                 />
               </div>
 
@@ -190,7 +190,7 @@ export function CartDrawer() {
             <p className="text-wine-400 text-sm">{t('cart.empty_hint')}</p>
             <button
               onClick={close}
-              className="mt-6 px-8 py-3 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-colors"
+              className="mt-6 px-8 py-3 bg-brand-500 text-cream   font-medium hover:bg-brand-600 transition-colors"
             >
               {t('nav.catalog')}
             </button>
@@ -200,13 +200,13 @@ export function CartDrawer() {
           <>
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
               {items.map((i) => (
-                <div key={i.id} className="flex gap-4 bg-cream-50 rounded-lg p-3 border border-brand-100">
-                  <img src={i.product.image} alt={name(i.product)} className="w-20 h-20 object-cover rounded-lg bg-brand-50 flex-shrink-0" />
+                <div key={i.id} className="flex gap-4 bg-cream-50   p-3 border border-brand-100">
+                  <img src={i.product.image} alt={name(i.product)} className="w-20 h-20 object-cover   bg-brand-50 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-serif text-wine-900 text-base font-medium truncate">{name(i.product)}</h3>
                     <p className="text-wine-400 text-xs mb-2">{colorLabel(i.product, i.colorIndex)}</p>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 bg-cream rounded-lg border border-brand-200">
+                      <div className="flex items-center gap-1 bg-cream   border border-brand-200">
                         <button onClick={() => setQty(i.id, i.quantity - 1)} className="w-7 h-7 flex items-center justify-center text-wine-500 hover:text-wine-700 transition-colors">
                           <Minus size={14} />
                         </button>
@@ -235,7 +235,7 @@ export function CartDrawer() {
               </div>
               <button
                 onClick={() => setCheckout(true)}
-                className="w-full py-4 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/30"
+                className="w-full py-4 bg-brand-500 text-cream   font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/30"
               >
                 {t('cart.checkout')}
               </button>
@@ -265,7 +265,7 @@ function Field({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full px-4 py-3 bg-cream-50 border rounded-lg text-wine-800 placeholder-wine-300 focus:outline-none focus:ring-2 transition-all ${error ? 'border-wine-400 focus:ring-wine-400/20' : 'border-brand-200 focus:ring-brand-500/20'}`}
+        className={`w-full px-4 py-3 bg-cream-50 border   text-wine-800 placeholder-wine-300 focus:outline-none focus:ring-2 transition-all ${error ? 'border-wine-400 focus:ring-wine-400/20' : 'border-brand-200 focus:ring-brand-500/20'}`}
       />
       {error && <p className="text-wine-500 text-xs mt-1">{error}</p>}
     </div>
