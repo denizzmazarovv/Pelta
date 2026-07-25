@@ -167,12 +167,6 @@ export function Footer() {
                   <p>Tashkent, Uzbekistan</p>
                 </div>
               </div>
-
-              <div className="pt-3 border-t border-cream/10">
-                <p className="text-sm text-cream/60 italic">
-                  {t("footer.tagline") || "Luxury leather accessories crafted with passion"}
-                </p>
-              </div>
             </div>
           </div>
         </div>
