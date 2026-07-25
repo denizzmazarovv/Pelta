@@ -139,7 +139,7 @@ export function Footer() {
                 <User size={16} className="mt-1 shrink-0 text-cream/60" />
                 <div>
                   <p className="text-xs uppercase tracking-wider text-cream/40">
-                    Founder
+                    {t("footer.founder")}
                   </p>
                   <p className="text-cream">Deniz Oztyurk</p>
                 </div>
@@ -149,7 +149,7 @@ export function Footer() {
                 <FileText size={16} className="mt-1 shrink-0 text-cream/60" />
                 <div>
                   <p className="text-xs uppercase tracking-wider text-cream/40">
-                    Registration
+                    {t("footer.registration")}
                   </p>
                   <p>No. 000000000</p>
                 </div>
@@ -159,7 +159,7 @@ export function Footer() {
                 <MapPin size={16} className="mt-1 shrink-0 text-cream/60" />
                 <div>
                   <p className="text-xs uppercase tracking-wider text-cream/40">
-                    Based in
+                    {t("footer.based")}
                   </p>
                   <p>Tashkent, Uzbekistan</p>
                 </div>
