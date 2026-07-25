@@ -236,7 +236,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
             <Field icon={<Mail size={18} />} label={t('auth.email')}>
               <input
                 value={email}
-                onChange={(e) => setEmail(sanitizeEmail(e.target.value))}
+                onChange={(e) => setEmail(e.target.value.toLowerCase().slice(0, MAX_EMAIL))}
                 type="email"
                 required
                 maxLength={MAX_EMAIL}

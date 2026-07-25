@@ -82,7 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const msg = error.message.toLowerCase();
       if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) return { error: t('auth.error.exists') };
       if (msg.includes('password')) return { error: t('auth.error.weak') };
-      return { error: t('auth.error.generic') };
+      if (msg.includes('rate limit') || msg.includes('too many') || msg.includes('429')) return { error: t('auth.error.rate_limit') };
+      if (msg.includes('email') || msg.includes('invalid')) return { error: t('auth.error.email') };
+      return { error: msg };
     }
     if (data.user && !data.session) {
       return { error: null, needsConfirmation: true };
@@ -112,7 +114,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cleanEmail = sanitizeEmail(email);
     if (!cleanEmail) return { error: t('auth.error.email') };
     const { error } = await supabase.auth.resend({ type: 'signup', email: cleanEmail });
-    if (error) return { error: t('auth.error.generic') };
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('rate limit') || msg.includes('too many')) return { error: t('auth.error.rate_limit') };
+      return { error: msg };
+    }
     return { error: null };
   }
 
@@ -123,7 +129,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       const msg = error.message.toLowerCase();
       if (msg.includes('email not confirmed')) return { error: t('auth.error.unconfirmed'), needsConfirmation: true };
-      return { error: t('auth.error.invalid') };
+      if (msg.includes('rate limit') || msg.includes('too many') || msg.includes('429')) return { error: t('auth.error.rate_limit') };
+      if (msg.includes('invalid') || msg.includes('credentials')) return { error: t('auth.error.invalid') };
+      return { error: msg };
     }
     if (data.user) await ensureProfile(data.user.id, cleanEmail, undefined);
     return { error: null };
@@ -135,7 +143,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
       redirectTo: window.location.origin,
     });
-    if (error) return { error: t('auth.error.generic') };
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('rate limit') || msg.includes('too many')) return { error: t('auth.error.rate_limit') };
+      return { error: msg };
+    }
     return { error: null };
   }
 
