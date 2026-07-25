@@ -204,11 +204,7 @@ export function Footer() {
           <p className="text-sm text-cream/50">
             © {year} Pelta Nera. {t("footer.rights")}.
           </p>
-          <div className="pt-8 border-t border-cream/15 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-cream/50">
-          <p>© {year} Pelta Nera. {t('footer.rights')}.</p>
           <p className="font-serif italic">Pelta Nera — {t('footer.tagline')}</p>
-        </div>
-
         </div>
       </div>
     </footer>
