@@ -67,21 +67,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function signUp(email: string, password: string, name: string) {
-    const trimmed = email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return { error: t('auth.error.email') };
-    if (password.length < 6) return { error: t('auth.error.weak') };
-    if (!name.trim()) return { error: t('auth.name.required') };
+    const cleanEmail = sanitizeEmail(email);
+    if (!cleanEmail) return { error: t('auth.error.email') };
+    if (password.length < 6 || password.length > 128) return { error: t('auth.error.weak') };
+    const cleanName = sanitizeText(name, MAX_NAME);
+    if (!cleanName) return { error: t('auth.name.required') };
 
     const { data, error } = await supabase.auth.signUp({
-      email: trimmed,
+      email: cleanEmail,
       password,
-      options: { data: { full_name: name.trim() } },
+      options: { data: { full_name: cleanName } },
     });
     if (error) {
       const msg = error.message.toLowerCase();
-      if (msg.includes('already') || msg.includes('registered')) return { error: t('auth.error.exists') };
-      if (msg.includes('password')) return { error: error.message };
-      return { error: error.message };
+      if (msg.includes('already') || msg.includes('registered') || msg.includes('exists')) return { error: t('auth.error.exists') };
+      if (msg.includes('password')) return { error: t('auth.error.weak') };
+      return { error: t('auth.error.generic') };
     }
     if (data.user && !data.session) {
       return { error: null, needsConfirmation: true };

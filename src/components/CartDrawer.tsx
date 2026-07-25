@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowLeft, Loader as Loader2, CircleCheck as CheckCircle2, Phone } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import { sanitizeText, sanitizePhone, MAX_NAME, MAX_ADDRESS, MAX_COMMENT } from '../lib/sanitize';
 
-// Google Apps Script Web App URL — replace with your deployment URL
-const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwcTc8QsfEVx3440DozhVa7sbB5ZZRbgRN2iI2BMxCRuihZS72EZQCXfd1C_eZd7Nm7Jw/exec';
+const GOOGLE_SHEET_URL = import.meta.env.VITE_GOOGLE_SHEET_CART_URL as string;
 
-export function CartDrawer() {
+export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
   const { t, lang } = useLang();
+  const { session } = useAuth();
   const { items, isOpen, close, remove, setQty, total, count, clear } = useCart();
   const [checkout, setCheckout] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', address: '', comment: '' });
@@ -126,6 +127,20 @@ export function CartDrawer() {
           </div>
         ) : checkout ? (
           /* Checkout form */
+          !session ? (
+            <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+              <div className="w-20 h-20 rounded-full bg-brand-50 flex items-center justify-center mb-6">
+                <ShoppingBag size={36} className="text-brand-300" />
+              </div>
+              <p className="text-wine-700 text-lg font-medium mb-1">{t('cart.login_required')}</p>
+              <button
+                onClick={onRequireAuth}
+                className="mt-6 px-8 py-3 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-colors"
+              >
+                {t('cart.login_button')}
+              </button>
+            </div>
+          ) : (
           <div className="flex-1 overflow-y-auto px-6 py-5">
             <div className="space-y-5">
               <Field label={t('cart.name')} value={form.name} onChange={(v) => setForm({ ...form, name: sanitizeText(v, MAX_NAME) })} error={errors.name} />
@@ -186,6 +201,7 @@ export function CartDrawer() {
               </button>
             </div>
           </div>
+          )
         ) : items.length === 0 ? (
           /* Empty cart */
           <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
@@ -240,7 +256,10 @@ export function CartDrawer() {
                 <span className="text-brand-500 text-3xl font-serif font-semibold">{t('common.currency')}{total}</span>
               </div>
               <button
-                onClick={() => setCheckout(true)}
+                onClick={() => {
+                  if (!session) { onRequireAuth(); return; }
+                  setCheckout(true);
+                }}
                 className="w-full py-4 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/30"
               >
                 {t('cart.checkout')}

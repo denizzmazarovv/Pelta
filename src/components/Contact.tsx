@@ -201,7 +201,7 @@ export function Contact() {
 
     try {
       await fetch(
-        "https://script.google.com/macros/s/AKfycbzQ1V8RdvlCK5yVZqfyJNSoOoTqb6sDOHfoDv3VmsTrYPt-5xg13DTxPQK46w6qclrCRA/exec",
+        import.meta.env.VITE_GOOGLE_SHEET_CONTACT_URL as string,
         {
           method: "POST",
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

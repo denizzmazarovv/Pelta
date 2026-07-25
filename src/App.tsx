@@ -30,7 +30,7 @@ function AppContent() {
       <Footer />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
       <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
-      <CartDrawer />
+      <CartDrawer onRequireAuth={() => setAuthOpen(true)} />
     </div>
   );
 }
