@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase, Profile } from '../lib/supabase';
 import { useLang } from './LangContext';
-import { sanitizeEmail, sanitizeText, MAX_NAME, MAX_PASSWORD_MIN } from '../lib/sanitize';
+import { sanitizeEmail, sanitizeText, sanitizeDigits, MAX_NAME, MAX_PASSWORD_MIN } from '../lib/sanitize';
 import type { Session } from '@supabase/supabase-js';
 
 type AuthContextType = {
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signUp(email: string, password: string, name: string) {
     const cleanEmail = sanitizeEmail(email);
     if (!cleanEmail) return { error: t('auth.error.email') };
-    if (password.length < 6 || password.length > 128) return { error: t('auth.error.weak') };
+    if (password.length < MAX_PASSWORD_MIN || password.length > 128) return { error: t('auth.error.weak') };
     const cleanName = sanitizeText(name, MAX_NAME);
     if (!cleanName) return { error: t('auth.name.required') };
 
@@ -99,7 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cleanToken = sanitizeDigits(token, 6);
     if (cleanToken.length !== 6) return { error: t('auth.code.error') };
     const { data, error } = await supabase.auth.verifyOtp({ email: cleanEmail, token: cleanToken, type: 'signup' });
-    if (error) return { error: t('auth.code.error') };
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('expired') || msg.includes('invalid')) return { error: t('auth.code.error') };
+      return { error: t('auth.code.error') };
+    }
     if (data.user) await ensureProfile(data.user.id, cleanEmail, undefined);
     return { error: null };
   }

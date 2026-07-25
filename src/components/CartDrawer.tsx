@@ -3,13 +3,14 @@ import { X, ShoppingBag, Plus, Minus, Trash2, ArrowLeft, Loader as Loader2, Circ
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
+import type { Session } from '@supabase/supabase-js';
 import { sanitizeText, sanitizePhone, MAX_NAME, MAX_ADDRESS, MAX_COMMENT } from '../lib/sanitize';
 
 const GOOGLE_SHEET_URL = import.meta.env.VITE_GOOGLE_SHEET_CART_URL as string;
 
 export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
   const { t, lang } = useLang();
-  const { session } = useAuth();
+  const { session } = useAuth() as { session: Session | null };
   const { items, isOpen, close, remove, setQty, total, count, clear } = useCart();
   const [checkout, setCheckout] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', address: '', comment: '' });
@@ -55,6 +56,8 @@ export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
     const cleanComment = sanitizeText(form.comment, MAX_COMMENT);
     const order = {
       timestamp: new Date().toISOString(),
+      user_id: session?.user?.id ?? '',
+      user_email: session?.user?.email ?? '',
       customer_name: cleanName,
       phone: cleanPhone,
       address: cleanAddress,
@@ -72,14 +75,17 @@ export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
     };
 
     try {
-      await fetch(GOOGLE_SHEET_URL, {
+      const res = await fetch(GOOGLE_SHEET_URL, {
         method: 'POST',
-        mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(order),
       });
-      setStatus('success');
-      clear();
+      if (res.ok || res.type === 'opaque') {
+        setStatus('success');
+        clear();
+      } else {
+        setStatus('error');
+      }
     } catch {
       setStatus('error');
     }
