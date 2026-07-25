@@ -141,7 +141,9 @@ export function Footer() {
                   <p className="text-xs uppercase tracking-wider text-cream/40">
                     {t("footer.founder")}
                   </p>
-                  <p className="text-cream">Deniz Oztyurk</p>
+                  <a href="https://instagram.com/deniz4me" target="_blank" rel="noopener noreferrer">
+                    <p className="text-cream ">Deniz Oztyurk</p>
+                  </a>
                 </div>
               </div>
 
