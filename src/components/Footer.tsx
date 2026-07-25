@@ -15,10 +15,8 @@ export function Footer() {
   return (
     <footer className="bg-wine-500 border-t border-cream/10 text-cream/80">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 py-16">
-
         {/* Верхняя часть */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
           {/* Бренд */}
           <div>
             <div className="flex items-center gap-2 mb-5">
@@ -30,9 +28,41 @@ export function Footer() {
               </span>
             </div>
 
-            <p className="text-sm leading-7 text-cream/60 max-w-xs">
+            <p className="text-sm leading-7 text-cream/60 max-w-xs mb-8">
               {t("footer.tagline")}
             </p>
+
+            <div className="space-y-5 text-sm">
+              <div className="flex gap-3">
+                <User size={16} className="mt-1 shrink-0 text-cream/60" />
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-cream/40">
+                    Founder
+                  </p>
+                  <p className="text-cream">Deniz Oztyurk</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <FileText size={16} className="mt-1 shrink-0 text-cream/60" />
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-cream/40">
+                    Registration
+                  </p>
+                  <p>No. 000000000</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <MapPin size={16} className="mt-1 shrink-0 text-cream/60" />
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-cream/40">
+                    Based in
+                  </p>
+                  <p>Tashkent, Uzbekistan</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Каталог */}
@@ -135,42 +165,6 @@ export function Footer() {
               </li>
             </ul>
           </div>
-
-          {/* Компания */}
-          <div>
-            <div className="space-y-5 text-sm">
-              <div className="flex gap-3">
-                <User size={16} className="mt-1 shrink-0 text-cream/60" />
-                <div>
-                  <p className="text-xs uppercase text-cream/40 tracking-wider">
-                    Founder
-                  </p>
-                  <p className="text-cream">Deniz Oztyurk</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <FileText size={16} className="mt-1 shrink-0 text-cream/60" />
-                <div>
-                  <p className="text-xs uppercase text-cream/40 tracking-wider">
-                    Registration
-                  </p>
-                  <p>No. 000000000</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <MapPin size={16} className="mt-1 shrink-0 text-cream/60" />
-                <div>
-                  <p className="text-xs uppercase text-cream/40 tracking-wider">
-                    Based in
-                  </p>
-                  <p>Tashkent, Uzbekistan</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
 
         {/* Нижняя часть */}
@@ -179,11 +173,10 @@ export function Footer() {
             © {year} Pelta Nera. {t("footer.rights")}.
           </p>
 
-          <p className="font-serif italic">
+          <p className="font-serif italic text-cream/60">
             Pelta Nera — {t("footer.tagline")}
           </p>
         </div>
-
       </div>
     </footer>
   );
