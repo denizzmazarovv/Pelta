@@ -204,9 +204,6 @@ export function Footer() {
           <p className="text-sm text-cream/50">
             © {year} Pelta Nera. {t("footer.rights")}.
           </p>
-
-          <div className="hidden md:block h-px w-20 bg-cream/20" />
-
           <p className="font-serif italic tracking-wide text-cream/60">
             Crafted in Uzbekistan.
           </p>
