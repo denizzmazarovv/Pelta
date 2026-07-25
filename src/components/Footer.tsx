@@ -36,12 +36,25 @@ export function Footer() {
             </ul>
           </div>
         </div>
+        <div className="mb-12 pt-8 border-t border-cream/15">
+            <div>
+              <h3 className="text-cream/70 text-[11px] uppercase tracking-wider mb-2 font-medium">
+                Details
+              </h3>
+              <p>Founder: Deniz Oztyurk</p>
+              <p>Address: Tashkent, Amir Temur St.</p>
+              <p>Registration: No. 000000000</p>
+              <p>Phone: +998 90 939 12 16</p>
+              <p>Email: peltanera@gmail.com</p>
+              <p>Based in Tashkent, Uzbekistan</p>
+            </div>
+          </div>
+        </div>
 
         <div className="pt-8 border-t border-cream/15 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-cream/50">
           <p>© {year} Pelta Nera. {t('footer.rights')}.</p>
           <p className="font-serif italic">Pelta Nera — {t('footer.tagline')}</p>
         </div>
-      </div>
     </footer>
   );
 }
