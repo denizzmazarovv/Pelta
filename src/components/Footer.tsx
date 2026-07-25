@@ -28,7 +28,43 @@ export function Footer() {
               <span className="font-serif text-3xl font-light italic text-cream/80">
                 Nera
               </span>
+              <div>
+            <div className="space-y-5 text-sm">
+              <div className="flex gap-3">
+                <User size={16} className="mt-1 shrink-0 text-cream/60"/>
+                <div>
+                  <p className="text-xs uppercase text-cream/40 tracking-wider">Founder</p>
+                  <p className="text-cream">Deniz Oztyurk</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <FileText size={16} className="mt-1 shrink-0 text-cream/60" />
+                <div>
+                  <p className="text-xs uppercase text-cream/40 tracking-wider">Registration</p>
+                  <p>No. 000000000</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <MapPin
+                  size={16}
+                  className="mt-1 shrink-0 text-cream/60"
+                />
+
+                <div>
+                  <p className="text-xs uppercase text-cream/40 tracking-wider">
+                    Based in
+                  </p>
+
+                  <p>Tashkent, Uzbekistan</p>
+                </div>
+              </div>
+
             </div>
+          </div>
+
+        </div>
+      </div>
 
             <p className="text-sm leading-7 text-cream/60 max-w-xs">
               {t("footer.tagline")}
@@ -138,65 +174,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Компания */}
-          <div>
-            <h3 className="text-xs uppercase tracking-[0.25em] text-cream mb-5">
-              Company
-            </h3>
-
-            <div className="space-y-5 text-sm">
-
-              <div className="flex gap-3">
-                <User
-                  size={16}
-                  className="mt-1 shrink-0 text-cream/60"
-                />
-
-                <div>
-                  <p className="text-xs uppercase text-cream/40 tracking-wider">
-                    Founder
-                  </p>
-
-                  <p className="text-cream">
-                    Deniz Oztyurk
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <FileText
-                  size={16}
-                  className="mt-1 shrink-0 text-cream/60"
-                />
-
-                <div>
-                  <p className="text-xs uppercase text-cream/40 tracking-wider">
-                    Registration
-                  </p>
-
-                  <p>No. 000000000</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <MapPin
-                  size={16}
-                  className="mt-1 shrink-0 text-cream/60"
-                />
-
-                <div>
-                  <p className="text-xs uppercase text-cream/40 tracking-wider">
-                    Based in
-                  </p>
-
-                  <p>Tashkent, Uzbekistan</p>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
+          
 
         {/* Нижняя часть */}
         <div className="mt-16 pt-8 border-t border-cream/10 flex flex-col md:flex-row items-center justify-between gap-4">
