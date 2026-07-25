@@ -16,10 +16,11 @@ export function Footer() {
     <footer className="bg-wine-500 border-t border-cream/10 text-cream/80">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 py-16">
         {/* Верхняя часть */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
-          {/* Бренд + Логотип */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+          {/* Колонка 1: Логотип + Каталог */}
           <div>
-            <div className="flex items-center gap-2 mb-5">
+            {/* Логотип */}
+            <div className="flex items-center gap-2 mb-8">
               <span className="font-serif text-3xl font-semibold text-cream">
                 Pelta
               </span>
@@ -27,76 +28,45 @@ export function Footer() {
                 Nera
               </span>
             </div>
-            <div className="space-y-5 text-sm">
-              <div className="flex gap-3">
-                <User size={16} className="mt-1 shrink-0 text-cream/60" />
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-cream/40">
-                    Founder
-                  </p>
-                  <p className="text-cream">Deniz Oztyurk</p>
-                </div>
-              </div>
 
-              <div className="flex gap-3">
-                <FileText size={16} className="mt-1 shrink-0 text-cream/60" />
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-cream/40">
-                    Registration
-                  </p>
-                  <p>No. 000000000</p>
-                </div>
-              </div>
+            {/* Каталог */}
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.25em] text-cream mb-5">
+                {t("nav.catalog")}
+              </h3>
 
-              <div className="flex gap-3">
-                <MapPin size={16} className="mt-1 shrink-0 text-cream/60" />
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-cream/40">
-                    Based in
-                  </p>
-                  <p>Tashkent, Uzbekistan</p>
-                </div>
-              </div>
+              <ul className="space-y-3">
+                <li>
+                  <a
+                    href="#catalog"
+                    className="text-cream/60 hover:text-cream transition-colors"
+                  >
+                    {t("cat.cardholder")}
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    href="#catalog"
+                    className="text-cream/60 hover:text-cream transition-colors"
+                  >
+                    {t("cat.bag")}
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    href="#catalog"
+                    className="text-cream/60 hover:text-cream transition-colors"
+                  >
+                    {t("cat.belt")}
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
 
-          {/* Каталог */}
-          <div>
-            <h3 className="text-xs uppercase tracking-[0.25em] text-cream mb-5">
-              {t("nav.catalog")}
-            </h3>
-
-            <ul className="space-y-3">
-              <li>
-                <a
-                  href="#catalog"
-                  className="text-cream/60 hover:text-cream transition-colors"
-                >
-                  {t("cat.cardholder")}
-                </a>
-              </li>
-
-              <li>
-                <a
-                  href="#catalog"
-                  className="text-cream/60 hover:text-cream transition-colors"
-                >
-                  {t("cat.bag")}
-                </a>
-              </li>
-
-              <li>
-                <a
-                  href="#catalog"
-                  className="text-cream/60 hover:text-cream transition-colors"
-                >
-                  {t("cat.belt")}
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Контакты */}
+          {/* Колонка 2: Контакты */}
           <div>
             <h3 className="text-xs uppercase tracking-[0.25em] text-cream mb-5">
               {t("nav.contact")}
@@ -161,19 +131,48 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Основатель (Founder) - дополнительная информация */}
+          {/* Колонка 3: О бренде (Founder + информация) */}
           <div>
             <h3 className="text-xs uppercase tracking-[0.25em] text-cream mb-5">
-              {t("nav.about") || "About"}
+              {t("nav.about") || "About Brand"}
             </h3>
 
-            <div className="space-y-4 text-sm text-cream/60">
-              <p>
-                {t("footer.description") || "Luxury leather accessories crafted with passion and precision."}
-              </p>
-              <p className="text-cream/40 text-xs">
-                {t("footer.established") || "Established 2024"}
-              </p>
+            <div className="space-y-5">
+              <div className="flex gap-3">
+                <User size={16} className="mt-1 shrink-0 text-cream/60" />
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-cream/40">
+                    Founder
+                  </p>
+                  <p className="text-cream">Deniz Oztyurk</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <FileText size={16} className="mt-1 shrink-0 text-cream/60" />
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-cream/40">
+                    Registration
+                  </p>
+                  <p>No. 000000000</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <MapPin size={16} className="mt-1 shrink-0 text-cream/60" />
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-cream/40">
+                    Based in
+                  </p>
+                  <p>Tashkent, Uzbekistan</p>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-cream/10">
+                <p className="text-sm text-cream/60 italic">
+                  {t("footer.tagline") || "Luxury leather accessories crafted with passion"}
+                </p>
+              </div>
             </div>
           </div>
         </div>
