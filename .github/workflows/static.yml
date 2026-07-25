@@ -31,6 +31,8 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_GOOGLE_SHEET_CART_URL: ${{ secrets.VITE_GOOGLE_SHEET_CART_URL }}
+          VITE_GOOGLE_SHEET_CONTACT_URL: ${{ secrets.VITE_GOOGLE_SHEET_CONTACT_URL }}
 
       - uses: actions/configure-pages@v5
 
