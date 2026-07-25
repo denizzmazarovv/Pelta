@@ -28,43 +28,7 @@ export function Footer() {
               <span className="font-serif text-3xl font-light italic text-cream/80">
                 Nera
               </span>
-              <div>
-            <div className="space-y-5 text-sm">
-              <div className="flex gap-3">
-                <User size={16} className="mt-1 shrink-0 text-cream/60"/>
-                <div>
-                  <p className="text-xs uppercase text-cream/40 tracking-wider">Founder</p>
-                  <p className="text-cream">Deniz Oztyurk</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <FileText size={16} className="mt-1 shrink-0 text-cream/60" />
-                <div>
-                  <p className="text-xs uppercase text-cream/40 tracking-wider">Registration</p>
-                  <p>No. 000000000</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <MapPin
-                  size={16}
-                  className="mt-1 shrink-0 text-cream/60"
-                />
-
-                <div>
-                  <p className="text-xs uppercase text-cream/40 tracking-wider">
-                    Based in
-                  </p>
-
-                  <p>Tashkent, Uzbekistan</p>
-                </div>
-              </div>
-
             </div>
-          </div>
-
-        </div>
-      </div>
 
             <p className="text-sm leading-7 text-cream/60 max-w-xs">
               {t("footer.tagline")}
@@ -114,7 +78,6 @@ export function Footer() {
             </h3>
 
             <ul className="space-y-4 text-sm">
-
               <li>
                 <a
                   href="tel:+998909391216"
@@ -170,20 +133,57 @@ export function Footer() {
                   Tashkent, Uzbekistan
                 </a>
               </li>
-
             </ul>
           </div>
 
-          
+          {/* Компания */}
+          <div>
+            <div className="space-y-5 text-sm">
+              <div className="flex gap-3">
+                <User size={16} className="mt-1 shrink-0 text-cream/60" />
+                <div>
+                  <p className="text-xs uppercase text-cream/40 tracking-wider">
+                    Founder
+                  </p>
+                  <p className="text-cream">Deniz Oztyurk</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <FileText size={16} className="mt-1 shrink-0 text-cream/60" />
+                <div>
+                  <p className="text-xs uppercase text-cream/40 tracking-wider">
+                    Registration
+                  </p>
+                  <p>No. 000000000</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <MapPin size={16} className="mt-1 shrink-0 text-cream/60" />
+                <div>
+                  <p className="text-xs uppercase text-cream/40 tracking-wider">
+                    Based in
+                  </p>
+                  <p>Tashkent, Uzbekistan</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
 
         {/* Нижняя часть */}
         <div className="mt-16 pt-8 border-t border-cream/10 flex flex-col md:flex-row items-center justify-between gap-4">
-
           <p className="text-sm text-cream/50">
             © {year} Pelta Nera. {t("footer.rights")}.
           </p>
-          <p className="font-serif italic">Pelta Nera — {t('footer.tagline')}</p>
+
+          <p className="font-serif italic">
+            Pelta Nera — {t("footer.tagline")}
+          </p>
         </div>
+
       </div>
     </footer>
   );
