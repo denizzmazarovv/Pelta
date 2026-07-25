@@ -15,55 +15,52 @@ export function Footer() {
   return (
     <footer className="bg-wine-500 border-t border-cream/10 text-cream/80">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 py-16">
-        {/* Верхняя часть */}
+        {/* Логотип на всю ширину */}
+        <div className="flex items-center justify-center gap-2 mb-12">
+          <span className="font-serif text-4xl sm:text-5xl font-semibold text-cream">
+            Pelta
+          </span>
+          <span className="font-serif text-4xl sm:text-5xl font-light italic text-cream/80">
+            Nera
+          </span>
+        </div>
+
+        {/* Основная сетка с элементами на одном уровне */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
-          {/* Колонка 1: Логотип + Каталог */}
+          {/* Колонка 1: Каталог */}
           <div>
-            {/* Логотип */}
-            <div className="flex items-center gap-2 mb-8 width-full">
-              <span className="font-serif text-3xl font-semibold text-cream">
-                Pelta
-              </span>
-              <span className="font-serif text-3xl font-light italic text-cream/80">
-                Nera
-              </span>
-            </div>
+            <h3 className="text-xs uppercase tracking-[0.25em] text-cream mb-5">
+              {t("nav.catalog")}
+            </h3>
 
-            {/* Каталог */}
-            <div>
-              <h3 className="text-xs uppercase tracking-[0.25em] text-cream mb-5">
-                {t("nav.catalog")}
-              </h3>
+            <ul className="space-y-3">
+              <li>
+                <a
+                  href="#catalog"
+                  className="text-cream/60 hover:text-cream transition-colors"
+                >
+                  {t("cat.cardholder")}
+                </a>
+              </li>
 
-              <ul className="space-y-3">
-                <li>
-                  <a
-                    href="#catalog"
-                    className="text-cream/60 hover:text-cream transition-colors"
-                  >
-                    {t("cat.cardholder")}
-                  </a>
-                </li>
+              <li>
+                <a
+                  href="#catalog"
+                  className="text-cream/60 hover:text-cream transition-colors"
+                >
+                  {t("cat.bag")}
+                </a>
+              </li>
 
-                <li>
-                  <a
-                    href="#catalog"
-                    className="text-cream/60 hover:text-cream transition-colors"
-                  >
-                    {t("cat.bag")}
-                  </a>
-                </li>
-
-                <li>
-                  <a
-                    href="#catalog"
-                    className="text-cream/60 hover:text-cream transition-colors"
-                  >
-                    {t("cat.belt")}
-                  </a>
-                </li>
-              </ul>
-            </div>
+              <li>
+                <a
+                  href="#catalog"
+                  className="text-cream/60 hover:text-cream transition-colors"
+                >
+                  {t("cat.belt")}
+                </a>
+              </li>
+            </ul>
           </div>
 
           {/* Колонка 2: Контакты */}
@@ -131,7 +128,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Колонка 3: О бренде (Founder + информация) */}
+          {/* Колонка 3: О бренде */}
           <div>
             <h3 className="text-xs uppercase tracking-[0.25em] text-cream mb-5">
               {t("nav.about") || "About Brand"}
