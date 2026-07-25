@@ -20,7 +20,7 @@ export function Footer() {
           {/* Колонка 1: Логотип + Каталог */}
           <div>
             {/* Логотип */}
-            <div className="flex items-center gap-2 mb-8">
+            <div className="flex items-center gap-2 mb-8 width-full">
               <span className="font-serif text-3xl font-semibold text-cream">
                 Pelta
               </span>
