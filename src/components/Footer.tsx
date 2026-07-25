@@ -27,11 +27,6 @@ export function Footer() {
                 Nera
               </span>
             </div>
-
-            <p className="text-sm leading-7 text-cream/60 max-w-xs mb-8">
-              {t("footer.tagline")}
-            </p>
-
             <div className="space-y-5 text-sm">
               <div className="flex gap-3">
                 <User size={16} className="mt-1 shrink-0 text-cream/60" />
