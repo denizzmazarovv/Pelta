@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send, Phone, MapPin, Mail, Loader as Loader2, CircleCheck as CheckCircle2, Camera } from 'lucide-react';
+import { Send, Phone, MapPin, Mail, Loader as Loader2, CircleCheck as CheckCircle2, } from 'lucide-react';
 import { useLang } from '../context/LangContext';
 import { useReveal } from '../hooks/useReveal';
 import { sanitizeText, sanitizeEmail, sanitizePhone, MAX_NAME, MAX_MESSAGE, MAX_EMAIL } from '../lib/sanitize';
