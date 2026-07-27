@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Send, Phone, MapPin, Mail, Loader as Loader2, CircleCheck as CheckCircle2, } from 'lucide-react';
+import { Send, Phone, MapPin, Mail, Loader as Loader2, CircleCheck as CheckCircle2, Camera } from 'lucide-react';
 import { useLang } from '../context/LangContext';
 import { useReveal } from '../hooks/useReveal';
 import { sanitizeText, sanitizeEmail, sanitizePhone, MAX_NAME, MAX_MESSAGE, MAX_EMAIL } from '../lib/sanitize';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
-import { CgInstagram } from 'react-icons/cg';
 
 export function Contact() {
   const [phone, setPhone] = useState('');
@@ -257,7 +256,7 @@ export function Contact() {
             />
             <ContactItem
               href="https://instagram.com/peltanera"
-              icon={<CgInstagram size={30} />}
+              icon={<Camera size={30} />}
               label="@peltanera"
             />
           </div>
