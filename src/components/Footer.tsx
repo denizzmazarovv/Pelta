@@ -92,7 +92,7 @@ export function Footer() {
 
               <li>
                 <a
-                  href="https://t.me/peltanera"
+                  href="https://t.me/+eOUaJZn_SsNhNzdi"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 text-cream/60 hover:text-cream transition-colors"

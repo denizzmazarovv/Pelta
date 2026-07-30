@@ -250,7 +250,7 @@ export function Contact() {
               label="Tashkent, Amir Temur St."
             />
             <ContactItem
-              href="https://t.me/peltanera"
+              href="https://t.me/+eOUaJZn_SsNhNzdi"
               icon={<Send size={30} />}
               label="@peltanera"
             />
