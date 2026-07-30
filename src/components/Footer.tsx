@@ -148,16 +148,6 @@ export function Footer() {
               </div>
 
               <div className="flex gap-3">
-                <FileText size={16} className="mt-1 shrink-0 text-cream/60" />
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-cream/40">
-                    {t("footer.registration")}
-                  </p>
-                  <p>No. 000000000</p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
                 <MapPin size={16} className="mt-1 shrink-0 text-cream/60" />
                 <div>
                   <p className="text-xs uppercase tracking-wider text-cream/40">
