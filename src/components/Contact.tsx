@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Send, Phone, MapPin, Mail, Loader as Loader2, CircleCheck as CheckCircle2, Camera } from 'lucide-react';
+import { Send, Phone, MapPin, Mail, Loader as Loader2, CircleCheck as CheckCircle2, } from 'lucide-react';
 import { useLang } from '../context/LangContext';
 import { useReveal } from '../hooks/useReveal';
 import { sanitizeText, sanitizeEmail, sanitizePhone, MAX_NAME, MAX_MESSAGE, MAX_EMAIL } from '../lib/sanitize';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
-import { BsInstagram } from 'react-icons/bs';
+
 import { FaInstagram, FaTelegramPlane } from 'react-icons/fa';
 
 export function Contact() {
