@@ -5,6 +5,8 @@ import { useReveal } from '../hooks/useReveal';
 import { sanitizeText, sanitizeEmail, sanitizePhone, MAX_NAME, MAX_MESSAGE, MAX_EMAIL } from '../lib/sanitize';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
+import { BsInstagram } from 'react-icons/bs';
+import { FaInstagram } from 'react-icons/fa';
 
 export function Contact() {
   const [phone, setPhone] = useState('');
@@ -256,7 +258,7 @@ export function Contact() {
             />
             <ContactItem
               href="https://instagram.com/peltanera"
-              icon={<Camera size={30} />}
+              icon={<FaInstagram size={30} />}
               label="@peltanera"
             />
           </div>
