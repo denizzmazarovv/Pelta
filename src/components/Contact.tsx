@@ -6,7 +6,7 @@ import { sanitizeText, sanitizeEmail, sanitizePhone, MAX_NAME, MAX_MESSAGE, MAX_
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { BsInstagram } from 'react-icons/bs';
-import { FaInstagram } from 'react-icons/fa';
+import { FaInstagram, FaTelegramPlane } from 'react-icons/fa';
 
 export function Contact() {
   const [phone, setPhone] = useState('');
@@ -253,7 +253,7 @@ export function Contact() {
             />
             <ContactItem
               href="https://t.me/+eOUaJZn_SsNhNzdi"
-              icon={<Send size={30} />}
+              icon={<FaTelegramPlane size={30} />}
               label="@peltanera"
             />
             <ContactItem
