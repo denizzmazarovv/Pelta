@@ -1,16 +1,31 @@
 import { useState, useEffect } from 'react';
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowLeft, Loader as Loader2, CircleCheck as CheckCircle2, Phone } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
-import type { Session } from '@supabase/supabase-js';
 import { sanitizeText, sanitizePhone, MAX_NAME, MAX_ADDRESS, MAX_COMMENT } from '../lib/sanitize';
 
 const GOOGLE_SHEET_URL = import.meta.env.VITE_GOOGLE_SHEET_CART_URL as string;
+const RATE_LIMIT_WINDOW = 10 * 60 * 1000;
+const RATE_LIMIT_MAX = 5;
 
-export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
+function isRateLimited(): boolean {
+  const now = Date.now();
+  const stored = localStorage.getItem('cartSubmissions');
+  const submissions: number[] = stored ? JSON.parse(stored) : [];
+  const recent = submissions.filter((time) => now - time <= RATE_LIMIT_WINDOW);
+  return recent.length >= RATE_LIMIT_MAX;
+}
+
+function recordSubmission() {
+  const now = Date.now();
+  const stored = localStorage.getItem('cartSubmissions');
+  const submissions: number[] = stored ? JSON.parse(stored) : [];
+  submissions.push(now);
+  localStorage.setItem('cartSubmissions', JSON.stringify(submissions));
+}
+
+export function CartDrawer() {
   const { t, lang } = useLang();
-  const { session } = useAuth() as { session: Session | null };
   const { items, isOpen, close, remove, setQty, total, count, clear } = useCart();
   const [checkout, setCheckout] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', address: '', comment: '' });
@@ -49,7 +64,13 @@ export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
 
   async function submitOrder() {
     if (!validate()) return;
+    if (isRateLimited()) {
+      setStatus('error');
+      setErrors({ form: t('cart.error_rate_limit') });
+      return;
+    }
     setStatus('submitting');
+    setErrors({});
     const cleanName = sanitizeText(form.name, MAX_NAME);
     const cleanPhone = sanitizePhone(form.phone);
     const cleanAddress = sanitizeText(form.address, MAX_ADDRESS);
@@ -82,6 +103,7 @@ export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
         body: JSON.stringify(order),
       });
       setStatus('success');
+      recordSubmission();
       clear();
     } catch {
       setStatus('error');
@@ -129,21 +151,6 @@ export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
             </button>
           </div>
         ) : checkout ? (
-          /* Checkout form */
-          !session ? (
-            <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-              <div className="w-20 h-20 rounded-full bg-brand-50 flex items-center justify-center mb-6">
-                <ShoppingBag size={36} className="text-brand-300" />
-              </div>
-              <p className="text-wine-700 text-lg font-medium mb-1">{t('cart.login_required')}</p>
-              <button
-                onClick={onRequireAuth}
-                className="mt-6 px-8 py-3 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-colors"
-              >
-                {t('cart.login_button')}
-              </button>
-            </div>
-          ) : (
           <div className="flex-1 overflow-y-auto px-6 py-5">
             <div className="space-y-5">
               <Field label={t('cart.name')} value={form.name} onChange={(v) => setForm({ ...form, name: sanitizeText(v, MAX_NAME) })} error={errors.name} />
@@ -188,7 +195,7 @@ export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
               </div>
 
               {status === 'error' && (
-                <p className="text-wine-500 text-sm text-center">{t('cart.error')}</p>
+                <p className="text-wine-500 text-sm text-center">{errors.form ?? t('cart.error')}</p>
               )}
 
               <button
@@ -204,7 +211,6 @@ export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
               </button>
             </div>
           </div>
-          )
         ) : items.length === 0 ? (
           /* Empty cart */
           <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
@@ -259,10 +265,7 @@ export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
                 <span className="text-brand-500 text-3xl font-serif font-semibold">{t('common.currency')}{total}</span>
               </div>
               <button
-                onClick={() => {
-                  if (!session) { onRequireAuth(); return; }
-                  setCheckout(true);
-                }}
+                onClick={() => setCheckout(true)}
                 className="w-full py-4 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/30"
               >
                 {t('cart.checkout')}
