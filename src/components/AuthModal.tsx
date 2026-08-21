@@ -87,6 +87,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     if (error) setError(error);
     else if (needsConfirmation) {
       setError(t('auth.error.unconfirmed'));
+      setMode('reset');
     } else {
       reset();
       onClose();

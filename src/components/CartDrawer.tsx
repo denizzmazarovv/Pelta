@@ -75,17 +75,14 @@ export function CartDrawer({ onRequireAuth }: { onRequireAuth: () => void }) {
     };
 
     try {
-      const res = await fetch(GOOGLE_SHEET_URL, {
+      await fetch(GOOGLE_SHEET_URL, {
         method: 'POST',
+        mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(order),
       });
-      if (res.ok || res.type === 'opaque') {
-        setStatus('success');
-        clear();
-      } else {
-        setStatus('error');
-      }
+      setStatus('success');
+      clear();
     } catch {
       setStatus('error');
     }

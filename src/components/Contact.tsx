@@ -215,9 +215,7 @@ export function Contact() {
       recordSubmission();
       setSent(true);
     } catch {
-      setStatusMessage(t('contact.success'));
-      recordSubmission();
-      setSent(true);
+      setStatusMessage(t('contact.error'));
     } finally {
       setBusy(false);
     }
