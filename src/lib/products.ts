@@ -40,7 +40,7 @@ export const products: Product[] = [
     desc_ru: 'Компактный кардхолдер на 6 карт из кожи растительного дубления.',
     desc_uz: 'O‘simlik bilan oshlangan teridan 6 ta karta uchun ixcham kartholder.',
     desc_en: 'Compact 6-card holder in vegetable-tanned leather.',
-    price: 45,
+    price: 77,
     image: '/images/products/pelta_denim.jpg',
     gallery: [
       '/images/products/pelta_denim.jpg',
