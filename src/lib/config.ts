@@ -5,6 +5,17 @@
 export const SHEET_URL: string =
   (import.meta.env.VITE_GOOGLE_SHEET_URL as string | undefined) || '';
 
+// Supabase (регистрация и вход). Берётся из секретов GitHub
+// VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY (Settings → Secrets → Actions).
+// anon-ключ публичный, его можно хранить в коде. service_role — НИКОГДА.
+export const SUPABASE_URL: string = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || '';
+export const SUPABASE_ANON_KEY: string = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || '';
+
+// Cloudflare Turnstile — защита от ботов на формах входа (необязательно).
+// Включайте одновременно здесь и в Supabase: Authentication → Attack Protection.
+export const TURNSTILE_SITE_KEY: string =
+  (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) || '';
+
 export const CONTACTS = {
   company: 'Pelta Nera',
   ceo: 'Deniz Oztyurk',

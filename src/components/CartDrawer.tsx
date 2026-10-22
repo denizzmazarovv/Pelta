@@ -12,7 +12,7 @@ import { Mark } from './Logo';
 export function CartDrawer() {
   const { t, lang } = useLang();
   const { items, isOpen, close, remove, setQty, total, count, clear } = useCart();
-  const { profile } = useProfile();
+  const { profile, session } = useProfile();
   const [checkout, setCheckout] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', address: '', comment: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -64,7 +64,8 @@ export function CartDrawer() {
       await sendToSheet('order', {
         name: form.name.slice(0, MAX_NAME),
         phone: sanitizePhone(form.phone),
-        email: profile?.email ?? '',
+        email: session?.user.email ?? '',
+        user_id: session?.user.id ?? '',
         address: form.address.slice(0, MAX_ADDRESS),
         comment: form.comment.slice(0, MAX_COMMENT),
         total,

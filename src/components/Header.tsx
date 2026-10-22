@@ -49,7 +49,7 @@ function useCrumbs(route: Route) {
 export function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
   const { t, lang, setLang } = useLang();
   const { count, open } = useCart();
-  const { profile, openRegister } = useProfile();
+  const { session, profile, openRegister } = useProfile();
   const crumbs = useCrumbs(route);
 
   return (
@@ -106,7 +106,7 @@ export function Header({ route, onMenu }: { route: Route; onMenu: () => void }) 
             ))}
           </div>
           <button onClick={openRegister} className="hidden lg:block link-u max-w-[160px] truncate">
-            {profile ? profile.name.split(' ')[0] : t('nav.signup')}
+            {session ? profile?.name.split(' ')[0] || t('nav.account') : t('nav.signin')}
           </button>
           <button onClick={open} className="link-u whitespace-nowrap" aria-label={t('nav.bag')}>
             <span className="hidden sm:inline">{t('nav.bag')} </span>

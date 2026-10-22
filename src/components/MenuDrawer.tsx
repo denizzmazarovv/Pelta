@@ -18,7 +18,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 export function MenuDrawer({ open, onClose, route }: { open: boolean; onClose: () => void; route: Route }) {
   const { t, lang, setLang } = useLang();
-  const { profile, openRegister } = useProfile();
+  const { session, profile, openRegister } = useProfile();
 
   useEffect(() => {
     if (!open) return;
@@ -99,7 +99,7 @@ export function MenuDrawer({ open, onClose, route }: { open: boolean; onClose: (
                 openRegister();
               }}
               className="block link-u uppercase text-left">
-              {profile ? `${t('reg.hello')}, ${profile.name.split(' ')[0]}` : t('nav.signup')}
+              {session ? profile?.name ? `${t('reg.hello')}, ${profile.name.split(' ')[0]}` : t('nav.account') : `${t('nav.signin')} / ${t('nav.signup')}`}
             </button>
           </Section>
 
