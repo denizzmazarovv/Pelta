@@ -13,15 +13,17 @@ export function Arrow({ size = 12 }: { size?: number }) {
   );
 }
 
-export function Check({ checked }: { checked: boolean }) {
+/** Чекбокс-лепесток: контур — не выбрано, чёрная заливка — выбрано. */
+export function Check({ checked, size = 14 }: { checked: boolean; size?: number }) {
   return (
-    <span
-      className={`inline-flex w-[13px] h-[13px] shrink-0 items-center justify-center transition-colors ${
-        checked ? 'text-ink' : 'text-ink/35'
-      }`}
-      aria-hidden="true"
-    >
-      <Mark size={13} />
+    <span className="relative inline-flex shrink-0 text-ink" style={{ width: size, height: size }} aria-hidden="true">
+      <Mark size={size} outline className="absolute inset-0" />
+      <Mark
+        size={size}
+        className={`absolute inset-0 transition-[opacity,transform] duration-200 ${
+          checked ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+        }`}
+      />
     </span>
   );
 }

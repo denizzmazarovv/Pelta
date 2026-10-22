@@ -7,6 +7,7 @@ import '@fontsource/fira-sans-condensed/500.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 import '@fontsource/inter/400.css';
+import '@fontsource/arya/400.css';
 import './index.css';
 
 if ('scrollRestoration' in history) {

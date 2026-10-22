@@ -1,5 +1,14 @@
 /** Знак Pelta Nera — четыре лепестка. */
-export function Mark({ size = 24, className = '' }: { size?: number; className?: string }) {
+export function Mark({
+  size = 24,
+  className = '',
+  outline = false,
+}: {
+  size?: number;
+  className?: string;
+  /** Только контур лепестков (без заливки) */
+  outline?: boolean;
+}) {
   const petal = 'M50 49 C30 50 14 40 11 11 C40 14 50 30 51 50 Z';
   return (
     <svg
@@ -7,7 +16,10 @@ export function Mark({ size = 24, className = '' }: { size?: number; className?:
       height={size}
       viewBox="0 0 100 100"
       className={className}
-      fill="currentColor"
+      fill={outline ? 'none' : 'currentColor'}
+      stroke={outline ? 'currentColor' : 'none'}
+      strokeWidth={outline ? 6 : 0}
+      strokeLinejoin="round"
       aria-hidden="true"
     >
       {[0, 90, 180, 270].map((r) => (
@@ -19,7 +31,7 @@ export function Mark({ size = 24, className = '' }: { size?: number; className?:
 
 export function Wordmark({ className = '' }: { className?: string }) {
   return (
-    <span className={`font-display font-normal tracking-[0.01em] leading-none whitespace-nowrap ${className}`}>
+    <span className={`font-logo font-normal tracking-[0.01em] leading-none whitespace-nowrap ${className}`}>
       Pelta Nera
     </span>
   );

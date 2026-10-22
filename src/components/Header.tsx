@@ -6,6 +6,7 @@ import { LANGS } from '../lib/i18n';
 import { href, type Route } from '../lib/router';
 import { findProduct } from '../lib/products';
 import { Wordmark } from './Logo';
+import { useHeaderHidden } from '../lib/useHeaderHidden';
 
 export function MenuIcon() {
   return (
@@ -51,9 +52,14 @@ export function Header({ route, onMenu }: { route: Route; onMenu: () => void }) 
   const { count, open } = useCart();
   const { session, profile, openRegister } = useProfile();
   const crumbs = useCrumbs(route);
+  const hidden = useHeaderHidden();
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 bg-white pt-safe">
+    <header
+      className={`fixed top-0 inset-x-0 z-50 bg-white pt-safe transition-transform duration-300 ease-out ${
+        hidden ? '-translate-y-full' : 'translate-y-0'
+      }`}
+    >
       <div className="relative h-header flex items-center px-4 sm:px-5">
         {/* Левая часть */}
         <div className="flex items-center min-w-0 flex-1">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Category } from './products';
+import { showHeader } from './useHeaderHidden';
 
 export type Route =
   | { name: 'catalog'; category: Category | 'all' }
@@ -7,7 +8,7 @@ export type Route =
   | { name: 'about' }
   | { name: 'contact' };
 
-const CATS = ['cardholder', 'bag', 'belt'];
+const CATS = ['cardholder', 'keychain', 'bag', 'belt'];
 
 export function parseHash(hash: string): Route {
   const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
@@ -33,6 +34,7 @@ export function useRoute(): Route {
     const onChange = () => {
       setRoute(parseHash(window.location.hash));
       window.scrollTo(0, 0);
+      showHeader();
     };
     window.addEventListener('hashchange', onChange);
     return () => window.removeEventListener('hashchange', onChange);

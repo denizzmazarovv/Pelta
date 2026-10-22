@@ -9,14 +9,17 @@ type LangContextType = {
 
 const LangContext = createContext<LangContextType | undefined>(undefined);
 
+// Основной язык — английский. Новый ключ, чтобы старое автосохранение 'ru' не мешало.
+const KEY = 'pelta_lang_v2';
+
 function initialLang(): Lang {
   try {
-    const saved = localStorage.getItem('pelta_lang');
+    const saved = localStorage.getItem(KEY);
     if (saved === 'ru' || saved === 'uz' || saved === 'en') return saved;
   } catch {
     /* ignore */
   }
-  return 'ru';
+  return 'en';
 }
 
 export function LangProvider({ children }: { children: ReactNode }) {
@@ -24,14 +27,14 @@ export function LangProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('pelta_lang', lang);
+      localStorage.setItem(KEY, lang);
     } catch {
       /* ignore */
     }
     document.documentElement.lang = lang;
   }, [lang]);
 
-  const t = useCallback((key: string) => translations[lang][key] ?? translations.ru[key] ?? key, [lang]);
+  const t = useCallback((key: string) => translations[lang][key] ?? translations.en[key] ?? key, [lang]);
 
   return <LangContext.Provider value={{ lang, setLang, t }}>{children}</LangContext.Provider>;
 }

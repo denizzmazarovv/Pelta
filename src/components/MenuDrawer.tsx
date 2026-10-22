@@ -1,4 +1,4 @@
-import { useEffect, ReactNode } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { useLang } from '../context/LangContext';
 import { useProfile } from '../context/ProfileContext';
 import { LANGS } from '../lib/i18n';
@@ -132,17 +132,48 @@ export function MenuDrawer({ open, onClose, route }: { open: boolean; onClose: (
 }
 
 function ContactRow({ label, value, to }: { label: string; value: string; to: string }) {
+  // Компьютер: значение раскрывается при наведении. Телефон: по нажатию на название.
+  const [open, setOpen] = useState(false);
+  const external = to.startsWith('http');
   return (
-    <a
-      href={to}
-      target={to.startsWith('http') ? '_blank' : undefined}
-      rel="noopener noreferrer"
-      className="grid grid-cols-[104px_1fr] items-baseline group"
+    <div
+      onPointerEnter={(e) => e.pointerType === 'mouse' && setOpen(true)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && setOpen(false)}
     >
-      <span>{label}</span>
-      <span className="text-[12px] normal-case font-mono tracking-tight text-ink/80 group-hover:underline underline-offset-4 break-all">
-        {value}
-      </span>
-    </a>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex items-center gap-2 uppercase text-left"
+      >
+        <span className={open ? 'underline underline-offset-4' : ''}>{label}</span>
+        <svg
+          width="8"
+          height="8"
+          viewBox="0 0 8 8"
+          aria-hidden="true"
+          className={`transition-transform duration-300 ${open ? 'rotate-90' : ''}`}
+        >
+          <path d="M2 1 L6 4 L2 7" fill="none" stroke="currentColor" strokeWidth="1.3" />
+        </svg>
+      </button>
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+          open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+        }`}
+      >
+        <div className="overflow-hidden">
+          <a
+            href={to}
+            target={external ? '_blank' : undefined}
+            rel="noopener noreferrer"
+            tabIndex={open ? 0 : -1}
+            className="inline-block pt-1.5 pb-1 normal-case font-mono text-[13px] tracking-tight text-ink/80 hover:text-ink underline-offset-4 hover:underline break-all"
+          >
+            {value}
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }

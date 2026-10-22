@@ -12,6 +12,7 @@ export default {
         coal: '#2e2e2e',
       },
       fontFamily: {
+        logo: ['"Arya"', '"Fira Sans Condensed"', 'sans-serif'],
         display: ['"Fira Sans Condensed"', '"Arial Narrow"', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
         sans: ['"Inter"', 'system-ui', 'sans-serif'],

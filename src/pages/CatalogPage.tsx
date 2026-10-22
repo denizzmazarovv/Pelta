@@ -4,6 +4,7 @@ import { CATEGORIES, products, type Category } from '../lib/products';
 import { href } from '../lib/router';
 import { Mark } from '../components/Logo';
 import { ProductCard } from '../components/ProductCard';
+import { useHeaderHidden } from '../lib/useHeaderHidden';
 
 type Sort = 'featured' | 'price_asc' | 'price_desc';
 
@@ -19,6 +20,7 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
   const { t } = useLang();
   const [sort, setSort] = useState<Sort>('featured');
   const [sortOpen, setSortOpen] = useState(false);
+  const headerHidden = useHeaderHidden();
 
   useEffect(() => {
     document.title = category === 'all' ? 'Pelta Nera' : `${t(`cat.${category}`)} — Pelta Nera`;
@@ -38,7 +40,11 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
   return (
     <div className="bg-ash min-h-[calc(100vh-50px)] flex flex-col">
       {/* Подзаголовок: знак, категории, фильтр */}
-      <div className="bg-white">
+      <div
+        className={`sticky z-40 bg-white transition-[top] duration-300 ease-out ${
+          headerHidden ? 'top-0' : 'top-[calc(50px+env(safe-area-inset-top))]'
+        }`}
+      >
         <div className="flex flex-col lg:grid lg:grid-cols-[1fr_auto_1fr] items-center lg:h-[47px] px-4 sm:px-5 pb-2 lg:pb-0">
           <div className="hidden lg:block" />
           <div className="py-1 lg:py-0 lg:px-10 lg:self-start">
