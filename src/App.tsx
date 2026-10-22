@@ -1,36 +1,36 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { LangProvider } from './context/LangContext';
-import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
-import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
-import { Marquee } from './components/Marquee';
-import { Catalog } from './components/Catalog';
-import { About } from './components/About';
-import { Contact } from './components/Contact';
+import { ProfileProvider } from './context/ProfileContext';
+import { useRoute } from './lib/router';
+import { Header } from './components/Header';
+import { MenuDrawer } from './components/MenuDrawer';
 import { Footer } from './components/Footer';
-import { AuthModal } from './components/AuthModal';
-import { AccountModal } from './components/AccountModal';
 import { CartDrawer } from './components/CartDrawer';
+import { RegisterDrawer } from './components/RegisterDrawer';
+import { CatalogPage } from './pages/CatalogPage';
+import { ProductPage } from './pages/ProductPage';
+import { AboutPage } from './pages/AboutPage';
+import { ContactPage } from './pages/ContactPage';
 
 function AppContent() {
-  const [authOpen, setAuthOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
+  const route = useRoute();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   return (
-    <div className="min-h-screen bg-cream">
-      <Navbar onOpenAuth={() => setAuthOpen(true)} onOpenAccount={() => setAccountOpen(true)} />
-      <main>
-        <Hero />
-        <Marquee />
-        <Catalog />
-        <About />
-        <Contact />
+    <div className="min-h-screen flex flex-col">
+      <Header route={route} onMenu={() => setMenuOpen(true)} />
+      <main className="flex-1 pt-[calc(50px+env(safe-area-inset-top))]">
+        {route.name === 'catalog' && <CatalogPage category={route.category} />}
+        {route.name === 'product' && <ProductPage id={route.id} />}
+        {route.name === 'about' && <AboutPage />}
+        {route.name === 'contact' && <ContactPage />}
       </main>
       <Footer />
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
-      <AccountModal open={accountOpen} onClose={() => setAccountOpen(false)} />
+      <MenuDrawer open={menuOpen} onClose={closeMenu} route={route} />
       <CartDrawer />
+      <RegisterDrawer />
     </div>
   );
 }
@@ -38,11 +38,11 @@ function AppContent() {
 export default function App() {
   return (
     <LangProvider>
-      <AuthProvider>
+      <ProfileProvider>
         <CartProvider>
           <AppContent />
         </CartProvider>
-      </AuthProvider>
+      </ProfileProvider>
     </LangProvider>
   );
 }

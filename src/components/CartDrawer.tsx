@@ -1,304 +1,217 @@
-import { useState, useEffect } from 'react';
-import { X, ShoppingBag, Plus, Minus, Trash2, ArrowLeft, Loader as Loader2, CircleCheck as CheckCircle2, Phone } from 'lucide-react';
+import { useEffect, useState, FormEvent } from 'react';
 import { useCart } from '../context/CartContext';
 import { useLang } from '../context/LangContext';
-import { sanitizeText, sanitizePhone, MAX_NAME, MAX_ADDRESS, MAX_COMMENT } from '../lib/sanitize';
-
-const GOOGLE_SHEET_URL = import.meta.env.VITE_GOOGLE_SHEET_CART_URL as string;
-const RATE_LIMIT_WINDOW = 10 * 60 * 1000;
-const RATE_LIMIT_MAX = 5;
-
-function isRateLimited(): boolean {
-  const now = Date.now();
-  const stored = localStorage.getItem('cartSubmissions');
-  const submissions: number[] = stored ? JSON.parse(stored) : [];
-  const recent = submissions.filter((time) => now - time <= RATE_LIMIT_WINDOW);
-  return recent.length >= RATE_LIMIT_MAX;
-}
-
-function recordSubmission() {
-  const now = Date.now();
-  const stored = localStorage.getItem('cartSubmissions');
-  const submissions: number[] = stored ? JSON.parse(stored) : [];
-  submissions.push(now);
-  localStorage.setItem('cartSubmissions', JSON.stringify(submissions));
-}
+import { useProfile } from '../context/ProfileContext';
+import { formatPrice } from '../lib/format';
+import { href } from '../lib/router';
+import { MAX_ADDRESS, MAX_COMMENT, MAX_NAME, sanitizePhone } from '../lib/sanitize';
+import { isRateLimited, sendToSheet } from '../lib/sheets';
+import { Field } from '../pages/ContactPage';
+import { Mark } from './Logo';
 
 export function CartDrawer() {
   const { t, lang } = useLang();
   const { items, isOpen, close, remove, setQty, total, count, clear } = useCart();
+  const { profile } = useProfile();
   const [checkout, setCheckout] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', address: '', comment: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-      setCheckout(false);
-      setStatus('idle');
-      setErrors({});
+      const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close();
+      window.addEventListener('keydown', onKey);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', onKey);
+      };
     }
-    return () => { document.body.style.overflow = ''; };
-  }, [isOpen]);
+    setCheckout(false);
+    setStatus('idle');
+    setErrors({});
+  }, [isOpen, close]);
+
+  // Подставляем данные зарегистрированного клиента
+  useEffect(() => {
+    if (checkout && profile) {
+      setForm((f) => ({ ...f, name: f.name || profile.name, phone: f.phone || profile.phone }));
+    }
+  }, [checkout, profile]);
 
   if (!isOpen) return null;
 
-  function name(p: typeof items[0]['product']) {
-    return p[`name_${lang}`];
-  }
-  function colorLabel(p: typeof items[0]['product'], ci: number) {
-    return t(p.colors[ci].colorKey);
-  }
+  const name = (p: (typeof items)[0]['product']) => p[`name_${lang}`];
+  const colorLabel = (i: (typeof items)[0]) => t(i.product.colors[i.colorIndex].colorKey);
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!sanitizeText(form.name, MAX_NAME)) e.name = t('cart.error_name');
-    if (!sanitizePhone(form.phone)) e.phone = t('cart.error_phone');
-    if (!sanitizeText(form.address, MAX_ADDRESS)) e.address = t('cart.error_address');
+    if (form.name.trim().length < 2) e.name = t('cart.error_name');
+    if (sanitizePhone(form.phone).replace(/\D/g, '').length < 9) e.phone = t('cart.error_phone');
+    if (form.address.trim().length < 3) e.address = t('cart.error_address');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
-  async function submitOrder() {
+  async function submitOrder(ev: FormEvent) {
+    ev.preventDefault();
     if (!validate()) return;
-    if (isRateLimited()) {
-      setStatus('error');
-      setErrors({ form: t('cart.error_rate_limit') });
-      return;
-    }
+    if (isRateLimited('order')) return setErrors({ form: t('common.rate_limit') });
     setStatus('submitting');
     setErrors({});
-    const cleanName = sanitizeText(form.name, MAX_NAME);
-    const cleanPhone = sanitizePhone(form.phone);
-    const cleanAddress = sanitizeText(form.address, MAX_ADDRESS);
-    const cleanComment = sanitizeText(form.comment, MAX_COMMENT);
-    const order = {
-      timestamp: new Date().toISOString(),
-      user_id: session?.user?.id ?? '',
-      user_email: session?.user?.email ?? '',
-      customer_name: cleanName,
-      phone: cleanPhone,
-      address: cleanAddress,
-      comment: cleanComment,
-      total,
-      items: items.map((i) => ({
-        id: i.product.id,
-        name: name(i.product),
-        color: colorLabel(i.product, i.colorIndex),
-        quantity: i.quantity,
-        price: i.product.price,
-        subtotal: i.product.price * i.quantity,
-      })),
-      items_summary: items.map((i) => `${name(i.product)} (${colorLabel(i.product, i.colorIndex)}) ×${i.quantity} = ${i.product.price * i.quantity}`).join('; '),
-    };
-
     try {
-      await fetch(GOOGLE_SHEET_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(order),
+      await sendToSheet('order', {
+        name: form.name.slice(0, MAX_NAME),
+        phone: sanitizePhone(form.phone),
+        email: profile?.email ?? '',
+        address: form.address.slice(0, MAX_ADDRESS),
+        comment: form.comment.slice(0, MAX_COMMENT),
+        total,
+        items: items
+          .map((i) => `${name(i.product)} (${colorLabel(i)}) ×${i.quantity} = ${i.product.price * i.quantity}`)
+          .join('; '),
+        lang,
       });
       setStatus('success');
-      recordSubmission();
       clear();
     } catch {
-      setStatus('error');
+      setStatus('idle');
+      setErrors({ form: t('cart.error') });
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-[110] flex justify-end h-[100dvh]">
-      <div className="absolute inset-0 bg-wine-900/60 backdrop-blur-sm animate-fade-in" onClick={close} />
+  const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
 
-      <div className="relative w-full max-w-md bg-cream shadow-2xl flex flex-col animate-slide-in-right h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-brand-100" style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top))' }}>
-          <div className="flex items-center gap-3">
-            {checkout && (
-              <button onClick={() => setCheckout(false)} className="text-wine-500 hover:text-wine-700 transition-colors">
-                <ArrowLeft size={20} />
+  return (
+    <div className="fixed inset-0 z-[110] flex justify-end" role="dialog" aria-modal="true" aria-label={t('cart.title')}>
+      <div className="absolute inset-0 bg-white/30 backdrop-blur-[10px] animate-fade-in" onClick={close} />
+
+      <aside className="relative w-full sm:w-[440px] h-full bg-white flex flex-col animate-slide-right border-l border-ink/10 pt-safe">
+        <div className="h-header shrink-0 flex items-center justify-between px-5 border-b border-ink/10">
+          <div className="flex items-center gap-3 nav-caps">
+            {checkout && status !== 'success' && (
+              <button onClick={() => setCheckout(false)} className="link-u">
+                ← {t('cart.back')}
               </button>
             )}
-            <h2 className="font-serif text-wine-900 text-2xl font-light flex items-center gap-2">
-              <ShoppingBag size={22} className="text-brand-500" />
-              {checkout ? t('cart.checkout') : t('cart.title')}
-              {!checkout && count > 0 && (
-                <span className="text-sm text-wine-400">({count} {t('cart.items')})</span>
-              )}
-            </h2>
+            {!checkout && (
+              <span>
+                {t('cart.title')} ({count})
+              </span>
+            )}
           </div>
-          <button onClick={close} className="text-wine-500 hover:text-wine-700 transition-colors">
-            <X size={22} />
+          <button
+            onClick={close}
+            className="w-9 h-9 flex items-center justify-center hover:rotate-45 transition-transform duration-300"
+            aria-label={t('common.close')}
+          >
+            <Mark size={20} />
           </button>
         </div>
 
-        {/* Success state */}
         {status === 'success' ? (
-          <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-            <div className="w-20 h-20 rounded-full bg-wine-100 flex items-center justify-center mb-6">
-              <CheckCircle2 size={40} className="text-wine-500" />
-            </div>
-            <p className="text-wine-700 text-lg font-medium mb-2">{t('cart.success')}</p>
-            <button
-              onClick={close}
-              className="mt-6 px-8 py-3 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-colors"
-            >
+          <div className="flex-1 flex flex-col justify-center px-8">
+            <Mark size={30} />
+            <h2 className="font-mono text-[20px] mt-8">{t('cart.success_title')}</h2>
+            <p className="font-mono text-[13px] text-ink/70 mt-4 leading-[1.7]">{t('cart.success')}</p>
+            <button onClick={close} className="btn-ink mt-10">
               OK
             </button>
           </div>
         ) : checkout ? (
-          <div className="flex-1 overflow-y-auto px-6 py-5">
-            <div className="space-y-5">
-              <Field label={t('cart.name')} value={form.name} onChange={(v) => setForm({ ...form, name: sanitizeText(v, MAX_NAME) })} error={errors.name} />
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-wine-400 mb-2">{t('cart.phone')}</label>
-                <div className="relative">
-                  <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-wine-400" />
-                  <input
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: sanitizePhone(e.target.value) })}
-                    className={`w-full pl-10 pr-4 py-3 bg-cream-50 border rounded-lg text-wine-800 placeholder-wine-300 focus:outline-none focus:ring-2 transition-all ${errors.phone ? 'border-wine-400 focus:ring-wine-400/20' : 'border-brand-200 focus:ring-brand-500/20'}`}
-                    placeholder="+998 90 123 45 67"
-                  />
-                </div>
-                {errors.phone && <p className="text-wine-500 text-xs mt-1">{errors.phone}</p>}
-              </div>
-              <Field label={t('cart.address')} value={form.address} onChange={(v) => setForm({ ...form, address: sanitizeText(v, MAX_ADDRESS) })} error={errors.address} />
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-wine-400 mb-2">{t('cart.comment')}</label>
-                <textarea
-                  value={form.comment}
-                  onChange={(e) => setForm({ ...form, comment: sanitizeText(e.target.value, MAX_COMMENT) })}
-                  rows={3}
-                  maxLength={MAX_COMMENT}
-                  className="w-full px-4 py-3 bg-cream-50 border border-brand-200 rounded-lg text-wine-800 placeholder-wine-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
-                />
-              </div>
+          <form onSubmit={submitOrder} noValidate className="flex-1 overflow-y-auto px-5 py-8 space-y-7">
+            <h2 className="nav-caps text-[19px]">{t('cart.checkout')}</h2>
+            <Field label={t('cart.name')} error={errors.name}>
+              <input className="field" value={form.name} onChange={set('name')} maxLength={MAX_NAME} autoComplete="name" />
+            </Field>
+            <Field label={t('cart.phone')} error={errors.phone}>
+              <input
+                className="field"
+                type="tel"
+                value={form.phone}
+                onChange={set('phone')}
+                placeholder="+998 90 123 45 67"
+                maxLength={20}
+                autoComplete="tel"
+              />
+            </Field>
+            <Field label={t('cart.address')} error={errors.address}>
+              <input className="field" value={form.address} onChange={set('address')} maxLength={MAX_ADDRESS} autoComplete="street-address" />
+            </Field>
+            <Field label={t('cart.comment')}>
+              <textarea className="field h-auto py-2 resize-none" rows={3} value={form.comment} onChange={set('comment')} maxLength={MAX_COMMENT} />
+            </Field>
 
-              {/* Order summary */}
-              <div className="bg-brand-50 rounded-lg p-4 space-y-2">
-                {items.map((i) => (
-                  <div key={i.id} className="flex justify-between text-sm text-wine-600">
-                    <span>{name(i.product)} ×{i.quantity}</span>
-                    <span>{t('common.currency')}{i.product.price * i.quantity}</span>
-                  </div>
-                ))}
-                <div className="flex justify-between font-semibold text-wine-800 pt-2 border-t border-brand-200">
-                  <span>{t('cart.total')}</span>
-                  <span>{t('common.currency')}{total}</span>
-                </div>
-              </div>
-
-              {status === 'error' && (
-                <p className="text-wine-500 text-sm text-center">{errors.form ?? t('cart.error')}</p>
-              )}
-
-              <button
-                onClick={submitOrder}
-                disabled={status === 'submitting'}
-                className="w-full py-4 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/30 disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {status === 'submitting' ? (
-                  <><Loader2 size={18} className="animate-spin" /> {t('cart.submitting')}</>
-                ) : (
-                  t('cart.submit')
-                )}
-              </button>
-            </div>
-          </div>
-        ) : items.length === 0 ? (
-          /* Empty cart */
-          <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-            <div className="w-20 h-20 rounded-full bg-brand-50 flex items-center justify-center mb-6">
-              <ShoppingBag size={36} className="text-brand-300" />
-            </div>
-            <p className="text-wine-700 text-lg font-medium mb-1">{t('cart.empty')}</p>
-            <p className="text-wine-400 text-sm">{t('cart.empty_hint')}</p>
-            <button
-              onClick={close}
-              className="mt-6 px-8 py-3 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-colors"
-            >
-              {t('nav.catalog')}
-            </button>
-          </div>
-        ) : (
-          /* Cart items */
-          <>
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+            <div className="bg-fog p-4 font-mono text-[12px] space-y-1.5">
               {items.map((i) => (
-                <div key={i.id} className="flex gap-4 bg-cream-50 rounded-lg p-3 border border-brand-100">
-                  <img src={i.product.image} alt={name(i.product)} className="w-20 h-20 object-cover rounded-lg bg-brand-50 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-serif text-wine-900 text-base font-medium truncate">{name(i.product)}</h3>
-                    <p className="text-wine-400 text-xs mb-2">{colorLabel(i.product, i.colorIndex)}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 bg-cream rounded-lg border border-brand-200">
-                        <button onClick={() => setQty(i.id, i.quantity - 1)} className="w-7 h-7 flex items-center justify-center text-wine-500 hover:text-wine-700 transition-colors">
-                          <Minus size={14} />
-                        </button>
-                        <span className="w-7 text-center text-sm font-medium text-wine-700">{i.quantity}</span>
-                        <button onClick={() => setQty(i.id, i.quantity + 1)} className="w-7 h-7 flex items-center justify-center text-wine-500 hover:text-wine-700 transition-colors">
-                          <Plus size={14} />
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-brand-500 font-serif font-semibold">{t('common.currency')}{i.product.price * i.quantity}</span>
-                        <button onClick={() => remove(i.id)} className="text-wine-300 hover:text-wine-500 transition-colors">
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                <div key={i.id} className="flex justify-between gap-4">
+                  <span>
+                    {name(i.product)} ×{i.quantity}
+                  </span>
+                  <span className="whitespace-nowrap">{formatPrice(i.product.price * i.quantity, lang)}</span>
                 </div>
               ))}
+              <div className="flex justify-between pt-2 mt-2 border-t border-ink/20 text-[13px] font-medium">
+                <span>{t('cart.total')}</span>
+                <span>{formatPrice(total, lang)}</span>
+              </div>
             </div>
 
-            {/* Footer with total + checkout */}
-            <div className="border-t border-brand-100 px-6 py-5 space-y-4" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
-              <div className="flex items-center justify-between">
-                <span className="text-wine-400 text-sm uppercase tracking-wider">{t('cart.total')}</span>
-                <span className="text-brand-500 text-3xl font-serif font-semibold">{t('common.currency')}{total}</span>
+            {errors.form && <p className="font-mono text-[12px] text-red-700">{errors.form}</p>}
+            <button type="submit" disabled={status === 'submitting'} className="btn-ink">
+              {status === 'submitting' ? t('cart.submitting') : t('cart.submit')}
+            </button>
+          </form>
+        ) : items.length === 0 ? (
+          <div className="flex-1 flex flex-col justify-center px-8">
+            <p className="font-mono text-[14px]">{t('cart.empty')}</p>
+            <a href={href.home} onClick={close} className="btn-line mt-8">
+              {t('cart.continue')}
+            </a>
+          </div>
+        ) : (
+          <>
+            <ul className="flex-1 overflow-y-auto divide-y divide-ink/10">
+              {items.map((i) => (
+                <li key={i.id} className="flex gap-4 p-5">
+                  <a href={href.product(i.product.id)} onClick={close} className="shrink-0">
+                    <img src={i.product.image} alt={name(i.product)} className="w-[84px] aspect-[4/5] object-cover bg-smoke" />
+                  </a>
+                  <div className="flex-1 min-w-0 flex flex-col">
+                    <p className="font-display uppercase text-[14px] leading-tight">{name(i.product)}</p>
+                    <p className="font-mono text-[11px] text-ink/60 mt-1">{colorLabel(i)}</p>
+                    <p className="font-mono text-[12px] mt-1">{formatPrice(i.product.price * i.quantity, lang)}</p>
+                    <div className="mt-auto pt-3 flex items-center justify-between">
+                      <div className="flex items-center border border-ink/30 font-mono text-[12px]">
+                        <button onClick={() => setQty(i.id, i.quantity - 1)} className="w-7 h-7 hover:bg-fog" aria-label="−">
+                          −
+                        </button>
+                        <span className="w-7 text-center">{i.quantity}</span>
+                        <button onClick={() => setQty(i.id, i.quantity + 1)} className="w-7 h-7 hover:bg-fog" aria-label="+">
+                          +
+                        </button>
+                      </div>
+                      <button onClick={() => remove(i.id)} className="font-mono text-[11px] text-ink/60 link-u">
+                        {t('cart.remove')}
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="border-t border-ink/10 px-5 pt-4 pb-safe space-y-4 shrink-0">
+              <div className="flex items-baseline justify-between">
+                <span className="nav-caps">{t('cart.total')}</span>
+                <span className="font-mono text-[15px]">{formatPrice(total, lang)}</span>
               </div>
-              <button
-                onClick={() => setCheckout(true)}
-                className="w-full py-4 bg-brand-500 text-cream rounded-lg font-medium hover:bg-brand-600 transition-all hover:shadow-lg hover:shadow-brand-500/30"
-              >
+              <button onClick={() => setCheckout(true)} className="btn-ink">
                 {t('cart.checkout')}
               </button>
             </div>
           </>
         )}
-      </div>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  error,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  error?: string;
-}) {
-  return (
-    <div>
-      <label className="block text-xs uppercase tracking-wider text-wine-400 mb-2">{label}</label>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full px-4 py-3 bg-cream-50 border rounded-lg text-wine-800 placeholder-wine-300 focus:outline-none focus:ring-2 transition-all ${error ? 'border-wine-400 focus:ring-wine-400/20' : 'border-brand-200 focus:ring-brand-500/20'}`}
-      />
-      {error && <p className="text-wine-500 text-xs mt-1">{error}</p>}
+      </aside>
     </div>
   );
 }

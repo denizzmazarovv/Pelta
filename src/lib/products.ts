@@ -18,6 +18,7 @@ export type Product = {
   desc_ru: string;
   desc_uz: string;
   desc_en: string;
+  /** Цена в сумах */
   price: number;
   image: string;
   gallery: string[];
@@ -30,6 +31,12 @@ const tan: ColorOption = { id: 'tan', colorKey: 'product.color_tan' };
 const black: ColorOption = { id: 'black', colorKey: 'product.color_black' };
 const cognac: ColorOption = { id: 'cognac', colorKey: 'product.color_cognac' };
 
+export const CATEGORIES: Category[] = ['cardholder', 'bag', 'belt'];
+
+export function findProduct(id: string): Product | undefined {
+  return products.find((p) => p.id === id);
+}
+
 export const products: Product[] = [
   {
     id: 'ch-01',
@@ -40,7 +47,7 @@ export const products: Product[] = [
     desc_ru: 'Компактный кардхолдер на 6 карт из кожи растительного дубления.',
     desc_uz: 'O‘simlik bilan oshlangan teridan 6 ta karta uchun ixcham kartholder.',
     desc_en: 'Compact 6-card holder in vegetable-tanned leather.',
-    price: 77,
+    price: 700_000,
     image: '/images/products/pelta_denim.jpg',
     gallery: [
       '/images/products/pelta_denim.jpg',
@@ -60,7 +67,7 @@ export const products: Product[] = [
     desc_ru: 'Минималистичный кардхолдер с отделением для купюр.',
     desc_uz: 'Banknot uchun bo‘limli minimalist kartholder.',
     desc_en: 'Minimalist cardholder with a bill compartment.',
-    price: 55,
+    price: 650_000,
     image: '/images/products/cardholder-pelta.svg',
     gallery: [
       '/images/products/cardholder-pelta.svg',
@@ -80,7 +87,7 @@ export const products: Product[] = [
     desc_ru: 'Городская сумка через плечо ручной работы.',
     desc_uz: 'Qo‘lda ishlangan shahar yelka sumkasi.',
     desc_en: 'Handcrafted city shoulder bag.',
-    price: 180,
+    price: 2_150_000,
     image: '/images/products/bag-tashkent.svg',
     gallery: [
       '/images/products/bag-tashkent.svg',
@@ -100,7 +107,7 @@ export const products: Product[] = [
     desc_ru: 'Вместительная сумка-портфель для документов.',
     desc_uz: 'Hujjatlar uchun sig‘imli portfel sumka.',
     desc_en: 'Roomy document portfolio bag.',
-    price: 220,
+    price: 2_650_000,
     image: '/images/products/bag-amir.svg',
     gallery: [
       '/images/products/bag-amir.svg',
@@ -120,7 +127,7 @@ export const products: Product[] = [
     desc_ru: 'Классический ремень из плотной кожи с пряжкой.',
     desc_uz: 'Qat’ti teridan klassik remen to‘qmoq bilan.',
     desc_en: 'Classic belt in firm leather with a buckle.',
-    price: 70,
+    price: 850_000,
     image: '/images/products/belt-classic.svg',
     gallery: [
       '/images/products/belt-classic.svg',
@@ -140,7 +147,7 @@ export const products: Product[] = [
     desc_ru: 'Ремень с фигурной пряжкой и ручной прострочкой.',
     desc_uz: 'Figurali to‘qmoq va qo‘l tikishli remen.',
     desc_en: 'Belt with a shaped buckle and hand stitching.',
-    price: 85,
+    price: 1_000_000,
     image: '/images/products/belt-heritage.svg',
     gallery: [
       '/images/products/belt-heritage.svg',

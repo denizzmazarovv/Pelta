@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import type { Product } from '../lib/products';
+import { createContext, useCallback, useContext, useState, useEffect, ReactNode } from 'react';
+import { findProduct, type Product } from '../lib/products';
 
 export type CartItem = {
   id: string;
@@ -25,22 +25,37 @@ const CartContext = createContext<CartContextType | null>(null);
 
 const STORAGE_KEY = 'pelta_cart';
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setItems(JSON.parse(raw));
-    } catch {
-      /* ignore */
+function loadCart(): CartItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    // Подтягиваем актуальные данные товара (цены могли измениться)
+    const saved = JSON.parse(raw) as { id: string; productId?: string; product?: { id: string }; colorIndex: number; quantity: number }[];
+    const fresh: CartItem[] = [];
+    for (const s of saved) {
+      const product = findProduct(s.productId ?? s.product?.id ?? '');
+      if (product && product.colors[s.colorIndex]) {
+        fresh.push({ id: s.id, product, colorIndex: s.colorIndex, quantity: Math.max(1, s.quantity | 0) });
+      }
     }
-  }, []);
+    return fresh;
+  } catch {
+    return [];
+  }
+}
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<CartItem[]>(loadCart);
+  const [isOpen, setIsOpen] = useState(false);
+  const openCart = useCallback(() => setIsOpen(true), []);
+  const closeCart = useCallback(() => setIsOpen(false), []);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(items.map((i) => ({ id: i.id, productId: i.product.id, colorIndex: i.colorIndex, quantity: i.quantity })))
+      );
     } catch {
       /* ignore */
     }
@@ -76,7 +91,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, isOpen, open: () => setIsOpen(true), close: () => setIsOpen(false), add, remove, setQty, clear, count, total }}
+      value={{ items, isOpen, open: openCart, close: closeCart, add, remove, setQty, clear, count, total }}
     >
       {children}
     </CartContext.Provider>

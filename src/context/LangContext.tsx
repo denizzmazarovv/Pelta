@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useState, useEffect, ReactNode } from 'react';
 import { Lang, translations } from '../lib/i18n';
 
 type LangContextType = {
@@ -9,25 +9,31 @@ type LangContextType = {
 
 const LangContext = createContext<LangContextType | undefined>(undefined);
 
+function initialLang(): Lang {
+  try {
+    const saved = localStorage.getItem('pelta_lang');
+    if (saved === 'ru' || saved === 'uz' || saved === 'en') return saved;
+  } catch {
+    /* ignore */
+  }
+  return 'ru';
+}
+
 export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => {
-    const saved = localStorage.getItem('pelta_lang') as Lang | null;
-    return saved ?? 'ru';
-  });
+  const [lang, setLang] = useState<Lang>(initialLang);
 
   useEffect(() => {
-    localStorage.setItem('pelta_lang', lang);
+    try {
+      localStorage.setItem('pelta_lang', lang);
+    } catch {
+      /* ignore */
+    }
     document.documentElement.lang = lang;
   }, [lang]);
 
-  const setLang = (l: Lang) => setLangState(l);
-  const t = (key: string) => translations[lang][key] ?? key;
+  const t = useCallback((key: string) => translations[lang][key] ?? translations.ru[key] ?? key, [lang]);
 
-  return (
-    <LangContext.Provider value={{ lang, setLang, t }}>
-      {children}
-    </LangContext.Provider>
-  );
+  return <LangContext.Provider value={{ lang, setLang, t }}>{children}</LangContext.Provider>;
 }
 
 export function useLang() {
