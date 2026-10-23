@@ -4,7 +4,15 @@ import { useLang } from '../context/LangContext';
 import { useProfile } from '../context/ProfileContext';
 import { useCart } from '../context/CartContext';
 import { CONTACTS, TELEGRAM_BOT_USERNAME } from '../lib/config';
-import { DEFAULT_COUNTRY, byIso, isComplete, toE164, type Country } from '../lib/phone';
+import {
+  botLink,
+  claimTelegramLogin,
+  clearNonce,
+  loadNonce,
+  startTelegramLogin,
+  telegramEnabled,
+} from '../lib/telegramLogin';
+import { DEFAULT_COUNTRY, isComplete, toE164, type Country } from '../lib/phone';
 import { LIMITS, filterName, validName } from '../lib/validate';
 import { Field } from '../pages/ContactPage';
 import { Captcha, captchaEnabled, type CaptchaHandle } from './Captcha';
@@ -12,58 +20,11 @@ import { Check } from './Footer';
 import { Mark } from './Logo';
 import { PhoneInput } from './PhoneInput';
 
-type View = 'phone' | 'code' | 'account';
+type View = 'phone' | 'telegram' | 'code' | 'account';
 
 const RESEND_SECONDS = 60;
 const MAX_CODE_ATTEMPTS = 5;
-const BOT_URL = TELEGRAM_BOT_USERNAME ? `https://t.me/${TELEGRAM_BOT_USERNAME}?start=login` : '';
-
-/**
- * Номер, который ждёт подтверждения в боте. Хранится 15 минут только в этом браузере,
- * чтобы после кнопки «Вернуться на сайт» в боте не вводить номер заново.
- */
-const PENDING_KEY = 'pelta_login_pending';
-const PENDING_TTL = 15 * 60 * 1000;
-type Pending = { iso: string; national: string; at: number };
-const pending = {
-  save(iso: string, national: string) {
-    try {
-      localStorage.setItem(PENDING_KEY, JSON.stringify({ iso, national, at: Date.now() }));
-    } catch {
-      /* ignore */
-    }
-  },
-  load(): Pending | null {
-    try {
-      const p = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null') as Pending | null;
-      return p && Date.now() - p.at < PENDING_TTL && /^[\d ]{4,20}$/.test(p.national) ? p : null;
-    } catch {
-      return null;
-    }
-  },
-  clear() {
-    try {
-      localStorage.removeItem(PENDING_KEY);
-    } catch {
-      /* ignore */
-    }
-  },
-};
-
-/** Кнопка «Открыть бота»: клиент один раз делится номером, после этого коды приходят туда. */
-function BotLink({ label, strong }: { label: string; strong?: boolean }) {
-  if (!BOT_URL) return null;
-  return (
-    <a
-      href={BOT_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={strong ? 'btn-ink inline-flex items-center justify-center w-full' : 'font-mono text-[12px] link-u'}
-    >
-      {strong ? label : `${label} @${TELEGRAM_BOT_USERNAME}`}
-    </a>
-  );
-}
+const POLL_MS = 2000;
 
 /** Понятное сообщение об ошибке без лишних подробностей. */
 function useAuthError() {
@@ -130,8 +91,7 @@ export function RegisterDrawer() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [cooldown, setCooldown] = useState(0);
-  const [needBot, setNeedBot] = useState(false);
-  const [autoSend, setAutoSend] = useState(false);
+  const [nonce, setNonce] = useState<string | null>(null);
 
   const phoneE164 = toE164(national, country);
 
@@ -141,14 +101,12 @@ export function RegisterDrawer() {
     setView(session ? 'account' : 'phone');
     setError('');
     setNotice('');
-    // Вернулись из бота — подставляем номер и сразу просим код
-    const p = !session ? pending.load() : null;
-    if (p) {
-      setCountry(byIso(p.iso));
-      setNational(p.national);
-      setAgree(true);
-      setNeedBot(true);
-      setAutoSend(true);
+    // Вход через бота уже начат (в этой вкладке или по кнопке «Вернуться на сайт»)
+    const n = !session ? loadNonce() : null;
+    if (n) {
+      setNonce(n);
+      setAgree(true); // согласие дано при начале входа
+      setView('telegram');
     }
     document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRegister();
@@ -170,21 +128,58 @@ export function RegisterDrawer() {
     }
   }, [view, profile]);
 
-  // Автоматический запрос кода после возврата из бота
+  // Ожидание подтверждения в боте: спрашиваем сервер каждые 2 секунды, пока вкладка видна
   useEffect(() => {
-    if (!autoSend || !registerOpen || view !== 'phone' || busy) return;
-    setAutoSend(false);
-    if (!captchaEnabled) onSend();
+    if (!registerOpen || view !== 'telegram' || !nonce || session) return;
+    let stop = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = async () => {
+      if (stop) return;
+      if (document.visibilityState === 'visible') {
+        const r = await claimTelegramLogin(nonce);
+        if (stop) return;
+        if (r.status === 'ok') {
+          stop = true;
+          clearNonce();
+          const { error } = await auth.applySession(r);
+          if (error) return setError(t('auth.err.generic'));
+          if (cart.isOpen) return closeRegister();
+          return setView('account');
+        }
+        if (r.status === 'expired' || r.status === 'used') {
+          stop = true;
+          clearNonce();
+          setNonce(null);
+          return setError(t(r.status === 'used' ? 'auth.tg.used' : 'auth.tg.expired'));
+        }
+        if (!loadNonce()) {
+          stop = true;
+          setNonce(null);
+          return setError(t('auth.tg.expired'));
+        }
+      }
+      timer = setTimeout(tick, POLL_MS);
+    };
+    tick();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        clearTimeout(timer);
+        tick();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      stop = true;
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSend, registerOpen, view, national]);
+  }, [registerOpen, view, nonce, session]);
 
-  // Клиент ушёл в бота и вернулся на эту же вкладку — пробуем отправить код ещё раз
+  // Вошли (в том числе в другой вкладке) — показываем аккаунт
   useEffect(() => {
-    if (!registerOpen || !needBot || view !== 'phone') return;
-    const onBack = () => document.visibilityState === 'visible' && setAutoSend(true);
-    document.addEventListener('visibilitychange', onBack);
-    return () => document.removeEventListener('visibilitychange', onBack);
-  }, [registerOpen, needBot, view]);
+    if (registerOpen && session && view === 'telegram') setView('account');
+  }, [registerOpen, session, view]);
 
   // Таймер повторной отправки
   useEffect(() => {
@@ -226,19 +221,28 @@ export function RegisterDrawer() {
     run(async () => {
       const { error } = await auth.sendCode(phoneE164, token);
       if (error) {
-        if ((error.message ?? '').includes('NEED_BOT')) {
-          setNeedBot(true);
-          pending.save(country.iso, national);
+        // Новый номер: сразу ведём в бота — там номер подтверждается в одно касание
+        if ((error.message ?? '').includes('NEED_BOT') && telegramEnabled) {
+          setNonce(startTelegramLogin());
+          setView('telegram');
+          return setNotice(t('auth.tg.new_number'));
         }
         return setError(toMsg(error, 'send'));
       }
-      setNeedBot(false);
-      pending.clear();
       setCooldown(RESEND_SECONDS);
       setAttempts(0);
       setCode('');
       setView('code');
     });
+  }
+
+  // Вход через Telegram в одно касание
+  function onTelegram() {
+    if (!agree) return setError(t('contact.errors.policy'));
+    setError('');
+    setNotice('');
+    setNonce(startTelegramLogin());
+    setView('telegram');
   }
 
   // Шаг 2: код → вход
@@ -293,6 +297,7 @@ export function RegisterDrawer() {
 
   const title: Record<View, string> = {
     phone: t('auth.phone_title'),
+    telegram: t('auth.tg.title'),
     code: t('auth.code_title'),
     account: t('nav.account'),
   };
@@ -317,28 +322,10 @@ export function RegisterDrawer() {
         <div className="flex-1 overflow-y-auto px-5 py-8 pb-safe">
           {!auth.enabled && <p className="font-mono text-[12px] mb-6">{t('auth.err.disabled')}</p>}
 
-          {/* ШАГ 1: НОМЕР */}
+          {/* ШАГ 1: ВХОД */}
           {view === 'phone' && (
-            <form onSubmit={onSend} noValidate className="space-y-7">
-              <p className="font-mono text-[12px] leading-[1.7] text-ink/70">{t('auth.phone_text')}</p>
-              {BOT_URL && (
-                <ol className="font-mono text-[11px] leading-[1.7] text-ink/70 list-decimal pl-4 space-y-1">
-                  <li>
-                    {t('auth.bot_step1')} <BotLink label={t('auth.open_bot')} />
-                  </li>
-                  <li>{t('auth.bot_step2')}</li>
-                </ol>
-              )}
-              <Field label={t('cart.phone')}>
-                <PhoneInput
-                  country={country}
-                  national={national}
-                  onChange={(c, n) => {
-                    setCountry(c);
-                    setNational(n);
-                  }}
-                />
-              </Field>
+            <div className="space-y-7">
+              <p className="font-mono text-[12px] leading-[1.7] text-ink/70">{t('auth.intro')}</p>
               {checkbox(
                 agree,
                 setAgree,
@@ -350,14 +337,86 @@ export function RegisterDrawer() {
                   {t('consent.post')}
                 </>
               )}
-              <Captcha ref={captcha} onToken={setToken} lang={lang} />
+
+              {telegramEnabled && (
+                <div className="space-y-4">
+                  <button type="button" onClick={onTelegram} className="btn-ink">
+                    {t('auth.tg.button')}
+                  </button>
+                  <ol className="font-mono text-[11px] leading-[1.7] text-ink/70 list-decimal pl-4 space-y-1">
+                    <li>{t('auth.tg.step1')}</li>
+                    <li>{t('auth.tg.step2')}</li>
+                    <li>{t('auth.tg.step3')}</li>
+                  </ol>
+                </div>
+              )}
+
+              {telegramEnabled && (
+                <div className="flex items-center gap-3 font-mono text-[11px] text-mute">
+                  <span className="h-px flex-1 bg-ink/15" />
+                  {t('auth.or_phone')}
+                  <span className="h-px flex-1 bg-ink/15" />
+                </div>
+              )}
+
+              <form onSubmit={onSend} noValidate className="space-y-7">
+                <Field label={t('cart.phone')}>
+                  <PhoneInput
+                    country={country}
+                    national={national}
+                    onChange={(c, n) => {
+                      setCountry(c);
+                      setNational(n);
+                    }}
+                  />
+                </Field>
+                <Captcha ref={captcha} onToken={setToken} lang={lang} />
+                {messages}
+                <button type="submit" disabled={busy || cooldown > 0} className={telegramEnabled ? 'btn-line' : 'btn-ink'}>
+                  {busy ? '…' : cooldown > 0 ? `${t('auth.resend_in')} ${cooldown}s` : t('auth.get_code')}
+                </button>
+                <p className="font-mono text-[11px] leading-[1.6] text-mute">{t('auth.telegram_note')}</p>
+              </form>
+            </div>
+          )}
+
+          {/* ВХОД ЧЕРЕЗ БОТА: ожидание */}
+          {view === 'telegram' && (
+            <div className="space-y-7">
               {messages}
-              {needBot && <BotLink label={t('auth.start_bot')} strong />}
-              <button type="submit" disabled={busy || cooldown > 0} className={needBot && BOT_URL ? 'btn-line' : 'btn-ink'}>
-                {busy ? '…' : cooldown > 0 ? `${t('auth.resend_in')} ${cooldown}s` : t('auth.get_code')}
-              </button>
-              <p className="font-mono text-[11px] leading-[1.6] text-mute">{t('auth.telegram_note')}</p>
-            </form>
+              <p className="font-mono text-[13px] leading-[1.7]">{t('auth.tg.waiting_title')}</p>
+              <ol className="font-mono text-[12px] leading-[1.8] text-ink/80 list-decimal pl-4 space-y-1">
+                <li>
+                  {t('auth.tg.wait1')} <span className="font-medium">@{TELEGRAM_BOT_USERNAME}</span>
+                </li>
+                <li>{t('auth.tg.wait2')}</li>
+                <li>{t('auth.tg.wait3')}</li>
+              </ol>
+              {nonce ? (
+                <>
+                  <p className="font-mono text-[11px] text-mute flex items-center gap-2" aria-live="polite">
+                    <span className="inline-block w-2 h-2 rounded-full bg-ink animate-pulse" />
+                    {t('auth.tg.waiting')}
+                  </p>
+                  <a href={botLink(nonce)} target="_blank" rel="noopener noreferrer" className="btn-ink inline-flex items-center justify-center w-full">
+                    {t('auth.tg.open_again')}
+                  </a>
+                </>
+              ) : (
+                <button type="button" onClick={onTelegram} className="btn-ink">
+                  {t('auth.tg.button')}
+                </button>
+              )}
+              <TextButton
+                onClick={() => {
+                  clearNonce();
+                  setNonce(null);
+                  go('phone');
+                }}
+              >
+                ← {t('auth.tg.use_code')}
+              </TextButton>
+            </div>
           )}
 
           {/* ШАГ 2: КОД */}

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
 import type { AuthError, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { isNonce, saveNonce } from '../lib/telegramLogin';
 
 /**
  * Аккаунт клиента. Вход и регистрация — только по номеру телефона:
@@ -27,6 +28,8 @@ type AuthContextType = {
   /** Отправить код в Telegram. Новый номер = регистрация, существующий = вход. */
   sendCode: (phoneE164: string, captchaToken?: string) => Promise<Result>;
   verifyCode: (phoneE164: string, code: string) => Promise<Result>;
+  /** Сессия, полученная после подтверждения входа в Telegram-боте. */
+  applySession: (tokens: { access_token: string; refresh_token: string }) => Promise<Result>;
   updateProfile: (p: Pick<Profile, 'name' | 'prefs' | 'marketing'>) => Promise<Result>;
   signOut: (everywhere?: boolean) => Promise<void>;
 };
@@ -43,13 +46,16 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [registerOpen, setRegisterOpen] = useState(false);
   const openRegister = useCallback(() => setRegisterOpen(true), []);
 
-  // Ссылка #/login (кнопка «Вернуться на сайт» в боте) сразу открывает вход
+  // Ссылка #/login (кнопка «Вернуться на сайт» в боте) сразу открывает вход.
+  // #/login?tg=<ключ> — вход уже подтверждён в боте, панель сама завершит его.
   useEffect(() => {
     const check = () => {
-      if (window.location.hash.replace(/^#\/?/, '').split(/[/?]/)[0] === 'login') {
-        history.replaceState(null, '', '#/');
-        setRegisterOpen(true);
-      }
+      const h = window.location.hash.replace(/^#\/?/, '');
+      if (h.split(/[/?]/)[0] !== 'login') return;
+      const tg = new URLSearchParams(h.split('?')[1] ?? '').get('tg');
+      if (isNonce(tg)) saveNonce(tg);
+      history.replaceState(null, '', '#/');
+      setRegisterOpen(true);
     };
     check();
     window.addEventListener('hashchange', check);
@@ -110,6 +116,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     async verifyCode(phone, code) {
       if (!supabase) return { error: NOT_CONFIGURED };
       const { error } = await supabase.auth.verifyOtp({ phone, token: code, type: 'sms' });
+      return { error };
+    },
+
+    async applySession(tokens) {
+      if (!supabase) return { error: NOT_CONFIGURED };
+      const { error } = await supabase.auth.setSession(tokens);
       return { error };
     },
 
