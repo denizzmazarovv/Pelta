@@ -61,7 +61,53 @@ function rateOk_(userId) {
 // Supabase присылает только одноразовый ID события, данные скрипт забирает сам.
 // ====================
 const USERS_SHEET = "Users PeltaNera";
-const USERS_HEADER = ["ID", "Дата регистрации", "Имя", "Номер", "Статус", "Код запрошен", "Подтверждён"];
+const USERS_HEADER = ["ID", "Дата регистрации", "Имя", "Номер", "Статус", "Код запрошен", "Подтверждён", "Интересы", "Рассылка"];
+const NEWS_SHEET = "Newsletter PeltaNera";
+const NEWS_HEADER = ["ID", "Дата подписки", "Email", "Интересы", "Язык"];
+
+function prefsLabel_(p) {
+  const a = Array.isArray(p) ? p : [];
+  if (a.indexOf("women") >= 0 && a.indexOf("men") >= 0) return "Все";
+  if (a.indexOf("women") >= 0) return "Женское";
+  if (a.indexOf("men") >= 0) return "Мужское";
+  return "";
+}
+
+// Лист с заголовком (заголовок обновляется, если добавились колонки)
+function sheetWithHeader_(name, header) {
+  const book = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = book.getSheetByName(name);
+  if (!sheet) {
+    sheet = book.insertSheet(name);
+    sheet.setFrozenRows(1);
+  }
+  const cur = sheet.getRange(1, 1, 1, header.length).getValues()[0];
+  if (cur.join("|") !== header.join("|")) {
+    sheet.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight("bold");
+  }
+  return sheet;
+}
+
+function handleNewsletter_(n) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sheet = sheetWithHeader_(NEWS_SHEET, NEWS_HEADER);
+    const id = String(n.id);
+    const found = sheet.getRange("A:A").createTextFinder(id).matchEntireCell(true).findNext();
+    const row = found ? found.getRow() : sheet.getLastRow() + 1;
+    sheet.getRange(row, 1, 1, NEWS_HEADER.length).setValues([[
+      id,
+      fmt_(n.created_at),
+      cell_(clean_(n.email, 120)),
+      prefsLabel_(n.prefs),
+      clean_(n.lang || "", 5).toUpperCase()
+    ]]);
+  } finally {
+    lock.releaseLock();
+  }
+  return reply_({ status: "ok" });
+}
 
 function fmt_(iso) {
   return iso ? Utilities.formatDate(new Date(iso), "Asia/Tashkent", "dd.MM.yyyy HH:mm:ss") : "";
@@ -91,19 +137,13 @@ function handleUserEvent_(eventId) {
   if (!/^[0-9a-f-]{36}$/i.test(String(eventId))) return reply_({ status: "error", code: "bad" });
   const u = takeUserEvent_(eventId);
   if (!u) return reply_({ status: "ignored" });
+  if (u.kind === "newsletter") return handleNewsletter_(u);
 
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   let isNew = false;
   try {
-    const book = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet = book.getSheetByName(USERS_SHEET);
-    if (!sheet) {
-      sheet = book.insertSheet(USERS_SHEET);
-      sheet.appendRow(USERS_HEADER);
-      sheet.setFrozenRows(1);
-      sheet.getRange(1, 1, 1, USERS_HEADER.length).setFontWeight("bold");
-    }
+    const sheet = sheetWithHeader_(USERS_SHEET, USERS_HEADER);
     const found = sheet.getRange("A:A").createTextFinder(u.id).matchEntireCell(true).findNext();
     const row = found ? found.getRow() : sheet.getLastRow() + 1;
     const old = found ? sheet.getRange(row, 1, 1, USERS_HEADER.length).getValues()[0] : [];
@@ -116,7 +156,9 @@ function handleUserEvent_(eventId) {
       cell_(u.phone || old[3] || ""),
       u.confirmed ? "✅ Подтверждён" : "⏳ Не подтверждён",
       fmt_(u.last_code_at) || old[5] || "",
-      fmt_(u.confirmed_at) || old[6] || ""
+      fmt_(u.confirmed_at) || old[6] || "",
+      Array.isArray(u.prefs) ? prefsLabel_(u.prefs) : old[7] || "",
+      typeof u.marketing === "boolean" ? (u.marketing ? "Да" : "Нет") : old[8] || ""
     ];
     sheet.getRange(row, 1, 1, values.length).setValues([values]);
     isNew = u.kind === "confirmed" && u.confirmed && !wasConfirmed;
@@ -165,7 +207,7 @@ function doPost(e) {
       const q = Math.max(1, Math.min(99, Math.floor(Number(i.quantity) || 0)));
       const p = Math.max(0, Math.floor(Number(i.price) || 0));
       total += p * q;
-      return clean_(i.name, 80) + " (" + clean_(i.color, 40) + ") ×" + q + " = " + (p * q).toLocaleString("ru-RU");
+      return clean_(i.name, 80) + " (" + clean_(i.color, 40) + ") ×" + q + " = " + (p * q).toLocaleString("ru-RU") + " USD";
     }).join("; ");
 
     const order = {
@@ -174,7 +216,7 @@ function doPost(e) {
       phone: user.phone,
       address: clean_(data.address, 200) || "Не указан",
       comment: clean_(data.comment, 400) || "Нет",
-      total: total.toLocaleString("ru-RU") + " сум",
+      total: total.toLocaleString("ru-RU") + " USD",
       summary: summary
     };
 

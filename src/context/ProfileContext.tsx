@@ -32,6 +32,8 @@ type AuthContextType = {
   applySession: (tokens: { access_token: string; refresh_token: string }) => Promise<Result>;
   updateProfile: (p: Pick<Profile, 'name' | 'prefs' | 'marketing'>) => Promise<Result>;
   signOut: (everywhere?: boolean) => Promise<void>;
+  /** Короткое уведомление внизу экрана (например, «Сохранено»). */
+  flash: (message: string) => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -44,6 +46,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ready, setReady] = useState(!supabase);
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
+  const flash = useCallback((text: string) => setToast({ id: Date.now(), text }), []);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 2600);
+    return () => clearTimeout(timer);
+  }, [toast]);
   const openRegister = useCallback(() => setRegisterOpen(true), []);
 
   // Ссылка #/login (кнопка «Вернуться на сайт» в боте) сразу открывает вход.
@@ -103,6 +112,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     registerOpen,
     openRegister,
     closeRegister,
+    flash,
 
     async sendCode(phone, captchaToken) {
       if (!supabase) return { error: NOT_CONFIGURED };
@@ -142,7 +152,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     },
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      {toast && (
+        <div
+          key={toast.id}
+          role="status"
+          className="fixed z-[130] left-1/2 -translate-x-1/2 bottom-[max(24px,env(safe-area-inset-bottom))] px-5 h-11 flex items-center gap-2 rounded-full bg-ink text-white font-mono text-[13px] shadow-lg animate-fade-in"
+        >
+          <span aria-hidden="true">✓</span>
+          {toast.text}
+        </div>
+      )}
+    </AuthContext.Provider>
+  );
 }
 
 export function useProfile() {

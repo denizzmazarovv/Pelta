@@ -1,6 +1,8 @@
 import { useState, FormEvent } from 'react';
 import { useLang } from '../context/LangContext';
-import { CONTACTS } from '../lib/config';
+import { CONTACTS, SOCIALS } from '../lib/config';
+import { href } from '../lib/router';
+import { CATEGORIES } from '../lib/products';
 import { sanitizeEmail } from '../lib/sanitize';
 import { isRateLimited, subscribe } from '../lib/forms';
 import { Mark } from './Logo';
@@ -20,7 +22,7 @@ export function Check({ checked, size = 20 }: { checked: boolean; size?: number 
   return (
     <span className="relative inline-flex shrink-0 text-ink" style={{ width: size, height: size }} aria-hidden="true">
       <span
-        className={`absolute inset-0 rounded-full border-[1.5px] border-ink bg-white transition-[opacity,transform] duration-200 ${
+        className={`absolute inset-0 rounded-full border-[1.5px] border-ink bg-transparent transition-[opacity,transform] duration-200 ${
           checked ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
         }`}
       />
@@ -34,6 +36,27 @@ export function Check({ checked, size = 20 }: { checked: boolean; size?: number 
   );
 }
 
+/** Интересы: «Все» = женское и мужское вместе. */
+export function PrefsPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const { t } = useLang();
+  const all = value.includes('women') && value.includes('men');
+  const opts: { key: 'all' | 'women' | 'men'; on: boolean; next: () => string[] }[] = [
+    { key: 'all', on: all, next: () => (all ? [] : ['women', 'men']) },
+    { key: 'women', on: value.includes('women'), next: () => (value.includes('women') ? value.filter((x) => x !== 'women') : [...value, 'women']) },
+    { key: 'men', on: value.includes('men'), next: () => (value.includes('men') ? value.filter((x) => x !== 'men') : [...value, 'men']) },
+  ];
+  return (
+    <div className="flex flex-wrap gap-x-8 gap-y-2 font-mono text-[13px] font-medium">
+      {opts.map((o) => (
+        <button key={o.key} type="button" onClick={() => onChange(o.next())} className="flex items-center gap-2" aria-pressed={o.on}>
+          <Check checked={o.on} />
+          {t(`news.${o.key}`)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Newsletter() {
   const { t, lang } = useLang();
   const [email, setEmail] = useState('');
@@ -41,16 +64,15 @@ function Newsletter() {
   const [agree, setAgree] = useState(false);
   const [state, setState] = useState<'idle' | 'busy' | 'done'>('idle');
   const [error, setError] = useState('');
-
-  function toggle(p: string) {
-    setPrefs((cur) => (cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p]));
-  }
+  const [consentError, setConsentError] = useState('');
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     const clean = sanitizeEmail(email);
     if (!clean) return setError(t('news.error_email'));
-    if (!agree) return setError(t('news.error_consent'));
+    setError('');
+    if (!agree) return setConsentError(t('news.error_consent'));
+    setConsentError('');
     if (isRateLimited('newsletter')) return setError(t('common.rate_limit'));
     setError('');
     setState('busy');
@@ -83,7 +105,7 @@ function Newsletter() {
           <button
             type="submit"
             disabled={state === 'busy'}
-            className="w-8 h-8 border border-ink flex items-center justify-center hover:bg-ink hover:text-ash transition-colors disabled:opacity-50"
+            className="w-9 h-9 shrink-0 rounded-full border border-ink bg-transparent flex items-center justify-center hover:bg-ink hover:text-ash transition-colors disabled:opacity-50"
             aria-label={t('contact.send')}
           >
             <Arrow />
@@ -91,23 +113,26 @@ function Newsletter() {
         </div>
       )}
 
-      <div className="flex gap-10 mt-3 font-mono text-[13px] font-medium">
-        {(['women', 'men'] as const).map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => toggle(p)}
-            className="flex items-center gap-2"
-            aria-pressed={prefs.includes(p)}
-          >
-            <Check checked={prefs.includes(p)} />
-            {t(`news.${p}`)}
-          </button>
-        ))}
+      {error && (
+        <p role="alert" className="font-mono text-[11px] mt-2 text-red-700">
+          {error}
+        </p>
+      )}
+
+      <div className="mt-3">
+        <PrefsPicker value={prefs} onChange={setPrefs} />
       </div>
 
       <label className="flex items-start gap-3 mt-4 font-mono text-[11px] leading-[1.5] cursor-pointer select-none">
-        <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="sr-only peer" />
+        <input
+          type="checkbox"
+          checked={agree}
+          onChange={(e) => {
+            setAgree(e.target.checked);
+            if (e.target.checked) setConsentError('');
+          }}
+          className="sr-only peer"
+        />
         <span className="peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 rounded-full">
           <Check checked={agree} />
         </span>
@@ -119,9 +144,57 @@ function Newsletter() {
           {t('consent.post')}
         </span>
       </label>
-
-      {error && <p className="font-mono text-[11px] mt-2 text-red-700">{error}</p>}
+      {consentError && (
+        <p role="alert" className="font-mono text-[11px] mt-1.5 pl-8 text-red-700">
+          {consentError}
+        </p>
+      )}
     </form>
+  );
+}
+
+/** Разделы меню — только на больших экранах, чтобы левая часть подвала не пустовала. */
+function FooterNav() {
+  const { t } = useLang();
+  const col = (title: string, links: { label: string; to: string; external?: boolean }[]) => (
+    <div>
+      <h3 className="font-display uppercase text-[15px] leading-none mb-4">{title}</h3>
+      <ul className="space-y-[7px] font-display uppercase text-[13px] leading-tight text-ink/75">
+        {links.map((l) => (
+          <li key={l.label}>
+            <a
+              href={l.to}
+              className="link-u hover:text-ink"
+              {...(l.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            >
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+  return (
+    <nav aria-label={t('nav.menu')} className="hidden lg:grid grid-cols-4 gap-10 xl:gap-16 pt-1">
+      {col(t('menu.collection'), [
+        { label: t('cat.all'), to: href.category('all') },
+        ...CATEGORIES.map((c) => ({ label: t(`cat.${c}`), to: href.category(c) })),
+      ])}
+      {col(t('menu.house'), [
+        { label: t('nav.about'), to: href.about },
+        { label: t('nav.contact'), to: href.contact },
+        { label: t('footer.privacy'), to: href.privacy },
+      ])}
+      {col(t('menu.contacts'), [
+        { label: t('menu.email'), to: `mailto:${CONTACTS.email}` },
+        { label: t('menu.phone'), to: CONTACTS.phoneHref },
+        { label: t('menu.telegram'), to: CONTACTS.telegramHref, external: true },
+      ])}
+      {col(
+        t('menu.socials'),
+        SOCIALS.map((x) => ({ label: x.label, to: x.href, external: true }))
+      )}
+    </nav>
   );
 }
 
@@ -140,8 +213,9 @@ export function Footer() {
 
   return (
     <footer className="bg-ash border-t-[3px] border-smoke">
-      <div className="flex justify-end px-4 sm:px-5 pt-5 pb-8">
-        <div className="w-full sm:w-[400px]">
+      <div className="flex justify-end lg:justify-between gap-10 px-4 sm:px-5 pt-5 pb-8">
+        <FooterNav />
+        <div className="w-full sm:w-[400px] shrink-0">
           <Newsletter />
         </div>
       </div>

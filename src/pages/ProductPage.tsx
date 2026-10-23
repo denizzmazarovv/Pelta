@@ -47,7 +47,6 @@ export function ProductPage({ id }: { id: string }) {
 
   const name = product[`name_${lang}`];
   const desc = product[`desc_${lang}`];
-  const currencyLabel = lang === 'en' ? 'UZS' : lang === 'uz' ? 'So‘m' : 'Сум';
   const related = products.filter((p) => p.id !== product.id && p.category === product.category)
     .concat(products.filter((p) => p.category !== product.category))
     .slice(0, 4);
@@ -102,7 +101,7 @@ export function ProductPage({ id }: { id: string }) {
 
             <Block title={t('product.price')}>
               <p>
-                {currencyLabel}&nbsp;&nbsp;{formatNumber(product.price)}
+                {formatNumber(product.price)}
               </p>
             </Block>
 

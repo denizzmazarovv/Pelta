@@ -16,7 +16,7 @@ import { DEFAULT_COUNTRY, isComplete, toE164, type Country } from '../lib/phone'
 import { LIMITS, filterName, validName } from '../lib/validate';
 import { Field } from '../pages/ContactPage';
 import { Captcha, captchaEnabled, type CaptchaHandle } from './Captcha';
-import { Check } from './Footer';
+import { Check, PrefsPicker } from './Footer';
 import { Mark } from './Logo';
 import { PhoneInput } from './PhoneInput';
 
@@ -92,6 +92,7 @@ export function RegisterDrawer() {
   const [notice, setNotice] = useState('');
   const [cooldown, setCooldown] = useState(0);
   const [nonce, setNonce] = useState<string | null>(null);
+  const [consentError, setConsentError] = useState('');
 
   const phoneE164 = toE164(national, country);
 
@@ -216,7 +217,7 @@ export function RegisterDrawer() {
     e?.preventDefault();
     if (busy || cooldown > 0) return;
     if (!isComplete(national, country)) return setError(t('cart.error_phone'));
-    if (!agree) return setError(t('contact.errors.policy'));
+    if (!agree) return setConsentError(t('contact.errors.policy'));
     if (captchaEnabled && !token) return setError(t('auth.err.captcha'));
     run(async () => {
       const { error } = await auth.sendCode(phoneE164, token);
@@ -238,7 +239,7 @@ export function RegisterDrawer() {
 
   // Вход через Telegram в одно касание
   function onTelegram() {
-    if (!agree) return setError(t('contact.errors.policy'));
+    if (!agree) return setConsentError(t('contact.errors.policy'));
     setError('');
     setNotice('');
     setNonce(startTelegramLogin());
@@ -270,7 +271,9 @@ export function RegisterDrawer() {
     run(async () => {
       const { error } = await auth.updateProfile({ name: name.trim(), prefs, marketing });
       if (error) return setError(t('auth.err.generic'));
-      setNotice(t('reg.saved'));
+      // Сохранили — возвращаемся туда, откуда открыли панель, и показываем «Сохранено»
+      auth.flash(t('reg.saved'));
+      closeRegister();
     });
   }
 
@@ -326,17 +329,27 @@ export function RegisterDrawer() {
           {view === 'phone' && (
             <div className="space-y-7">
               <p className="font-mono text-[12px] leading-[1.7] text-ink/70">{t('auth.intro')}</p>
-              {checkbox(
-                agree,
-                setAgree,
-                <>
-                  {t('consent.pre')}{' '}
-                  <a href="#/privacy" className="underline underline-offset-2">
-                    {t('consent.link')}
-                  </a>{' '}
-                  {t('consent.post')}
-                </>
-              )}
+              <div>
+                {checkbox(
+                  agree,
+                  (v) => {
+                    setAgree(v);
+                    if (v) setConsentError('');
+                  },
+                  <>
+                    {t('consent.pre')}{' '}
+                    <a href="#/privacy" className="underline underline-offset-2">
+                      {t('consent.link')}
+                    </a>{' '}
+                    {t('consent.post')}
+                  </>
+                )}
+                {consentError && (
+                  <p role="alert" className="font-mono text-[12px] text-red-700 mt-1.5 pl-8">
+                    {consentError}
+                  </p>
+                )}
+              </div>
 
               {telegramEnabled && (
                 <div className="space-y-4">
@@ -468,19 +481,8 @@ export function RegisterDrawer() {
                 </Field>
                 <div>
                   <span className="field-label">{t('reg.pref')}</span>
-                  <div className="flex gap-10 mt-2 font-mono text-[13px] font-medium">
-                    {(['women', 'men'] as const).map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => setPrefs((c) => (c.includes(p) ? c.filter((x) => x !== p) : [...c, p]))}
-                        className="flex items-center gap-2"
-                        aria-pressed={prefs.includes(p)}
-                      >
-                        <Check checked={prefs.includes(p)} />
-                        {t(`news.${p}`)}
-                      </button>
-                    ))}
+                  <div className="mt-2">
+                    <PrefsPicker value={prefs} onChange={setPrefs} />
                   </div>
                 </div>
                 {checkbox(marketing, setMarketing, t('reg.marketing'))}

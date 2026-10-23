@@ -18,7 +18,7 @@ export type Product = {
   desc_ru: string;
   desc_uz: string;
   desc_en: string;
-  /** Цена в сумах */
+  /** Цена в долларах США. На сайте показывается просто числом, без знака $. */
   price: number;
   image: string;
   gallery: string[];
@@ -47,7 +47,7 @@ export const products: Product[] = [
     desc_ru: 'Компактный кардхолдер на шесть карт из кожи растительного дубления. Лаконичный силуэт, выполненный вручную.',
     desc_uz: 'O‘simlik bilan oshlangan charmdan oltita karta uchun ixcham kartxolder. Qo‘lda ishlangan lakonik siluet.',
     desc_en: 'A compact six-card holder in vegetable-tanned leather. A pared-back silhouette, made by hand.',
-    price: 700_000,
+    price: 60,
     image: '/images/products/pelta_denim.jpg',
     gallery: [
       '/images/products/pelta_denim.jpg',
@@ -67,7 +67,7 @@ export const products: Product[] = [
     desc_ru: 'Минималистичный кардхолдер с отделением для купюр. Кожа растительного дубления, ручная работа.',
     desc_uz: 'Banknotlar uchun bo‘limli minimalistik kartxolder. O‘simlik bilan oshlangan charm, qo‘l mehnati.',
     desc_en: 'A minimal cardholder with a note compartment. Vegetable-tanned leather, made by hand.',
-    price: 650_000,
+    price: 56,
     image: '/images/products/cardholder-pelta.svg',
     gallery: [
       '/images/products/cardholder-pelta.svg',
@@ -87,7 +87,7 @@ export const products: Product[] = [
     desc_ru: 'Брелок для ключей из кожи растительного дубления, выполненный вручную. Небольшая вещь, которая с годами становится только красивее.',
     desc_uz: 'O‘simlik bilan oshlangan charmdan qo‘lda ishlangan kalit breloki. Yillar o‘tib yanada chiroyli bo‘ladigan kichik buyum.',
     desc_en: 'A key chain in vegetable-tanned leather, made by hand. A small object that only grows more beautiful with time.',
-    price: 350_000,
+    price: 30,
     image: '/images/products/keychain-nera.svg',
     gallery: ['/images/products/keychain-nera.svg'],
     colors: [tan, black, cognac],
@@ -103,7 +103,7 @@ export const products: Product[] = [
     desc_ru: 'Городская сумка через плечо ручной работы из кожи растительного дубления, которая со временем приобретает благородную патину.',
     desc_uz: 'Vaqt o‘tishi bilan nafis patina kasb etadigan, o‘simlik bilan oshlangan charmdan qo‘lda ishlangan shahar yelka sumkasi.',
     desc_en: 'A handcrafted city shoulder bag in vegetable-tanned leather that develops a rich patina over time.',
-    price: 2_150_000,
+    price: 184,
     image: '/images/products/bag-tashkent.svg',
     gallery: [
       '/images/products/bag-tashkent.svg',
@@ -123,7 +123,7 @@ export const products: Product[] = [
     desc_ru: 'Вместительный портфель для документов. Структурный силуэт и ручная работа.',
     desc_uz: 'Hujjatlar uchun keng portfel. Qat’iy siluet va qo‘l mehnati.',
     desc_en: 'A generous portfolio for documents. A structured silhouette, made by hand.',
-    price: 2_650_000,
+    price: 227,
     image: '/images/products/bag-amir.svg',
     gallery: [
       '/images/products/bag-amir.svg',
@@ -143,7 +143,7 @@ export const products: Product[] = [
     desc_ru: 'Классический ремень из плотной кожи с лаконичной пряжкой.',
     desc_uz: 'Ixcham to‘qali zich charmdan klassik kamar.',
     desc_en: 'A classic belt in firm leather with an understated buckle.',
-    price: 850_000,
+    price: 73,
     image: '/images/products/belt-classic.svg',
     gallery: [
       '/images/products/belt-classic.svg',
@@ -163,7 +163,7 @@ export const products: Product[] = [
     desc_ru: 'Ремень с фигурной пряжкой и ручной прострочкой.',
     desc_uz: 'Shakldor to‘qa va qo‘lda tikilgan kamar.',
     desc_en: 'A belt with a sculpted buckle and hand stitching.',
-    price: 1_000_000,
+    price: 86,
     image: '/images/products/belt-heritage.svg',
     gallery: [
       '/images/products/belt-heritage.svg',

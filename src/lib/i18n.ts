@@ -167,6 +167,7 @@ const ru: Dict = {
 
   'news.title': "Подпишитесь на новости",
   'news.placeholder': 'Ваш email…',
+  'news.all': 'Все',
   'news.women': 'Женское',
   'news.men': 'Мужское',
   'news.done': 'Спасибо! Вы подписаны.',
@@ -408,6 +409,7 @@ const uz: Dict = {
 
   'news.title': 'Yangiliklarga obuna bo‘ling',
   'news.placeholder': 'Email manzilingiz…',
+  'news.all': "Hammasi",
   'news.women': "Ayollar uchun",
   'news.men': "Erkaklar uchun",
   'news.done': 'Rahmat! Siz obuna bo‘ldingiz.',
@@ -649,6 +651,7 @@ const en: Dict = {
 
   'news.title': 'Subscribe to our newsletter',
   'news.placeholder': 'Your email here…',
+  'news.all': "All",
   'news.women': "Women",
   'news.men': "Men",
   'news.done': 'Thank you! You are subscribed.',

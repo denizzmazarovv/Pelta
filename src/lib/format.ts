@@ -1,13 +1,14 @@
 import type { Lang } from './i18n';
 
-const CURRENCY: Record<Lang, string> = { ru: 'сум', uz: 'so‘m', en: 'UZS' };
-
+/** 1 234 — пробел между тысячами. */
 export function formatNumber(n: number): string {
   return Math.round(n)
     .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
-export function formatPrice(n: number, lang: Lang): string {
-  return `${formatNumber(n)} ${CURRENCY[lang]}`;
+/** Цена в долларах США: просто число, без знака и без валюты (например, «60»). */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function formatPrice(n: number, _lang?: Lang): string {
+  return formatNumber(n);
 }
