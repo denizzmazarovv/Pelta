@@ -45,17 +45,18 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
           headerHidden ? 'top-0' : 'top-[calc(50px+env(safe-area-inset-top))]'
         }`}
       >
-        {/* Знак — по центру сверху */}
-        <div className="flex justify-center pt-2">
-          <a href={href.home} aria-label="Pelta Nera">
+        {/* Одна строка 46px: знак ровно по центру, категории и сортировка справа */}
+        <div className="relative h-[46px] flex items-center px-4 sm:px-5">
+          <a
+            href={href.home}
+            aria-label="Pelta Nera"
+            className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          >
             <Mark size={30} />
           </a>
-        </div>
 
-        {/* Категории — строго по центру, сортировка справа */}
-        <div className="relative h-[42px] flex items-center px-4 sm:px-5">
-          <nav className="flex-1 min-w-0 overflow-x-auto hide-scrollbar pr-9 sm:pr-0">
-            <div className="flex gap-1 sm:gap-2 w-max mx-auto">
+          <nav className="flex-1 lg:flex-none lg:ml-[calc(50%+48px)] min-w-0 overflow-x-auto hide-scrollbar pr-10 lg:pr-0">
+            <div className="flex gap-1 sm:gap-2 w-max">
               {tabs.map((c) => {
                 const active = c === category;
                 return (
