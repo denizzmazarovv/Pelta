@@ -135,12 +135,12 @@ export function Footer() {
 
   return (
     <footer className="bg-ash border-t-[3px] border-smoke">
-      <div className="flex justify-end px-5 sm:px-0 sm:pr-5 pt-5 pb-8">
+      <div className="flex justify-end px-4 sm:px-5 pt-5 pb-8">
         <div className="w-full sm:w-[400px]">
           <Newsletter />
         </div>
       </div>
-      <div className="px-5 sm:px-16 pb-safe">
+      <div className="px-4 sm:px-5 pb-safe">
         <div className="border-t-2 border-ink pt-4 pb-8 flex flex-wrap gap-x-5 gap-y-2 font-sans text-[13px] sm:text-[15px] text-ink/75">
           {items.map((i) => (
             <span key={i.label} className="whitespace-nowrap">

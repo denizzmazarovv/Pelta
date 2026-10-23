@@ -55,15 +55,18 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
             <Mark size={30} />
           </a>
 
-          <nav className="flex-1 lg:flex-none lg:ml-auto lg:mr-[92px] min-w-0 overflow-x-auto hide-scrollbar pr-10 lg:pr-0">
-            <div className="flex gap-1 sm:gap-2 w-max">
+          {/* Правая группа: категории + сортировка в одном потоке, без наложений.
+              На больших экранах группа не заходит за центральный знак. */}
+          <div className="flex items-center gap-2 flex-1 min-w-0 lg:flex-none lg:ml-auto lg:max-w-[calc(50%-36px)]">
+          <nav className="flex-1 min-w-0 overflow-x-auto hide-scrollbar">
+            <div className="flex gap-1 sm:gap-2 lg:gap-1 xl:gap-2 w-max ml-auto">
               {tabs.map((c) => {
                 const active = c === category;
                 return (
                   <a
                     key={c}
                     href={href.category(c)}
-                    className={`nav-caps text-[15px] sm:text-[16px] px-[5px] py-[4px] border whitespace-nowrap transition-colors ${
+                    className={`nav-caps text-[15px] sm:text-[16px] lg:text-[14px] xl:text-[16px] px-[5px] lg:px-[4px] xl:px-[5px] py-[4px] border whitespace-nowrap transition-colors ${
                       active ? 'border-ink' : 'border-transparent hover:border-ink/30'
                     }`}
                     aria-current={active ? 'page' : undefined}
@@ -75,14 +78,14 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
             </div>
           </nav>
 
-          <div className="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 bg-white pl-2">
+          <div className="relative shrink-0">
               <button
                 onClick={() => setSortOpen((o) => !o)}
-                className="nav-caps text-[16px] flex items-center gap-2"
+                className="nav-caps text-[16px] flex items-center gap-2 px-[5px] py-[4px] border border-transparent hover:border-ink/30 -mr-[5px]"
                 aria-expanded={sortOpen}
               >
                 <FilterIcon />
-                <span className="hidden sm:inline">{t('sort.label')}</span>
+                <span className="hidden sm:inline lg:hidden min-[1400px]:inline">{t('sort.label')}</span>
               </button>
               {sortOpen && (
                 <>
@@ -105,6 +108,7 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
                   </div>
                 </>
               )}
+          </div>
           </div>
         </div>
       </div>
