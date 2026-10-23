@@ -2,8 +2,9 @@ import { useEffect, useRef, useState, FormEvent, ReactNode } from 'react';
 import type { AuthError } from '@supabase/supabase-js';
 import { useLang } from '../context/LangContext';
 import { useProfile } from '../context/ProfileContext';
+import { useCart } from '../context/CartContext';
 import { CONTACTS, TELEGRAM_BOT_USERNAME } from '../lib/config';
-import { DEFAULT_COUNTRY, isComplete, toE164, type Country } from '../lib/phone';
+import { DEFAULT_COUNTRY, byIso, isComplete, toE164, type Country } from '../lib/phone';
 import { LIMITS, filterName, validName } from '../lib/validate';
 import { Field } from '../pages/ContactPage';
 import { Captcha, captchaEnabled, type CaptchaHandle } from './Captcha';
@@ -17,6 +18,38 @@ const RESEND_SECONDS = 60;
 const MAX_CODE_ATTEMPTS = 5;
 const BOT_URL = TELEGRAM_BOT_USERNAME ? `https://t.me/${TELEGRAM_BOT_USERNAME}?start=login` : '';
 
+/**
+ * Номер, который ждёт подтверждения в боте. Хранится 15 минут только в этом браузере,
+ * чтобы после кнопки «Вернуться на сайт» в боте не вводить номер заново.
+ */
+const PENDING_KEY = 'pelta_login_pending';
+const PENDING_TTL = 15 * 60 * 1000;
+type Pending = { iso: string; national: string; at: number };
+const pending = {
+  save(iso: string, national: string) {
+    try {
+      localStorage.setItem(PENDING_KEY, JSON.stringify({ iso, national, at: Date.now() }));
+    } catch {
+      /* ignore */
+    }
+  },
+  load(): Pending | null {
+    try {
+      const p = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null') as Pending | null;
+      return p && Date.now() - p.at < PENDING_TTL && /^[\d ]{4,20}$/.test(p.national) ? p : null;
+    } catch {
+      return null;
+    }
+  },
+  clear() {
+    try {
+      localStorage.removeItem(PENDING_KEY);
+    } catch {
+      /* ignore */
+    }
+  },
+};
+
 /** Кнопка «Открыть бота»: клиент один раз делится номером, после этого коды приходят туда. */
 function BotLink({ label, strong }: { label: string; strong?: boolean }) {
   if (!BOT_URL) return null;
@@ -27,7 +60,7 @@ function BotLink({ label, strong }: { label: string; strong?: boolean }) {
       rel="noopener noreferrer"
       className={strong ? 'btn-ink inline-flex items-center justify-center w-full' : 'font-mono text-[12px] link-u'}
     >
-      {label} @{TELEGRAM_BOT_USERNAME}
+      {strong ? label : `${label} @${TELEGRAM_BOT_USERNAME}`}
     </a>
   );
 }
@@ -80,6 +113,7 @@ export function RegisterDrawer() {
   const auth = useProfile();
   const { registerOpen, closeRegister, session, profile } = auth;
   const toMsg = useAuthError();
+  const cart = useCart();
   const captcha = useRef<CaptchaHandle>(null);
 
   const [view, setView] = useState<View>('phone');
@@ -97,6 +131,7 @@ export function RegisterDrawer() {
   const [notice, setNotice] = useState('');
   const [cooldown, setCooldown] = useState(0);
   const [needBot, setNeedBot] = useState(false);
+  const [autoSend, setAutoSend] = useState(false);
 
   const phoneE164 = toE164(national, country);
 
@@ -106,6 +141,15 @@ export function RegisterDrawer() {
     setView(session ? 'account' : 'phone');
     setError('');
     setNotice('');
+    // Вернулись из бота — подставляем номер и сразу просим код
+    const p = !session ? pending.load() : null;
+    if (p) {
+      setCountry(byIso(p.iso));
+      setNational(p.national);
+      setAgree(true);
+      setNeedBot(true);
+      setAutoSend(true);
+    }
     document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRegister();
     window.addEventListener('keydown', onKey);
@@ -125,6 +169,22 @@ export function RegisterDrawer() {
       setMarketing(profile.marketing);
     }
   }, [view, profile]);
+
+  // Автоматический запрос кода после возврата из бота
+  useEffect(() => {
+    if (!autoSend || !registerOpen || view !== 'phone' || busy) return;
+    setAutoSend(false);
+    if (!captchaEnabled) onSend();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSend, registerOpen, view, national]);
+
+  // Клиент ушёл в бота и вернулся на эту же вкладку — пробуем отправить код ещё раз
+  useEffect(() => {
+    if (!registerOpen || !needBot || view !== 'phone') return;
+    const onBack = () => document.visibilityState === 'visible' && setAutoSend(true);
+    document.addEventListener('visibilitychange', onBack);
+    return () => document.removeEventListener('visibilitychange', onBack);
+  }, [registerOpen, needBot, view]);
 
   // Таймер повторной отправки
   useEffect(() => {
@@ -166,10 +226,14 @@ export function RegisterDrawer() {
     run(async () => {
       const { error } = await auth.sendCode(phoneE164, token);
       if (error) {
-        if ((error.message ?? '').includes('NEED_BOT')) setNeedBot(true);
+        if ((error.message ?? '').includes('NEED_BOT')) {
+          setNeedBot(true);
+          pending.save(country.iso, national);
+        }
         return setError(toMsg(error, 'send'));
       }
       setNeedBot(false);
+      pending.clear();
       setCooldown(RESEND_SECONDS);
       setAttempts(0);
       setCode('');
@@ -190,6 +254,8 @@ export function RegisterDrawer() {
         setCode('');
         return setError(attempts + 1 >= MAX_CODE_ATTEMPTS ? t('auth.err.attempts') : toMsg(error, 'code'));
       }
+      // Вход ради заказа — возвращаем к оформлению
+      if (cart.isOpen) return closeRegister();
       setView('account');
     });
   }
@@ -286,7 +352,7 @@ export function RegisterDrawer() {
               )}
               <Captcha ref={captcha} onToken={setToken} lang={lang} />
               {messages}
-              {needBot && <BotLink label={t('auth.open_bot')} strong />}
+              {needBot && <BotLink label={t('auth.start_bot')} strong />}
               <button type="submit" disabled={busy || cooldown > 0} className={needBot && BOT_URL ? 'btn-line' : 'btn-ink'}>
                 {busy ? '…' : cooldown > 0 ? `${t('auth.resend_in')} ${cooldown}s` : t('auth.get_code')}
               </button>

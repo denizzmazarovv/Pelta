@@ -20,6 +20,7 @@
  *  TELEGRAM_BOT_TOKEN       — от @BotFather
  *  TELEGRAM_WEBHOOK_SECRET  — любая длинная строка (латиница/цифры), та же, что в setWebhook
  *  OTP_DAILY_LIMIT          — необязательно, по умолчанию 300
+ *  SITE_LOGIN_URL           — необязательно, по умолчанию https://peltanera.com/#/login
  * SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY Supabase подставляет сам.
  */
 import { Webhook } from 'npm:standardwebhooks@1.0.0';
@@ -27,10 +28,13 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
 const PER_HOUR = 5;
 const PER_DAY = 10;
+const siteUrl = () => Deno.env.get('SITE_LOGIN_URL') || 'https://peltanera.com/#/login';
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
-const fail = (http_code: number, message: string) => json({ error: { http_code, message } }, http_code);
+// Supabase Auth принимает ошибку хука только с HTTP 200: код для клиента передаётся в http_code.
+// Любой другой статус Supabase превращает в «Invalid payload sent to hook».
+const fail = (http_code: number, message: string) => json({ error: { http_code, message } }, 200);
 
 const env = (k: string) => Deno.env.get(k) ?? '';
 
@@ -75,7 +79,8 @@ const T: Record<L, Record<string, string>> = {
   ru: {
     hello: 'Здравствуйте! Это бот входа на сайт Pelta Nera.\n\nНажмите кнопку ниже, чтобы подтвердить свой номер телефона. После этого коды для входа будут приходить сюда.',
     share: '📱 Поделиться номером',
-    done: '✅ Номер подтверждён.\n\nВернитесь на сайт и нажмите «Получить код» — код придёт в этот чат.',
+    done: '✅ Номер подтверждён.\n\nНажмите кнопку ниже, чтобы вернуться на сайт — код для входа придёт в этот чат.',
+    back: '↩️ Вернуться на сайт',
     notOwn: 'Пожалуйста, отправьте свой номер кнопкой «Поделиться номером», а не чужой контакт.',
     hint: 'Нажмите кнопку «Поделиться номером» ниже.',
     code: 'Код для входа на сайт Pelta Nera: {code}\n\nДействует 10 минут. Никому не сообщайте этот код — сотрудники Pelta Nera никогда его не спрашивают.',
@@ -83,7 +88,8 @@ const T: Record<L, Record<string, string>> = {
   uz: {
     hello: 'Assalomu alaykum! Bu Pelta Nera saytiga kirish boti.\n\nTelefon raqamingizni tasdiqlash uchun quyidagi tugmani bosing. Shundan so‘ng kirish kodlari shu yerga keladi.',
     share: '📱 Raqamni ulashish',
-    done: '✅ Raqam tasdiqlandi.\n\nSaytga qayting va «Kod olish» tugmasini bosing — kod shu chatga keladi.',
+    done: '✅ Raqam tasdiqlandi.\n\nSaytga qaytish uchun quyidagi tugmani bosing — kirish kodi shu chatga keladi.',
+    back: '↩️ Saytga qaytish',
     notOwn: 'Iltimos, boshqa kontaktni emas, o‘z raqamingizni «Raqamni ulashish» tugmasi orqali yuboring.',
     hint: 'Quyidagi «Raqamni ulashish» tugmasini bosing.',
     code: 'Pelta Nera saytiga kirish kodi: {code}\n\n10 daqiqa amal qiladi. Kodni hech kimga aytmang — Pelta Nera xodimlari uni hech qachon so‘ramaydi.',
@@ -91,7 +97,8 @@ const T: Record<L, Record<string, string>> = {
   en: {
     hello: 'Hello! This is the Pelta Nera sign-in bot.\n\nTap the button below to confirm your phone number. Sign-in codes will then arrive here.',
     share: '📱 Share my number',
-    done: '✅ Number confirmed.\n\nGo back to the website and tap “Get code” — the code will arrive in this chat.',
+    done: '✅ Number confirmed.\n\nTap the button below to go back to the website — your sign-in code will arrive in this chat.',
+    back: '↩️ Back to the website',
     notOwn: 'Please share your own number using the “Share my number” button, not someone else’s contact.',
     hint: 'Tap the “Share my number” button below.',
     code: 'Your Pelta Nera sign-in code: {code}\n\nValid for 10 minutes. Never share this code — Pelta Nera staff will never ask for it.',
@@ -128,7 +135,11 @@ async function handleTelegram(req: Request) {
       .from('pn_telegram_links')
       .upsert({ phone_hash: await phoneHash(phone), chat_id: chatId, linked_at: new Date().toISOString() });
     if (error) return json({ ok: true });
-    await tg('sendMessage', { chat_id: chatId, text: t.done, reply_markup: { remove_keyboard: true } });
+    await tg('sendMessage', {
+      chat_id: chatId,
+      text: t.done,
+      reply_markup: { inline_keyboard: [[{ text: t.back, url: siteUrl() }]] },
+    });
     return json({ ok: true });
   }
 

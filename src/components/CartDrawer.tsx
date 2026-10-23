@@ -13,16 +13,16 @@ import {
   normalizeHandle,
   validName,
 } from '../lib/validate';
-import { isRateLimited, RateLimitError, saveOrder } from '../lib/forms';
+import { AuthRequiredError, isRateLimited, RateLimitError, saveOrder } from '../lib/forms';
 import { Field } from '../pages/ContactPage';
 import { Mark } from './Logo';
-import { PhoneInput } from './PhoneInput';
 import { DEFAULT_COUNTRY, isComplete, parsePhone, toE164, type Country } from '../lib/phone';
 
 export function CartDrawer() {
   const { t, lang } = useLang();
   const { items, isOpen, close, remove, setQty, total, count, clear } = useCart();
-  const { profile, session } = useProfile();
+  const { profile, session, openRegister } = useProfile();
+  const verifiedPhone = profile?.phone ?? '';
   const [checkout, setCheckout] = useState(false);
   const [form, setForm] = useState({ name: '', telegram: '', address: '', comment: '' });
   const [phoneCountry, setPhoneCountry] = useState<Country>(DEFAULT_COUNTRY);
@@ -49,7 +49,7 @@ export function CartDrawer() {
   useEffect(() => {
     if (checkout && profile) {
       setForm((f) => ({ ...f, name: f.name || filterName(profile.name) }));
-      if (!phone && profile.phone) {
+      if (profile.phone) {
         const p = parsePhone(profile.phone);
         setPhoneCountry(p.country);
         setPhone(p.national);
@@ -66,7 +66,7 @@ export function CartDrawer() {
   function validate() {
     const e: Record<string, string> = {};
     if (!validName(form.name)) e.name = t('cart.error_name');
-    if (!isComplete(phone, phoneCountry)) e.phone = t('cart.error_phone');
+    if (!verifiedPhone || !isComplete(phone, phoneCountry)) e.phone = t('cart.error_phone');
     if (normalizeHandle(form.telegram) === null) e.telegram = t('cart.error_telegram');
     const addr = finalText(form.address, LIMITS.address);
     if (addr && addr.length < 3) e.address = t('cart.error_address');
@@ -76,6 +76,7 @@ export function CartDrawer() {
 
   async function submitOrder(ev: FormEvent) {
     ev.preventDefault();
+    if (!session || !verifiedPhone) return openRegister();
     if (!validate()) return;
     if (isRateLimited('order')) return setErrors({ form: t('common.rate_limit') });
     setStatus('submitting');
@@ -85,7 +86,8 @@ export function CartDrawer() {
       const comment = finalText(form.comment, LIMITS.comment);
       await saveOrder({
         name: form.name.trim(),
-        phone: toE164(phone, phoneCountry),
+        phone: verifiedPhone || toE164(phone, phoneCountry),
+        accessToken: session.access_token,
         telegram: tg,
         email: session?.user.email ?? '',
         address: finalText(form.address, LIMITS.address),
@@ -105,6 +107,10 @@ export function CartDrawer() {
       clear();
     } catch (err) {
       setStatus('idle');
+      if (err instanceof AuthRequiredError) {
+        setErrors({ form: t('cart.login_required') });
+        return openRegister();
+      }
       setErrors({ form: err instanceof RateLimitError ? t('common.rate_limit') : t('cart.error') });
     }
   }
@@ -146,6 +152,14 @@ export function CartDrawer() {
               OK
             </button>
           </div>
+        ) : checkout && (!session || !verifiedPhone) ? (
+          <div className="flex-1 flex flex-col justify-center px-8">
+            <h2 className="nav-caps text-[19px]">{t('cart.checkout')}</h2>
+            <p className="font-mono text-[13px] text-ink/70 mt-4 leading-[1.7]">{t('cart.login_required')}</p>
+            <button onClick={openRegister} className="btn-ink mt-10">
+              {t('cart.login_button')}
+            </button>
+          </div>
         ) : checkout ? (
           <form onSubmit={submitOrder} noValidate className="flex-1 overflow-y-auto px-5 py-8 space-y-7">
             <h2 className="nav-caps text-[19px]">{t('cart.checkout')}</h2>
@@ -159,15 +173,12 @@ export function CartDrawer() {
               />
             </Field>
             <Field label={t('cart.phone')} error={errors.phone}>
-              <PhoneInput
-                country={phoneCountry}
-                national={phone}
-                invalid={!!errors.phone}
-                onChange={(c, n) => {
-                  setPhoneCountry(c);
-                  setPhone(n);
-                }}
-              />
+              <div className="flex items-center justify-between h-11 border-b border-ink/20 font-mono text-[13px]">
+                <span>
+                  +{phoneCountry.dial} {phone}
+                </span>
+                <span className="text-[11px] text-mute">✓ {t('cart.phone_verified')}</span>
+              </div>
             </Field>
             <Field label={t('cart.telegram')} error={errors.telegram}>
               <div

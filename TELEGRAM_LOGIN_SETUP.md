@@ -31,7 +31,7 @@
 
 ### 1. Создать бота
 1. В Telegram откройте **@BotFather** → `/newbot`.
-2. Имя: `Pelta Nera`. Username: например `PeltaNeraBot` (должен заканчиваться на `bot`).
+2. Имя: `Pelta Nera`. Username: `peltanera_bot` (должен заканчиваться на `bot`).
 3. BotFather пришлёт **токен** вида `123456789:AA...`. **Никому его не отправляйте**, даже в чат с Claude. Он нужен только в шаге 4.
 4. Username бота (без @) впишите в `src/lib/config.ts` → `TELEGRAM_BOT_USERNAME`.
 
@@ -75,3 +75,12 @@ https://api.telegram.org/bot<ТОКЕН>/setWebhook?url=https://misuvgnzuustjptk
 
 ### Капча (рекомендуется, позже)
 Cloudflare → Turnstile → виджет для `peltanera.com`. Secret Key → Supabase **Authentication → Attack Protection → CAPTCHA**. Site Key → `TURNSTILE_SITE_KEY` в `src/lib/config.ts`. Включать одновременно.
+
+---
+
+## Заказы только от подтверждённых клиентов
+
+- На сайте оформить заказ можно только после входа по номеру. Телефон в заказе берётся из подтверждённого аккаунта, изменить его в форме нельзя.
+- Google Apps Script (файл `google-apps-script/orders.gs`, вставлен в проект таблицы «Orders PeltaNera») сам проверяет токен входа в Supabase. Без входа скрипт отвечает `auth` и ничего не отправляет в канал. Не больше 5 заказов в час с одного аккаунта.
+- В базе (`pn_orders`) анонимные записи запрещены, а номер заказа должен совпадать с подтверждённым номером клиента (`supabase/migrations/20261027090000_orders_verified_only.sql`).
+- После изменения кода в Apps Script: **Начать развертывание → Управление развертываниями → ✏️ → Версия: Новая версия → Начать развертывание**. Ссылка остаётся прежней.

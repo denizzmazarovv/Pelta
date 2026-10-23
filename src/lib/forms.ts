@@ -84,9 +84,20 @@ function deviceType(): string {
   return /Mobi/i.test(ua) ? 'Mobile' : 'Desktop';
 }
 
+export class AuthRequiredError extends Error {
+  constructor() {
+    super('auth_required');
+  }
+}
+
+/**
+ * Заказ принимают только от вошедших клиентов: скрипт Google проверяет токен входа
+ * в Supabase и берёт номер из подтверждённого аккаунта, а не из формы.
+ */
 export async function saveOrder(o: {
   name: string;
   phone: string;
+  accessToken: string;
   telegram?: string;
   email?: string;
   userId?: string;
@@ -110,7 +121,20 @@ export async function saveOrder(o: {
     items: o.items.map((i) => ({ ...i, subtotal: i.price * i.quantity })),
     items_summary: o.items.map((i) => `${i.name} (${i.color}) ×${i.quantity} = ${i.price * i.quantity}`).join('; '),
   };
-  await toGoogle(GOOGLE_CART_URL, JSON.stringify(payload), 'text/plain;charset=utf-8');
+  if (!o.accessToken) throw new AuthRequiredError();
+  if (!GOOGLE_CART_URL) throw new Error('not_configured');
+  // text/plain — без предварительного CORS-запроса; ответ скрипта читается
+  const res = await fetch(GOOGLE_CART_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ ...payload, access_token: o.accessToken }),
+  });
+  const out = (await res.json().catch(() => null)) as { status?: string; code?: string } | null;
+  if (out?.status !== 'ok') {
+    if (out?.code === 'auth') throw new AuthRequiredError();
+    if (out?.code === 'rate') throw new RateLimitError();
+    throw new Error(out?.code || 'order_failed');
+  }
   record('order');
   await toSupabase('pn_orders', {
     name: payload.customer_name,

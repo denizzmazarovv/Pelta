@@ -42,6 +42,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(!supabase);
   const [registerOpen, setRegisterOpen] = useState(false);
   const openRegister = useCallback(() => setRegisterOpen(true), []);
+
+  // Ссылка #/login (кнопка «Вернуться на сайт» в боте) сразу открывает вход
+  useEffect(() => {
+    const check = () => {
+      if (window.location.hash.replace(/^#\/?/, '').split(/[/?]/)[0] === 'login') {
+        history.replaceState(null, '', '#/');
+        setRegisterOpen(true);
+      }
+    };
+    check();
+    window.addEventListener('hashchange', check);
+    return () => window.removeEventListener('hashchange', check);
+  }, []);
   const closeRegister = useCallback(() => setRegisterOpen(false), []);
 
   const loadProfile = useCallback(async (s: Session | null) => {
