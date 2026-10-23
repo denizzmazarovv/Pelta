@@ -21,6 +21,10 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 
+-- Если таблица profiles уже была создана раньше с другими колонками — добавляем недостающие
+alter table public.profiles add column if not exists email text;
+alter table public.profiles add column if not exists full_name text;
+alter table public.profiles add column if not exists created_at timestamptz not null default now();
 alter table public.profiles add column if not exists phone text;
 alter table public.profiles add column if not exists prefs text[] not null default '{}';
 alter table public.profiles add column if not exists marketing boolean not null default false;
@@ -76,7 +80,11 @@ begin
   return new;
 exception when others then
   -- Регистрация не должна падать из-за профиля
-  insert into public.profiles (id, email) values (new.id, new.email) on conflict (id) do nothing;
+  begin
+    insert into public.profiles (id, email) values (new.id, new.email) on conflict (id) do nothing;
+  exception when others then
+    null;
+  end;
   return new;
 end;
 $$;
@@ -124,10 +132,15 @@ create trigger profiles_touch
   for each row execute function public.touch_updated_at();
 
 -- Профили для уже существующих пользователей
-insert into public.profiles (id, email)
-select u.id, u.email from auth.users u
-where u.email is not null
-on conflict (id) do nothing;
+do $$
+begin
+  insert into public.profiles (id, email)
+  select u.id, u.email from auth.users u
+  where u.email is not null
+  on conflict (id) do nothing;
+exception when others then
+  raise notice 'profiles backfill skipped: %', sqlerrm;
+end $$;
 
 -- 3. RLS ------------------------------------------------------------------
 alter table public.profiles enable row level security;

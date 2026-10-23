@@ -109,7 +109,7 @@ export async function saveOrder(o: {
   };
   await toGoogle(GOOGLE_CART_URL, JSON.stringify(payload), 'text/plain;charset=utf-8');
   record('order');
-  await toSupabase('orders', {
+  await toSupabase('pn_orders', {
     name: payload.customer_name,
     phone: payload.phone,
     email: clean(o.email),
@@ -130,7 +130,7 @@ export async function saveMessage(m: { name: string; phone?: string; email?: str
   form.append('device', deviceType());
   await toGoogle(GOOGLE_CONTACT_URL, form.toString(), 'application/x-www-form-urlencoded');
   record('contact');
-  await toSupabase('contact_messages', {
+  await toSupabase('pn_contact_messages', {
     name: clean(m.name),
     phone: clean(m.phone),
     email: clean(m.email),
@@ -141,5 +141,5 @@ export async function saveMessage(m: { name: string; phone?: string; email?: str
 
 export function subscribe(email: string, prefs: string[], lang: Lang) {
   // Повторная подписка того же email — не ошибка
-  return insert('newsletter_subscribers', { email: clean(email), prefs, lang }, 'newsletter', true);
+  return insert('pn_newsletter', { email: clean(email), prefs, lang }, 'newsletter', true);
 }
