@@ -5,7 +5,7 @@
  * формул в таблицах (=, +, @ в начале), разметки Telegram (*, _, `, [ ]) и мусора (~, |, ^, \).
  */
 
-export const LIMITS = { name: 20, telegram: 30, address: 200, comment: 500 } as const;
+export const LIMITS = { name: 20, telegram: 30, address: 200, comment: 300 } as const;
 
 // Невидимые и управляющие символы (в т.ч. RTL-override, zero-width) — всегда удаляем
 /* eslint-disable no-control-regex -- намеренно удаляем управляющие символы */

@@ -7,24 +7,26 @@ import { href } from '../lib/router';
 import {
   LIMITS,
   filterName,
-  filterPhone,
   filterTelegram,
   filterText,
   finalText,
-  normalizePhone,
   normalizeTelegram,
   validName,
 } from '../lib/validate';
 import { isRateLimited, RateLimitError, saveOrder } from '../lib/forms';
 import { Field } from '../pages/ContactPage';
 import { Mark } from './Logo';
+import { PhoneInput } from './PhoneInput';
+import { DEFAULT_COUNTRY, isComplete, parsePhone, toE164, type Country } from '../lib/phone';
 
 export function CartDrawer() {
   const { t, lang } = useLang();
   const { items, isOpen, close, remove, setQty, total, count, clear } = useCart();
   const { profile, session } = useProfile();
   const [checkout, setCheckout] = useState(false);
-  const [form, setForm] = useState({ name: '', phone: '', telegram: '', address: '', comment: '' });
+  const [form, setForm] = useState({ name: '', telegram: '', address: '', comment: '' });
+  const [phoneCountry, setPhoneCountry] = useState<Country>(DEFAULT_COUNTRY);
+  const [phone, setPhone] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
 
@@ -46,8 +48,14 @@ export function CartDrawer() {
   // Подставляем данные зарегистрированного клиента
   useEffect(() => {
     if (checkout && profile) {
-      setForm((f) => ({ ...f, name: f.name || filterName(profile.name), phone: f.phone || filterPhone(profile.phone) }));
+      setForm((f) => ({ ...f, name: f.name || filterName(profile.name) }));
+      if (!phone && profile.phone) {
+        const p = parsePhone(profile.phone);
+        setPhoneCountry(p.country);
+        setPhone(p.national);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkout, profile]);
 
   if (!isOpen) return null;
@@ -58,7 +66,7 @@ export function CartDrawer() {
   function validate() {
     const e: Record<string, string> = {};
     if (!validName(form.name)) e.name = t('cart.error_name');
-    if (!normalizePhone(form.phone)) e.phone = t('cart.error_phone');
+    if (!isComplete(phone, phoneCountry)) e.phone = t('cart.error_phone');
     const tg = normalizeTelegram(form.telegram);
     if (!tg) e.telegram = t('cart.error_telegram');
     const addr = finalText(form.address, LIMITS.address);
@@ -78,7 +86,7 @@ export function CartDrawer() {
       const comment = finalText(form.comment, LIMITS.comment);
       await saveOrder({
         name: form.name.trim(),
-        phone: normalizePhone(form.phone) ?? '',
+        phone: toE164(phone, phoneCountry),
         telegram: tg,
         email: session?.user.email ?? '',
         address: finalText(form.address, LIMITS.address),
@@ -152,15 +160,14 @@ export function CartDrawer() {
               />
             </Field>
             <Field label={t('cart.phone')} error={errors.phone}>
-              <input
-                className="field"
-                type="tel"
-                inputMode="tel"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: filterPhone(e.target.value) })}
-                placeholder="+998 90 999 77 88"
-                maxLength={20}
-                autoComplete="tel"
+              <PhoneInput
+                country={phoneCountry}
+                national={phone}
+                invalid={!!errors.phone}
+                onChange={(c, n) => {
+                  setPhoneCountry(c);
+                  setPhone(n);
+                }}
               />
             </Field>
             <Field label={t('cart.telegram')} error={errors.telegram}>
@@ -192,6 +199,9 @@ export function CartDrawer() {
                 onChange={(e) => setForm({ ...form, comment: filterText(e.target.value, LIMITS.comment) })}
                 maxLength={LIMITS.comment}
               />
+              <span className="block text-right font-mono text-[10px] text-mute mt-1">
+                {form.comment.length}/{LIMITS.comment}
+              </span>
             </Field>
 
             <div className="bg-fog p-4 font-mono text-[12px] space-y-1.5">
