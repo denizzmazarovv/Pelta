@@ -162,6 +162,7 @@ const ru: Dict = {
 
   'consent.pre': 'Я ознакомлен(а) с',
   'consent.link': 'политикой конфиденциальности',
+  'cookie.link': 'политике конфиденциальности',
   'consent.post': 'и согласен(на) на обработку персональных данных.',
 
   'news.title': "Подпишитесь на новости",
@@ -199,6 +200,13 @@ const ru: Dict = {
   'common.rate_limit': 'Слишком много отправок. Подождите 10 минут.',
   'common.close': 'Закрыть',
   'cat.keychain': "Брелоки",
+  'footer.privacy': "Политика конфиденциальности",
+  'cookie.title': "Cookies",
+  'cookie.text': "Мы используем только то, что нужно для работы сайта: корзину, язык и вход в аккаунт. Необязательные cookies для аналитики и маркетинга — только с вашего разрешения. Подробнее — в",
+  'cookie.all': "Разрешить все",
+  'cookie.necessary': "Только необходимые",
+  'cookie.current': "Текущий выбор",
+  'cookie.settings': "Настройки cookies",
 };
 
 const uz: Dict = {
@@ -355,6 +363,7 @@ const uz: Dict = {
 
   'consent.pre': 'Men',
   'consent.link': 'maxfiylik siyosati',
+  'cookie.link': 'maxfiylik siyosatida',
   'consent.post': 'bilan tanishdim va shaxsiy ma’lumotlarimni qayta ishlashga roziman.',
 
   'news.title': 'Yangiliklarga obuna bo‘ling',
@@ -392,6 +401,13 @@ const uz: Dict = {
   'common.rate_limit': 'Juda ko‘p yuborildi. 10 daqiqa kuting.',
   'common.close': 'Yopish',
   'cat.keychain': "Breloklar",
+  'footer.privacy': "Maxfiylik siyosati",
+  'cookie.title': "Cookies",
+  'cookie.text': "Biz faqat sayt ishlashi uchun zarur bo‘lgan narsalardan foydalanamiz: savat, til va hisobga kirish. Analitika va marketing uchun ixtiyoriy cookies — faqat ruxsatingiz bilan. Batafsil —",
+  'cookie.all': "Barchasiga ruxsat",
+  'cookie.necessary': "Faqat zarurlari",
+  'cookie.current': "Joriy tanlov",
+  'cookie.settings': "Cookies sozlamalari",
 };
 
 const en: Dict = {
@@ -548,6 +564,7 @@ const en: Dict = {
 
   'consent.pre': 'I have read the',
   'consent.link': 'privacy policy',
+  'cookie.link': 'Privacy Policy',
   'consent.post': 'and agree to the processing of my personal data.',
 
   'news.title': 'Subscribe to our newsletter',
@@ -585,6 +602,13 @@ const en: Dict = {
   'common.rate_limit': 'Too many submissions. Please wait 10 minutes.',
   'common.close': 'Close',
   'cat.keychain': "Key Chains",
+  'footer.privacy': "Privacy Policy",
+  'cookie.title': "Cookies",
+  'cookie.text': "We use only the storage the site needs to work: your bag, language and sign-in. Optional analytics and marketing cookies are used only with your permission. Details in our",
+  'cookie.all': "Allow all",
+  'cookie.necessary': "Necessary only",
+  'cookie.current': "Current choice",
+  'cookie.settings': "Cookie settings",
 };
 
 export const translations: Record<Lang, Dict> = { ru, uz, en };

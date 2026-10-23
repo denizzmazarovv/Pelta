@@ -39,6 +39,8 @@ function useCrumbs(route: Route) {
     }
   } else if (route.name === 'about') {
     crumbs.push({ label: t('nav.about') });
+  } else if (route.name === 'privacy') {
+    crumbs.push({ label: t('footer.privacy') });
   } else if (route.name === 'contact') {
     crumbs.push({ label: t('nav.contact') });
   } else {

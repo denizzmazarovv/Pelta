@@ -4,6 +4,7 @@ import { CONTACTS } from '../lib/config';
 import { sanitizeEmail } from '../lib/sanitize';
 import { isRateLimited, subscribe } from '../lib/forms';
 import { Mark } from './Logo';
+import { useConsent } from '../context/ConsentContext';
 
 export function Arrow({ size = 12 }: { size?: number }) {
   return (
@@ -107,7 +108,7 @@ function Newsletter() {
         </span>
         <span>
           {t('consent.pre')}{' '}
-          <a href="/privacy.html" target="_blank" className="font-medium underline underline-offset-2">
+          <a href="#/privacy" className="font-medium underline underline-offset-2">
             {t('consent.link')}
           </a>{' '}
           {t('consent.post')}
@@ -121,6 +122,7 @@ function Newsletter() {
 
 export function Footer() {
   const { t } = useLang();
+  const { openSettings } = useConsent();
   const year = new Date().getFullYear();
 
   const items: { label: string; value: string; to?: string }[] = [
@@ -155,6 +157,12 @@ export function Footer() {
           <span className="whitespace-nowrap">
             © {year} Pelta Nera. {t('footer.rights')}
           </span>
+          <a href="#/privacy" className="whitespace-nowrap link-u">
+            {t('footer.privacy')}
+          </a>
+          <button onClick={openSettings} className="whitespace-nowrap link-u text-left">
+            {t('cookie.settings')}
+          </button>
         </div>
       </div>
     </footer>

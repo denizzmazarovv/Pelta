@@ -45,21 +45,24 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
           headerHidden ? 'top-0' : 'top-[calc(50px+env(safe-area-inset-top))]'
         }`}
       >
-        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_auto_1fr] items-center lg:h-[47px] px-4 sm:px-5 pb-2 lg:pb-0">
-          <div className="hidden lg:block" />
-          <div className="py-1 lg:py-0 lg:px-10 lg:self-start">
-            <Mark size={34} />
-          </div>
+        {/* Знак — по центру сверху */}
+        <div className="flex justify-center pt-2">
+          <a href={href.home} aria-label="Pelta Nera">
+            <Mark size={30} />
+          </a>
+        </div>
 
-          <div className="w-full flex items-center justify-between gap-4 lg:pl-24">
-            <nav className="flex gap-1 sm:gap-2 overflow-x-auto hide-scrollbar -mx-1 px-1">
+        {/* Категории — строго по центру, сортировка справа */}
+        <div className="relative h-[42px] flex items-center px-4 sm:px-5">
+          <nav className="flex-1 min-w-0 overflow-x-auto hide-scrollbar pr-9 sm:pr-0">
+            <div className="flex gap-1 sm:gap-2 w-max mx-auto">
               {tabs.map((c) => {
                 const active = c === category;
                 return (
                   <a
                     key={c}
                     href={href.category(c)}
-                    className={`nav-caps text-[16px] px-[5px] py-[4px] border whitespace-nowrap transition-colors ${
+                    className={`nav-caps text-[15px] sm:text-[16px] px-[5px] py-[4px] border whitespace-nowrap transition-colors ${
                       active ? 'border-ink' : 'border-transparent hover:border-ink/30'
                     }`}
                     aria-current={active ? 'page' : undefined}
@@ -68,9 +71,10 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
                   </a>
                 );
               })}
-            </nav>
+            </div>
+          </nav>
 
-            <div className="relative shrink-0">
+          <div className="absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 bg-white pl-2">
               <button
                 onClick={() => setSortOpen((o) => !o)}
                 className="nav-caps text-[16px] flex items-center gap-2"
@@ -100,7 +104,6 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
                   </div>
                 </>
               )}
-            </div>
           </div>
         </div>
       </div>

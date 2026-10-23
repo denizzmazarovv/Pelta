@@ -68,10 +68,11 @@ export function CartDrawer() {
         address: form.address.slice(0, MAX_ADDRESS),
         comment: form.comment.slice(0, MAX_COMMENT),
         total,
+        userId: session?.user.id,
         items: items.map((i) => ({
           id: i.product.id,
-          name: i.product.name_en,
-          color: i.product.colors[i.colorIndex].id,
+          name: name(i.product),
+          color: colorLabel(i),
           quantity: i.quantity,
           price: i.product.price,
         })),

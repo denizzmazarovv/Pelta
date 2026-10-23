@@ -137,7 +137,7 @@ export function ContactPage() {
               </span>
               <span>
                 {t('consent.pre')}{' '}
-                <a href="/privacy.html" target="_blank" className="underline underline-offset-2">
+                <a href="#/privacy" className="underline underline-offset-2">
                   {t('consent.link')}
                 </a>{' '}
                 {t('consent.post')}

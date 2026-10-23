@@ -6,7 +6,8 @@ export type Route =
   | { name: 'catalog'; category: Category | 'all' }
   | { name: 'product'; id: string }
   | { name: 'about' }
-  | { name: 'contact' };
+  | { name: 'contact' }
+  | { name: 'privacy' };
 
 const CATS = ['cardholder', 'keychain', 'bag', 'belt'];
 
@@ -17,6 +18,7 @@ export function parseHash(hash: string): Route {
     return { name: 'catalog', category: parts[1] as Category };
   if (parts[0] === 'about') return { name: 'about' };
   if (parts[0] === 'contact') return { name: 'contact' };
+  if (parts[0] === 'privacy') return { name: 'privacy' };
   return { name: 'catalog', category: 'all' };
 }
 
@@ -26,6 +28,7 @@ export const href = {
   product: (id: string) => `#/p/${id}`,
   about: '#/about',
   contact: '#/contact',
+  privacy: '#/privacy',
 };
 
 export function useRoute(): Route {

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { lazy, Suspense, useCallback, useState } from 'react';
 import { LangProvider } from './context/LangContext';
 import { CartProvider } from './context/CartContext';
 import { ProfileProvider } from './context/ProfileContext';
@@ -12,6 +12,10 @@ import { CatalogPage } from './pages/CatalogPage';
 import { ProductPage } from './pages/ProductPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
+import { ConsentProvider } from './context/ConsentContext';
+import { CookieBanner } from './components/CookieBanner';
+
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 
 function AppContent() {
   const route = useRoute();
@@ -26,11 +30,17 @@ function AppContent() {
         {route.name === 'product' && <ProductPage id={route.id} />}
         {route.name === 'about' && <AboutPage />}
         {route.name === 'contact' && <ContactPage />}
+        {route.name === 'privacy' && (
+          <Suspense fallback={<div className="min-h-screen" />}>
+            <PrivacyPage />
+          </Suspense>
+        )}
       </main>
       <Footer />
       <MenuDrawer open={menuOpen} onClose={closeMenu} route={route} />
       <CartDrawer />
       <RegisterDrawer />
+      <CookieBanner />
     </div>
   );
 }
@@ -38,11 +48,13 @@ function AppContent() {
 export default function App() {
   return (
     <LangProvider>
+      <ConsentProvider>
       <ProfileProvider>
         <CartProvider>
           <AppContent />
         </CartProvider>
       </ProfileProvider>
+      </ConsentProvider>
     </LangProvider>
   );
 }

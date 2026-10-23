@@ -1,9 +1,11 @@
 import { supabase } from './supabase';
+import { GOOGLE_CART_URL, GOOGLE_CONTACT_URL } from './config';
 import type { Lang } from './i18n';
 
 /**
- * Заказы, сообщения и подписки сохраняются в Supabase.
- * Сайт может только добавлять строки; читать их можно только в панели Supabase.
+ * Заказы и сообщения уходят в Telegram-канал через ваши Google Apps Script
+ * (как раньше), и параллельно сохраняются в Supabase, если таблицы уже созданы.
+ * Подписки на рассылку — только в Supabase.
  */
 
 type Kind = 'order' | 'contact' | 'newsletter';
@@ -56,38 +58,85 @@ async function insert(table: string, row: Record<string, unknown>, kind: Kind, i
 
 export type OrderItem = { id: string; name: string; color: string; quantity: number; price: number };
 
-export function saveOrder(o: {
+/** Отправка в Google Apps Script → Telegram. no-cors: ответ не читается, ошибка только при сбое сети. */
+async function toGoogle(url: string, body: string, contentType: string) {
+  if (!url) throw new Error('not_configured');
+  await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': contentType }, body });
+}
+
+/** Копия в Supabase: не мешает отправке, если база ещё не настроена. */
+async function toSupabase(table: string, row: Record<string, unknown>) {
+  try {
+    if (supabase) await supabase.from(table).insert(row);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Тип устройства без лишних подробностей (для удобства ответа). */
+function deviceType(): string {
+  const ua = navigator.userAgent;
+  if (/iPad/i.test(ua) || (/Mac/i.test(navigator.platform) && navigator.maxTouchPoints > 1)) return 'iPad';
+  if (/iPhone|iPod/i.test(ua)) return 'iPhone';
+  if (/Android/i.test(ua)) return /Mobi/i.test(ua) ? 'Android phone' : 'Android tablet';
+  if (/Windows/i.test(ua)) return 'Windows PC';
+  if (/Mac/i.test(ua)) return 'Mac';
+  return /Mobi/i.test(ua) ? 'Mobile' : 'Desktop';
+}
+
+export async function saveOrder(o: {
   name: string;
   phone: string;
   email?: string;
+  userId?: string;
   address: string;
   comment?: string;
   items: OrderItem[];
   total: number;
   lang: Lang;
 }) {
-  return insert(
-    'orders',
-    {
-      name: clean(o.name),
-      phone: clean(o.phone),
-      email: clean(o.email),
-      address: clean(o.address),
-      comment: clean(o.comment),
-      items: o.items,
-      total: Math.round(o.total),
-      lang: o.lang,
-    },
-    'order'
-  );
+  const payload = {
+    timestamp: new Date().toISOString(),
+    user_id: o.userId ?? '',
+    user_email: o.email ?? '',
+    customer_name: clean(o.name) ?? '',
+    phone: clean(o.phone) ?? '',
+    address: clean(o.address) ?? '',
+    comment: clean(o.comment) ?? '',
+    total: Math.round(o.total),
+    items: o.items.map((i) => ({ ...i, subtotal: i.price * i.quantity })),
+    items_summary: o.items.map((i) => `${i.name} (${i.color}) ×${i.quantity} = ${i.price * i.quantity}`).join('; '),
+  };
+  await toGoogle(GOOGLE_CART_URL, JSON.stringify(payload), 'text/plain;charset=utf-8');
+  record('order');
+  await toSupabase('orders', {
+    name: payload.customer_name,
+    phone: payload.phone,
+    email: clean(o.email),
+    address: payload.address,
+    comment: clean(o.comment),
+    items: o.items,
+    total: payload.total,
+    lang: o.lang,
+  });
 }
 
-export function saveMessage(m: { name: string; phone?: string; email?: string; message: string; lang: Lang }) {
-  return insert(
-    'contact_messages',
-    { name: clean(m.name), phone: clean(m.phone), email: clean(m.email), message: clean(m.message), lang: m.lang },
-    'contact'
-  );
+export async function saveMessage(m: { name: string; phone?: string; email?: string; message: string; lang: Lang }) {
+  const form = new URLSearchParams();
+  form.append('name', clean(m.name) ?? '');
+  form.append('phone', clean(m.phone) ?? '');
+  form.append('email', clean(m.email) ?? '');
+  form.append('message', clean(m.message) ?? '');
+  form.append('device', deviceType());
+  await toGoogle(GOOGLE_CONTACT_URL, form.toString(), 'application/x-www-form-urlencoded');
+  record('contact');
+  await toSupabase('contact_messages', {
+    name: clean(m.name),
+    phone: clean(m.phone),
+    email: clean(m.email),
+    message: clean(m.message),
+    lang: m.lang,
+  });
 }
 
 export function subscribe(email: string, prefs: string[], lang: Lang) {

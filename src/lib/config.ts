@@ -9,6 +9,15 @@ export const SUPABASE_ANON_KEY: string =
   (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNydnV1d3BqeXVobWlkeXh5aW5sIiwicm9sIjoiYW5vbiIsImlhdCI6MTc4NDM1NTg3MywiZXhwIjoyMDk5OTMxODczfQ.xzDM7AGSyemHtDxSD_Mfi5L00NddTX1YGIt7MEDYG8E';
 
+// Заявки в Telegram-канал через Google Apps Script (ваши скрипты из .env).
+// Ссылки публичные: они всё равно видны в коде страницы.
+export const GOOGLE_CART_URL: string =
+  (import.meta.env.VITE_GOOGLE_SHEET_CART_URL as string | undefined) ||
+  'https://script.google.com/macros/s/AKfycbwcTc8QsfEVx3440DozhVa7sbB5ZZRbgRN2iI2BMxCRuihZS72EZQCXfd1C_eZd7Nm7Jw/exec';
+export const GOOGLE_CONTACT_URL: string =
+  (import.meta.env.VITE_GOOGLE_SHEET_CONTACT_URL as string | undefined) ||
+  'https://script.google.com/macros/s/AKfycbzQ1V8RdvlCK5yVZqfyJNSoOoTqb6sDOHfoDv3VmsTrYPt-5xg13DTxPQK46w6qclrCRA/exec';
+
 // Cloudflare Turnstile — защита от ботов на формах входа (необязательно).
 // Включайте одновременно здесь и в Supabase: Authentication → Attack Protection.
 export const TURNSTILE_SITE_KEY: string =

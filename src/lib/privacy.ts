@@ -1,0 +1,464 @@
+import type { Lang } from './i18n';
+import { CONTACTS } from './config';
+
+/**
+ * Текст политики конфиденциальности.
+ * Меняйте здесь, если меняется то, какие данные собирает сайт.
+ * Абзац — строка; список — массив строк.
+ */
+export type Block = string | string[];
+export type Section = { id: string; title: string; body: Block[] };
+export type Policy = { title: string; updated: string; intro: string; toc: string; sections: Section[] };
+
+export const POLICY_DATE = '2026-10-23';
+
+const E = CONTACTS.email;
+
+const en: Policy = {
+  title: 'Privacy Policy',
+  updated: 'Last updated: 23 October 2026',
+  toc: 'Contents',
+  intro:
+    'This policy explains what personal data Pelta Nera collects through peltanera.com, why, where it is stored and what rights you have. We collect only what we need to fulfil your orders, answer your messages and run your account. We do not sell personal data and do not use advertising trackers.',
+  sections: [
+    {
+      id: 'operator',
+      title: '1. Who we are',
+      body: [
+        `The operator of your personal data is Pelta Nera (owner: ${CONTACTS.ceo}), ${CONTACTS.city}.`,
+        [`Email: ${E}`, `Phone: ${CONTACTS.phone}`, `Telegram: ${CONTACTS.telegramHandle}`],
+        'We process personal data in accordance with the Law of the Republic of Uzbekistan “On Personal Data” and, for visitors from the European Union, with the principles of the GDPR.',
+      ],
+    },
+    {
+      id: 'data',
+      title: '2. What we collect and why',
+      body: [
+        'Placing an order (shopping bag → checkout):',
+        [
+          'name, phone number, delivery address, optional comment;',
+          'items ordered, colour, quantity and total;',
+          'email and account ID — only if you are signed in.',
+        ],
+        'Purpose: to accept, confirm and deliver your order. Legal basis: performance of a contract.',
+        'Client Service form:',
+        ['name, phone and/or email, your message;', 'device type (for example “iPhone” or “Windows PC”) — to reply in a convenient way.'],
+        'Purpose: to answer your enquiry. Legal basis: your consent.',
+        'Account (sign up / sign in):',
+        [
+          'name, email, phone (optional), interests (women / men), newsletter preference;',
+          'password — stored only as an irreversible hash by our authentication provider; we never see it;',
+          'one-time codes sent to your email to confirm the address or reset the password;',
+          'IP address and time of sign-in attempts — kept by the authentication provider to protect against abuse.',
+        ],
+        'Purpose: to provide your account and faster checkout. Legal basis: contract and consent.',
+        'Newsletter:',
+        ['email, interests (women / men), language.'],
+        'Purpose: to send news about collections. Legal basis: consent, which you can withdraw at any time.',
+        'Technical data:',
+        [
+          'when you open the site, our hosting provider automatically receives your IP address and browser details in server logs;',
+          'we do not use analytics, advertising or social-media tracking tools.',
+        ],
+      ],
+    },
+    {
+      id: 'cookies',
+      title: '3. Cookies and local storage',
+      body: [
+        'The site stores small pieces of data in your browser (local storage). Strictly necessary items work without consent because the site cannot function without them:',
+        [
+          'pelta_cart — contents of your shopping bag;',
+          'pelta_lang_v2 — chosen language;',
+          'pelta_auth — sign-in session (only if you sign in);',
+          'pelta_consent — your cookie choice;',
+          'pelta_sent_* — timestamps of sent forms, to limit spam.',
+        ],
+        'Optional cookies (analytics, marketing) are used only if you choose “Allow all”. At the moment the site uses none; if we add them, they will start working only after your consent and this policy will be updated.',
+        'You can change your choice at any time via “Cookie settings” at the bottom of the site.',
+        'If bot protection (Cloudflare Turnstile) is enabled on the sign-in forms, Cloudflare may process technical data to tell people from bots. This is necessary for security.',
+      ],
+    },
+    {
+      id: 'processors',
+      title: '4. Who processes the data for us',
+      body: [
+        'We use trusted service providers. They process data only on our instructions:',
+        [
+          'Supabase Inc. — accounts, order and message records (database);',
+          'Google LLC (Google Apps Script / Sheets) — receiving orders and messages;',
+          'Telegram — delivering new orders and messages to our private team channel;',
+          'GitHub Inc. (GitHub Pages) — website hosting;',
+          'an email delivery service — sending confirmation and password-reset codes;',
+          'Cloudflare Inc. — bot protection, if enabled.',
+        ],
+        'We may also disclose data to courier services to deliver your order, and to state authorities when required by law.',
+      ],
+    },
+    {
+      id: 'transfer',
+      title: '5. Storage location and cross-border transfer',
+      body: [
+        'Some of these providers store data on servers outside Uzbekistan (for example in the European Union or the United States). The transfer is made to countries that provide an adequate level of personal data protection, or on the basis of your consent given when you submit a form. We do not process biometric or genetic data.',
+      ],
+    },
+    {
+      id: 'retention',
+      title: '6. How long we keep data',
+      body: [
+        [
+          'orders — for the period required by tax and accounting legislation;',
+          'Client Service messages — up to 1 year after the conversation ends;',
+          'account — until you delete it;',
+          'newsletter — until you unsubscribe;',
+          'server and security logs — according to the providers’ standard periods, usually up to 90 days.',
+        ],
+        'After that, data is deleted or anonymised.',
+      ],
+    },
+    {
+      id: 'security',
+      title: '7. How we protect data',
+      body: [
+        [
+          'all connections to the site are encrypted (HTTPS);',
+          'database access rules: visitors can only add their own records and read only their own account data;',
+          'passwords are stored as hashes; email confirmation and password reset use one-time codes;',
+          'limits on the number of attempts and submissions to prevent brute force and spam;',
+          'only authorised staff have access to orders and messages.',
+        ],
+      ],
+    },
+    {
+      id: 'rights',
+      title: '8. Your rights',
+      body: [
+        'You have the right to:',
+        [
+          'know whether we process your data and receive a copy of it;',
+          'correct inaccurate data (you can also do it yourself in “My Account”);',
+          'request deletion of your data and your account;',
+          'withdraw your consent at any time, including unsubscribing from the newsletter;',
+          'object to processing;',
+          'file a complaint with the authorised state body for personal data protection of the Republic of Uzbekistan (or your local data protection authority in the EU).',
+        ],
+        `To exercise these rights, write to ${E}. We reply within 30 days. We may ask you to confirm that the request comes from the account holder.`,
+      ],
+    },
+    {
+      id: 'children',
+      title: '9. Children',
+      body: ['The site is not intended for children under 16. We do not knowingly collect their data. If you believe a child has provided data to us, contact us and we will delete it.'],
+    },
+    {
+      id: 'changes',
+      title: '10. Changes to this policy',
+      body: ['We may update this policy when the site changes. The date of the latest version is shown at the top. If changes are significant, we will notify you on the site or by email.'],
+    },
+    {
+      id: 'contact',
+      title: '11. Contact',
+      body: [`Questions about personal data: ${E} · ${CONTACTS.phone} · Telegram ${CONTACTS.telegramHandle}`],
+    },
+  ],
+};
+
+const ru: Policy = {
+  title: 'Политика конфиденциальности',
+  updated: 'Последнее обновление: 23 октября 2026',
+  toc: 'Содержание',
+  intro:
+    'Эта политика объясняет, какие персональные данные Pelta Nera получает через сайт peltanera.com, зачем, где они хранятся и какие у вас права. Мы собираем только то, что нужно для выполнения заказа, ответа на сообщение и работы аккаунта. Мы не продаём персональные данные и не используем рекламные трекеры.',
+  sections: [
+    {
+      id: 'operator',
+      title: '1. Кто мы',
+      body: [
+        `Оператор персональных данных — Pelta Nera (владелец: ${CONTACTS.ceo}), г. Ташкент, Узбекистан.`,
+        [`Email: ${E}`, `Телефон: ${CONTACTS.phone}`, `Telegram: ${CONTACTS.telegramHandle}`],
+        'Мы обрабатываем персональные данные в соответствии с Законом Республики Узбекистан «О персональных данных», а для посетителей из Европейского союза — с учётом принципов GDPR.',
+      ],
+    },
+    {
+      id: 'data',
+      title: '2. Какие данные мы получаем и зачем',
+      body: [
+        'Оформление заказа (корзина → оформление):',
+        [
+          'имя, телефон, адрес доставки, комментарий (по желанию);',
+          'выбранные изделия, цвет, количество и сумма;',
+          'email и идентификатор аккаунта — только если вы вошли в аккаунт.',
+        ],
+        'Цель: принять, подтвердить и доставить заказ. Основание: исполнение договора.',
+        'Форма «Клиентский сервис»:',
+        ['имя, телефон и/или email, текст сообщения;', 'тип устройства (например, «iPhone» или «Windows PC») — чтобы ответить удобным способом.'],
+        'Цель: ответить на ваше обращение. Основание: ваше согласие.',
+        'Аккаунт (регистрация и вход):',
+        [
+          'имя, email, телефон (по желанию), интересы (женское / мужское), согласие на рассылку;',
+          'пароль — хранится только в виде необратимого хеша у провайдера авторизации, мы его не видим;',
+          'одноразовые коды, которые приходят на email для подтверждения адреса и сброса пароля;',
+          'IP-адрес и время попыток входа — хранятся провайдером авторизации для защиты от взлома.',
+        ],
+        'Цель: работа аккаунта и быстрое оформление заказов. Основание: договор и согласие.',
+        'Рассылка:',
+        ['email, интересы (женское / мужское), язык.'],
+        'Цель: сообщать о новых коллекциях. Основание: согласие, которое можно отозвать в любой момент.',
+        'Технические данные:',
+        [
+          'при открытии сайта хостинг автоматически получает IP-адрес и сведения о браузере в серверных журналах;',
+          'мы не используем аналитику, рекламные и социальные трекеры.',
+        ],
+      ],
+    },
+    {
+      id: 'cookies',
+      title: '3. Cookies и локальное хранилище',
+      body: [
+        'Сайт сохраняет в вашем браузере небольшие данные (local storage). Строго необходимые работают без согласия, потому что без них сайт не функционирует:',
+        [
+          'pelta_cart — содержимое корзины;',
+          'pelta_lang_v2 — выбранный язык;',
+          'pelta_auth — сессия входа (только если вы вошли);',
+          'pelta_consent — ваш выбор по cookies;',
+          'pelta_sent_* — время отправки форм, для защиты от спама.',
+        ],
+        'Необязательные cookies (аналитика, маркетинг) используются, только если вы выбрали «Разрешить все». Сейчас сайт таких не использует; если они появятся, то начнут работать только после вашего согласия, а эта политика будет обновлена.',
+        'Изменить выбор можно в любой момент по ссылке «Настройки cookies» внизу сайта.',
+        'Если на формах входа включена защита от ботов (Cloudflare Turnstile), Cloudflare может обрабатывать технические данные, чтобы отличить человека от бота. Это необходимо для безопасности.',
+      ],
+    },
+    {
+      id: 'processors',
+      title: '4. Кто обрабатывает данные по нашему поручению',
+      body: [
+        'Мы пользуемся надёжными сервисами. Они обрабатывают данные только по нашему поручению:',
+        [
+          'Supabase Inc. — аккаунты, записи заказов и сообщений (база данных);',
+          'Google LLC (Google Apps Script / Таблицы) — приём заказов и сообщений;',
+          'Telegram — доставка новых заказов и сообщений в закрытый канал нашей команды;',
+          'GitHub Inc. (GitHub Pages) — хостинг сайта;',
+          'сервис отправки писем — коды подтверждения и сброса пароля;',
+          'Cloudflare Inc. — защита от ботов, если она включена.',
+        ],
+        'Также данные могут передаваться курьерской службе для доставки заказа и государственным органам в случаях, предусмотренных законом.',
+      ],
+    },
+    {
+      id: 'transfer',
+      title: '5. Место хранения и трансграничная передача',
+      body: [
+        'Часть сервисов хранит данные на серверах за пределами Узбекистана (например, в Европейском союзе или США). Передача осуществляется в страны, обеспечивающие надлежащий уровень защиты персональных данных, либо на основании вашего согласия, которое вы даёте при отправке формы. Биометрические и генетические данные мы не обрабатываем.',
+      ],
+    },
+    {
+      id: 'retention',
+      title: '6. Сроки хранения',
+      body: [
+        [
+          'заказы — в течение срока, установленного налоговым и бухгалтерским законодательством;',
+          'обращения в клиентский сервис — до 1 года после завершения переписки;',
+          'аккаунт — до его удаления;',
+          'рассылка — до отписки;',
+          'серверные журналы и журналы безопасности — в пределах стандартных сроков сервисов, обычно до 90 дней.',
+        ],
+        'После этого данные удаляются или обезличиваются.',
+      ],
+    },
+    {
+      id: 'security',
+      title: '7. Как мы защищаем данные',
+      body: [
+        [
+          'все соединения с сайтом зашифрованы (HTTPS);',
+          'правила доступа к базе: посетитель может только добавлять свои записи и видеть только данные своего аккаунта;',
+          'пароли хранятся в виде хешей, подтверждение email и сброс пароля — по одноразовым кодам;',
+          'ограничение числа попыток и отправок для защиты от подбора паролей и спама;',
+          'доступ к заказам и сообщениям есть только у уполномоченных сотрудников.',
+        ],
+      ],
+    },
+    {
+      id: 'rights',
+      title: '8. Ваши права',
+      body: [
+        'Вы вправе:',
+        [
+          'знать, обрабатываем ли мы ваши данные, и получить их копию;',
+          'исправить неточные данные (это можно сделать и самостоятельно в «Личном кабинете»);',
+          'потребовать удаления данных и аккаунта;',
+          'в любой момент отозвать согласие, в том числе отписаться от рассылки;',
+          'возразить против обработки;',
+          'обратиться с жалобой в уполномоченный государственный орган по защите персональных данных Республики Узбекистан (или в надзорный орган вашей страны в ЕС).',
+        ],
+        `Чтобы воспользоваться правами, напишите на ${E}. Мы отвечаем в течение 30 дней и можем попросить подтвердить, что запрос исходит от владельца аккаунта.`,
+      ],
+    },
+    {
+      id: 'children',
+      title: '9. Дети',
+      body: ['Сайт не предназначен для детей младше 16 лет. Мы намеренно не собираем их данные. Если вы считаете, что ребёнок передал нам данные, свяжитесь с нами — мы их удалим.'],
+    },
+    {
+      id: 'changes',
+      title: '10. Изменения политики',
+      body: ['Мы можем обновлять политику при изменениях на сайте. Дата актуальной версии указана вверху. О существенных изменениях мы сообщим на сайте или по email.'],
+    },
+    {
+      id: 'contact',
+      title: '11. Контакты',
+      body: [`Вопросы о персональных данных: ${E} · ${CONTACTS.phone} · Telegram ${CONTACTS.telegramHandle}`],
+    },
+  ],
+};
+
+const uz: Policy = {
+  title: 'Maxfiylik siyosati',
+  updated: 'Oxirgi yangilanish: 2026-yil 23-oktabr',
+  toc: 'Mundarija',
+  intro:
+    'Ushbu siyosat Pelta Nera peltanera.com sayti orqali qanday shaxsiy ma’lumotlarni, nima maqsadda olishini, ular qayerda saqlanishini va sizning huquqlaringizni tushuntiradi. Biz faqat buyurtmani bajarish, xabaringizga javob berish va hisobingiz ishlashi uchun zarur bo‘lgan ma’lumotlarni yig‘amiz. Biz shaxsiy ma’lumotlarni sotmaymiz va reklama trekerlaridan foydalanmaymiz.',
+  sections: [
+    {
+      id: 'operator',
+      title: '1. Biz kimmiz',
+      body: [
+        `Shaxsiy ma’lumotlar operatori — Pelta Nera (egasi: ${CONTACTS.ceo}), Toshkent sh., O‘zbekiston.`,
+        [`Email: ${E}`, `Telefon: ${CONTACTS.phone}`, `Telegram: ${CONTACTS.telegramHandle}`],
+        'Biz shaxsiy ma’lumotlarni O‘zbekiston Respublikasining «Shaxsga doir ma’lumotlar to‘g‘risida»gi Qonuniga muvofiq, Yevropa Ittifoqidan tashrif buyuruvchilar uchun esa GDPR tamoyillarini hisobga olgan holda qayta ishlaymiz.',
+      ],
+    },
+    {
+      id: 'data',
+      title: '2. Qanday ma’lumotlarni va nima uchun olamiz',
+      body: [
+        'Buyurtma berish (savat → rasmiylashtirish):',
+        [
+          'ism, telefon, yetkazib berish manzili, izoh (ixtiyoriy);',
+          'tanlangan buyumlar, rang, soni va summa;',
+          'email va hisob identifikatori — faqat hisobingizga kirgan bo‘lsangiz.',
+        ],
+        'Maqsad: buyurtmani qabul qilish, tasdiqlash va yetkazib berish. Asos: shartnomani bajarish.',
+        '«Mijozlar xizmati» shakli:',
+        ['ism, telefon va/yoki email, xabar matni;', 'qurilma turi (masalan, «iPhone» yoki «Windows PC») — qulay usulda javob berish uchun.'],
+        'Maqsad: murojaatingizga javob berish. Asos: sizning roziligingiz.',
+        'Hisob (ro‘yxatdan o‘tish va kirish):',
+        [
+          'ism, email, telefon (ixtiyoriy), qiziqishlar (ayollar / erkaklar uchun), yangiliklarga rozilik;',
+          'parol — avtorizatsiya provayderida faqat qaytarib bo‘lmaydigan xesh ko‘rinishida saqlanadi, biz uni ko‘rmaymiz;',
+          'emailni tasdiqlash va parolni tiklash uchun yuboriladigan bir martalik kodlar;',
+          'IP-manzil va kirishga urinishlar vaqti — buzib kirishdan himoya qilish uchun avtorizatsiya provayderida saqlanadi.',
+        ],
+        'Maqsad: hisob ishlashi va buyurtmalarni tez rasmiylashtirish. Asos: shartnoma va rozilik.',
+        'Yangiliklar:',
+        ['email, qiziqishlar (ayollar / erkaklar uchun), til.'],
+        'Maqsad: yangi kolleksiyalar haqida xabar berish. Asos: istalgan vaqtda qaytarib olish mumkin bo‘lgan rozilik.',
+        'Texnik ma’lumotlar:',
+        [
+          'saytni ochganingizda xosting server jurnallarida IP-manzil va brauzer haqidagi ma’lumotlarni avtomatik oladi;',
+          'biz analitika, reklama va ijtimoiy tarmoq trekerlaridan foydalanmaymiz.',
+        ],
+      ],
+    },
+    {
+      id: 'cookies',
+      title: '3. Cookies va mahalliy xotira',
+      body: [
+        'Sayt brauzeringizda kichik ma’lumotlarni saqlaydi (local storage). Mutlaqo zarur bo‘lganlari roziliksiz ishlaydi, chunki ularsiz sayt ishlamaydi:',
+        [
+          'pelta_cart — savat tarkibi;',
+          'pelta_lang_v2 — tanlangan til;',
+          'pelta_auth — kirish sessiyasi (faqat hisobga kirgan bo‘lsangiz);',
+          'pelta_consent — cookies bo‘yicha tanlovingiz;',
+          'pelta_sent_* — spamdan himoya uchun shakllar yuborilgan vaqt.',
+        ],
+        'Ixtiyoriy cookies (analitika, marketing) faqat «Barchasiga ruxsat berish»ni tanlasangiz ishlatiladi. Hozircha sayt bunday cookies’dan foydalanmaydi; agar ular paydo bo‘lsa, faqat roziligingizdan keyin ishlay boshlaydi va ushbu siyosat yangilanadi.',
+        'Tanlovingizni istalgan vaqtda sayt pastidagi «Cookies sozlamalari» havolasi orqali o‘zgartirishingiz mumkin.',
+        'Agar kirish shakllarida botlardan himoya (Cloudflare Turnstile) yoqilgan bo‘lsa, Cloudflare odamni botdan ajratish uchun texnik ma’lumotlarni qayta ishlashi mumkin. Bu xavfsizlik uchun zarur.',
+      ],
+    },
+    {
+      id: 'processors',
+      title: '4. Ma’lumotlarni bizning topshirig‘imiz bilan kim qayta ishlaydi',
+      body: [
+        'Biz ishonchli xizmatlardan foydalanamiz. Ular ma’lumotlarni faqat bizning topshirig‘imiz bilan qayta ishlaydi:',
+        [
+          'Supabase Inc. — hisoblar, buyurtma va xabarlar yozuvlari (ma’lumotlar bazasi);',
+          'Google LLC (Google Apps Script / Jadvallar) — buyurtma va xabarlarni qabul qilish;',
+          'Telegram — yangi buyurtma va xabarlarni jamoamizning yopiq kanaliga yetkazish;',
+          'GitHub Inc. (GitHub Pages) — sayt xostingi;',
+          'xat yuborish xizmati — tasdiqlash va parolni tiklash kodlari;',
+          'Cloudflare Inc. — botlardan himoya, agar yoqilgan bo‘lsa.',
+        ],
+        'Shuningdek, ma’lumotlar buyurtmani yetkazish uchun kuryer xizmatiga va qonunda nazarda tutilgan hollarda davlat organlariga berilishi mumkin.',
+      ],
+    },
+    {
+      id: 'transfer',
+      title: '5. Saqlash joyi va transchegaraviy uzatish',
+      body: [
+        'Ayrim xizmatlar ma’lumotlarni O‘zbekistondan tashqaridagi serverlarda (masalan, Yevropa Ittifoqi yoki AQShda) saqlaydi. Uzatish shaxsiy ma’lumotlarni yetarli darajada himoya qiladigan mamlakatlarga yoki shaklni yuborishda bergan roziligingiz asosida amalga oshiriladi. Biz biometrik va genetik ma’lumotlarni qayta ishlamaymiz.',
+      ],
+    },
+    {
+      id: 'retention',
+      title: '6. Saqlash muddatlari',
+      body: [
+        [
+          'buyurtmalar — soliq va buxgalteriya qonunchiligida belgilangan muddat davomida;',
+          'mijozlar xizmatiga murojaatlar — yozishma tugaganidan keyin 1 yilgacha;',
+          'hisob — o‘chirilgunga qadar;',
+          'yangiliklar — obunadan chiqqunga qadar;',
+          'server va xavfsizlik jurnallari — xizmatlarning standart muddatlarida, odatda 90 kungacha.',
+        ],
+        'Shundan so‘ng ma’lumotlar o‘chiriladi yoki shaxssizlashtiriladi.',
+      ],
+    },
+    {
+      id: 'security',
+      title: '7. Ma’lumotlarni qanday himoya qilamiz',
+      body: [
+        [
+          'sayt bilan barcha ulanishlar shifrlangan (HTTPS);',
+          'ma’lumotlar bazasiga kirish qoidalari: tashrif buyuruvchi faqat o‘z yozuvlarini qo‘shishi va faqat o‘z hisobi ma’lumotlarini ko‘rishi mumkin;',
+          'parollar xesh ko‘rinishida saqlanadi, emailni tasdiqlash va parolni tiklash bir martalik kodlar orqali;',
+          'parolni tanlash va spamdan himoya uchun urinishlar va yuborishlar soni cheklangan;',
+          'buyurtma va xabarlarga faqat vakolatli xodimlar kira oladi.',
+        ],
+      ],
+    },
+    {
+      id: 'rights',
+      title: '8. Sizning huquqlaringiz',
+      body: [
+        'Siz quyidagi huquqlarga egasiz:',
+        [
+          'ma’lumotlaringiz qayta ishlanayotganini bilish va ularning nusxasini olish;',
+          'noto‘g‘ri ma’lumotlarni tuzatish («Shaxsiy kabinet»da o‘zingiz ham qilishingiz mumkin);',
+          'ma’lumotlar va hisobni o‘chirishni talab qilish;',
+          'istalgan vaqtda roziligingizni, jumladan yangiliklarga obunani qaytarib olish;',
+          'qayta ishlashga e’tiroz bildirish;',
+          'O‘zbekiston Respublikasining shaxsga doir ma’lumotlarni himoya qilish bo‘yicha vakolatli davlat organiga (yoki Yevropa Ittifoqidagi mamlakatingiz nazorat organiga) shikoyat qilish.',
+        ],
+        `Huquqlaringizdan foydalanish uchun ${E} manziliga yozing. Biz 30 kun ichida javob beramiz va so‘rov hisob egasidan kelganini tasdiqlashni so‘rashimiz mumkin.`,
+      ],
+    },
+    {
+      id: 'children',
+      title: '9. Bolalar',
+      body: ['Sayt 16 yoshgacha bo‘lgan bolalar uchun mo‘ljallanmagan. Biz ularning ma’lumotlarini ataylab yig‘maymiz. Agar bola bizga ma’lumot bergan deb hisoblasangiz, biz bilan bog‘laning — biz ularni o‘chiramiz.'],
+    },
+    {
+      id: 'changes',
+      title: '10. Siyosatdagi o‘zgarishlar',
+      body: ['Saytdagi o‘zgarishlarga qarab siyosatni yangilashimiz mumkin. Amaldagi versiya sanasi yuqorida ko‘rsatilgan. Muhim o‘zgarishlar haqida saytda yoki email orqali xabar beramiz.'],
+    },
+    {
+      id: 'contact',
+      title: '11. Aloqa',
+      body: [`Shaxsiy ma’lumotlar bo‘yicha savollar: ${E} · ${CONTACTS.phone} · Telegram ${CONTACTS.telegramHandle}`],
+    },
+  ],
+};
+
+export const POLICIES: Record<Lang, Policy> = { en, ru, uz };
