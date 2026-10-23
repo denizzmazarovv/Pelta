@@ -55,7 +55,7 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
             <Mark size={30} />
           </a>
 
-          <nav className="flex-1 lg:flex-none lg:ml-[calc(50%+48px)] min-w-0 overflow-x-auto hide-scrollbar pr-10 lg:pr-0">
+          <nav className="flex-1 lg:flex-none lg:ml-auto lg:mr-[92px] min-w-0 overflow-x-auto hide-scrollbar pr-10 lg:pr-0">
             <div className="flex gap-1 sm:gap-2 w-max">
               {tabs.map((c) => {
                 const active = c === category;
