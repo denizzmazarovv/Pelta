@@ -19,7 +19,7 @@ export const GOOGLE_CONTACT_URL: string =
 
 // Telegram-бот, который присылает коды входа (имя без @). Токен бота сюда НЕ вставлять —
 // он хранится только в Supabase → Edge Functions → Secrets.
-export const TELEGRAM_BOT_USERNAME = '';
+export const TELEGRAM_BOT_USERNAME = 'peltanera_bot';
 
 // Cloudflare Turnstile — защита от ботов на формах входа (необязательно).
 // Включайте одновременно здесь и в Supabase: Authentication → Attack Protection.
