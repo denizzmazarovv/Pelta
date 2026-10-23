@@ -5,7 +5,7 @@ import { useProfile } from '../context/ProfileContext';
 import { formatPrice } from '../lib/format';
 import { href } from '../lib/router';
 import { MAX_ADDRESS, MAX_COMMENT, MAX_NAME, sanitizePhone } from '../lib/sanitize';
-import { isRateLimited, sendToSheet } from '../lib/sheets';
+import { isRateLimited, RateLimitError, saveOrder } from '../lib/forms';
 import { Field } from '../pages/ContactPage';
 import { Mark } from './Logo';
 
@@ -61,24 +61,27 @@ export function CartDrawer() {
     setStatus('submitting');
     setErrors({});
     try {
-      await sendToSheet('order', {
+      await saveOrder({
         name: form.name.slice(0, MAX_NAME),
         phone: sanitizePhone(form.phone),
         email: session?.user.email ?? '',
-        user_id: session?.user.id ?? '',
         address: form.address.slice(0, MAX_ADDRESS),
         comment: form.comment.slice(0, MAX_COMMENT),
         total,
-        items: items
-          .map((i) => `${name(i.product)} (${colorLabel(i)}) ×${i.quantity} = ${i.product.price * i.quantity}`)
-          .join('; '),
+        items: items.map((i) => ({
+          id: i.product.id,
+          name: i.product.name_en,
+          color: i.product.colors[i.colorIndex].id,
+          quantity: i.quantity,
+          price: i.product.price,
+        })),
         lang,
       });
       setStatus('success');
       clear();
-    } catch {
+    } catch (err) {
       setStatus('idle');
-      setErrors({ form: t('cart.error') });
+      setErrors({ form: err instanceof RateLimitError ? t('common.rate_limit') : t('cart.error') });
     }
   }
 

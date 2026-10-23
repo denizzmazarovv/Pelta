@@ -3,7 +3,7 @@ import { useLang } from '../context/LangContext';
 import { useProfile } from '../context/ProfileContext';
 import { CONTACTS, SOCIALS } from '../lib/config';
 import { MAX_MESSAGE, MAX_NAME, sanitizeEmail, sanitizePhone } from '../lib/sanitize';
-import { isRateLimited, sendToSheet } from '../lib/sheets';
+import { isRateLimited, RateLimitError, saveMessage } from '../lib/forms';
 import { Check } from '../components/Footer';
 
 export function ContactPage() {
@@ -42,7 +42,7 @@ export function ContactPage() {
     if (isRateLimited('contact')) return setErrors({ form: t('common.rate_limit') });
     setState('busy');
     try {
-      await sendToSheet('contact', {
+      await saveMessage({
         name: form.name.slice(0, MAX_NAME),
         phone: sanitizePhone(form.phone),
         email: sanitizeEmail(form.email),
@@ -51,9 +51,9 @@ export function ContactPage() {
       });
       setState('done');
       setForm((f) => ({ ...f, message: '' }));
-    } catch {
+    } catch (err) {
       setState('idle');
-      setErrors({ form: t('contact.error') });
+      setErrors({ form: err instanceof RateLimitError ? t('common.rate_limit') : t('contact.error') });
     }
   }
 

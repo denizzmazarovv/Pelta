@@ -2,7 +2,7 @@ import { useState, FormEvent } from 'react';
 import { useLang } from '../context/LangContext';
 import { CONTACTS } from '../lib/config';
 import { sanitizeEmail } from '../lib/sanitize';
-import { isRateLimited, sendToSheet } from '../lib/sheets';
+import { isRateLimited, subscribe } from '../lib/forms';
 import { Mark } from './Logo';
 
 export function Arrow({ size = 12 }: { size?: number }) {
@@ -49,7 +49,7 @@ function Newsletter() {
     setError('');
     setState('busy');
     try {
-      await sendToSheet('newsletter', { email: clean, prefs: prefs.join(', '), lang });
+      await subscribe(clean, prefs, lang);
       setState('done');
       setEmail('');
     } catch {

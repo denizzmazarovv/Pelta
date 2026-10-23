@@ -1,15 +1,13 @@
 // Все контакты и ссылки сайта — меняйте здесь.
 
-// Ссылка на веб-приложение Google Apps Script (см. GOOGLE_SHEETS.md).
-// Можно также задать через переменную окружения VITE_GOOGLE_SHEET_URL.
-export const SHEET_URL: string =
-  (import.meta.env.VITE_GOOGLE_SHEET_URL as string | undefined) || '';
-
-// Supabase (регистрация и вход). Берётся из секретов GitHub
-// VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY (Settings → Secrets → Actions).
-// anon-ключ публичный, его можно хранить в коде. service_role — НИКОГДА.
-export const SUPABASE_URL: string = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || '';
-export const SUPABASE_ANON_KEY: string = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) || '';
+// Supabase: аккаунты, заказы, сообщения, рассылка.
+// anon-ключ публичный (он и так виден в браузере), данные защищены правилами RLS.
+// service_role ключ сюда НИКОГДА не вставлять.
+export const SUPABASE_URL: string =
+  (import.meta.env.VITE_SUPABASE_URL as string | undefined) || 'https://srvuuwpjyuhmidyxyinl.supabase.co';
+export const SUPABASE_ANON_KEY: string =
+  (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNydnV1d3BqeXVobWlkeXh5aW5sIiwicm9sIjoiYW5vbiIsImlhdCI6MTc4NDM1NTg3MywiZXhwIjoyMDk5OTMxODczfQ.xzDM7AGSyemHtDxSD_Mfi5L00NddTX1YGIt7MEDYG8E';
 
 // Cloudflare Turnstile — защита от ботов на формах входа (необязательно).
 // Включайте одновременно здесь и в Supabase: Authentication → Attack Protection.
