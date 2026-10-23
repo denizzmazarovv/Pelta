@@ -1,0 +1,77 @@
+# Вход по номеру телефона с кодом в Telegram (свой бот, бесплатно)
+
+Как это работает:
+
+1. **Один раз:** клиент открывает нашего бота и нажимает «Поделиться номером». Бот принимает только собственный номер клиента (чужой контакт переслать нельзя) и запоминает связку «номер → чат». Номер хранится только как хеш.
+2. Клиент вводит номер на сайте и нажимает «Получить код».
+3. Supabase создаёт 6-значный код и вызывает функцию `send-sms-telegram`. Функция проверяет лимиты и отправляет код в чат с ботом.
+4. Клиент вводит код. Новый номер — аккаунт создаётся сам, старый — просто вход.
+
+Паролей нет. Код действует 10 минут и срабатывает один раз. Если клиент ещё не открывал бота, сайт покажет кнопку «Открыть @бот».
+
+**Стоимость:** 0. Telegram Bot API бесплатный, Supabase Edge Functions — 500 000 вызовов в месяц бесплатно.
+
+---
+
+## Защита от спама кодами
+
+| Уровень | Ограничение |
+|---|---|
+| Сайт | Повтор не раньше чем через 60 секунд, не больше 5 попыток ввести код |
+| Функция | На один номер: 5 кодов в час и 10 в сутки |
+| Функция | На весь сайт: 300 кодов в сутки (секрет `OTP_DAILY_LIMIT`) |
+| Бот | Код уходит только в чат, который сам подтвердил этот номер. Посторонний не получит код на чужой номер |
+| Supabase | Один код на номер в минуту, лимит запросов с одного IP |
+| Подписи | Запросы от Supabase проверяются подписью хука, от Telegram — секретным заголовком. Вызвать функцию напрямую нельзя |
+| Капча (по желанию) | Cloudflare Turnstile перед отправкой кода |
+
+---
+
+## Настройка (около 15 минут)
+
+### 1. Создать бота
+1. В Telegram откройте **@BotFather** → `/newbot`.
+2. Имя: `Pelta Nera`. Username: например `PeltaNeraBot` (должен заканчиваться на `bot`).
+3. BotFather пришлёт **токен** вида `123456789:AA...`. **Никому его не отправляйте**, даже в чат с Claude. Он нужен только в шаге 4.
+4. Username бота (без @) впишите в `src/lib/config.ts` → `TELEGRAM_BOT_USERNAME`.
+
+### 2. База данных
+**SQL Editor → New query** → вставьте файл `supabase/migrations/20261026090000_telegram_bot_links.sql` → **Run**.
+
+### 3. Функция
+1. **Edge Functions → Deploy a new function → Via Editor**, имя `send-sms-telegram`.
+2. Вставьте весь текст `supabase/functions/send-sms-telegram/index.ts` → **Deploy**.
+3. В настройках функции выключите **Verify JWT** (Enforce JWT verification).
+
+### 4. Хук и секреты
+1. **Authentication → Auth Hooks → Add hook → Send SMS hook**, тип **HTTPS**, URL:
+   `https://misuvgnzuustjptkvsvx.supabase.co/functions/v1/send-sms-telegram`
+   → **Generate secret** (скопируйте `v1,whsec_...`) → **Create**.
+2. **Edge Functions → Secrets** → добавьте:
+
+| Name | Value |
+|---|---|
+| `SEND_SMS_HOOK_SECRET` | секрет хука `v1,whsec_...` |
+| `TELEGRAM_BOT_TOKEN` | токен от BotFather |
+| `TELEGRAM_WEBHOOK_SECRET` | придумайте 30–60 латинских букв и цифр |
+| `OTP_DAILY_LIMIT` | `300` (по желанию) |
+
+### 5. Подключить бота к функции
+Вставьте в адресную строку браузера (подставьте свой токен и свой секрет из шага 4) и нажмите Enter:
+
+```
+https://api.telegram.org/bot<ТОКЕН>/setWebhook?url=https://misuvgnzuustjptkvsvx.supabase.co/functions/v1/send-sms-telegram&secret_token=<TELEGRAM_WEBHOOK_SECRET>&allowed_updates=["message"]&drop_pending_updates=true
+```
+
+Должно появиться `"ok":true, ... "Webhook was set"`. После этого закройте вкладку и очистите историю браузера для этой ссылки (в ней токен).
+
+### 6. Вход по телефону
+**Authentication → Sign In / Providers → Phone**: включить. SMS OTP Expiry `600`, длина `6`. Если панель требует SMS-провайдера — выберите любой, поля оставьте пустыми: хук его заменяет.
+
+### 7. Проверка
+Откройте бота → **Start** → «Поделиться номером» → на сайте «Войти» → свой номер → «Получить код» → код придёт в бота.
+
+Если кода нет: **Edge Functions → send-sms-telegram → Logs**. Причины: `NEED_BOT` (номер не подтверждён в боте), `TOO_MANY_CODES`, `SERVER_NOT_CONFIGURED` (не заданы секреты), `INVALID_SIGNATURE` (неверный `SEND_SMS_HOOK_SECRET`). Если бот не отвечает на Start — проверьте шаг 5 и `TELEGRAM_WEBHOOK_SECRET`.
+
+### Капча (рекомендуется, позже)
+Cloudflare → Turnstile → виджет для `peltanera.com`. Secret Key → Supabase **Authentication → Attack Protection → CAPTCHA**. Site Key → `TURNSTILE_SITE_KEY` в `src/lib/config.ts`. Включать одновременно.

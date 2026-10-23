@@ -12,7 +12,7 @@ export function ContactPage() {
   const [form, setForm] = useState({
     name: profile?.name ?? '',
     phone: profile?.phone ?? '',
-    email: profile?.email ?? '',
+    email: '',
     message: '',
   });
   const [agree, setAgree] = useState(false);

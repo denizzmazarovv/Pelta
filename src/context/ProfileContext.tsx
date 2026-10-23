@@ -2,22 +2,16 @@ import { createContext, useCallback, useContext, useEffect, useState, ReactNode 
 import type { AuthError, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
+/**
+ * Аккаунт клиента. Вход и регистрация — только по номеру телефона:
+ * код приходит в Telegram (наш Telegram-бот через Supabase Send SMS Hook).
+ * Паролей нет.
+ */
 export type Profile = {
   name: string;
-  phone: string;
-  email: string;
+  phone: string; // подтверждённый номер, +998XXXXXXXXX
   prefs: string[]; // 'women' | 'men'
   marketing: boolean;
-};
-
-export type SignUpData = {
-  email: string;
-  password: string;
-  name: string;
-  phone: string;
-  prefs: string[];
-  marketing: boolean;
-  captchaToken?: string;
 };
 
 type Result = { error: AuthError | Error | null };
@@ -30,20 +24,17 @@ type AuthContextType = {
   registerOpen: boolean;
   openRegister: () => void;
   closeRegister: () => void;
-  signUp: (d: SignUpData) => Promise<Result>;
-  verifyEmail: (email: string, code: string) => Promise<Result>;
-  resendSignup: (email: string, captchaToken?: string) => Promise<Result>;
-  signIn: (email: string, password: string, captchaToken?: string) => Promise<Result>;
-  requestReset: (email: string, captchaToken?: string) => Promise<Result>;
-  verifyReset: (email: string, code: string) => Promise<Result>;
-  setNewPassword: (password: string) => Promise<Result>;
-  changePassword: (current: string, next: string) => Promise<Result>;
-  updateProfile: (p: Pick<Profile, 'name' | 'phone' | 'prefs' | 'marketing'>) => Promise<Result>;
+  /** Отправить код в Telegram. Новый номер = регистрация, существующий = вход. */
+  sendCode: (phoneE164: string, captchaToken?: string) => Promise<Result>;
+  verifyCode: (phoneE164: string, code: string) => Promise<Result>;
+  updateProfile: (p: Pick<Profile, 'name' | 'prefs' | 'marketing'>) => Promise<Result>;
   signOut: (everywhere?: boolean) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 const NOT_CONFIGURED = new Error('auth_not_configured');
+
+const plusPhone = (p?: string | null) => (p ? '+' + p.replace(/\D/g, '') : '');
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -60,13 +51,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
     const { data } = await supabase
       .from('profiles')
-      .select('email, full_name, phone, prefs, marketing')
+      .select('full_name, prefs, marketing')
       .eq('id', s.user.id)
       .maybeSingle();
     setProfile({
-      email: data?.email ?? s.user.email ?? '',
       name: data?.full_name ?? '',
-      phone: data?.phone ?? '',
+      phone: plusPhone(s.user.phone),
       prefs: data?.prefs ?? [],
       marketing: !!data?.marketing,
     });
@@ -95,61 +85,18 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     openRegister,
     closeRegister,
 
-    async signUp(d) {
+    async sendCode(phone, captchaToken) {
       if (!supabase) return { error: NOT_CONFIGURED };
-      const { error } = await supabase.auth.signUp({
-        email: d.email,
-        password: d.password,
-        options: {
-          captchaToken: d.captchaToken,
-          data: { full_name: d.name, phone: d.phone, prefs: d.prefs, marketing: d.marketing },
-        },
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
+        options: { channel: 'sms', shouldCreateUser: true, captchaToken },
       });
       return { error };
     },
 
-    async verifyEmail(email, code) {
+    async verifyCode(phone, code) {
       if (!supabase) return { error: NOT_CONFIGURED };
-      const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
-      return { error };
-    },
-
-    async resendSignup(email, captchaToken) {
-      if (!supabase) return { error: NOT_CONFIGURED };
-      const { error } = await supabase.auth.resend({ type: 'signup', email, options: { captchaToken } });
-      return { error };
-    },
-
-    async signIn(email, password, captchaToken) {
-      if (!supabase) return { error: NOT_CONFIGURED };
-      const { error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken } });
-      return { error };
-    },
-
-    async requestReset(email, captchaToken) {
-      if (!supabase) return { error: NOT_CONFIGURED };
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { captchaToken });
-      return { error };
-    },
-
-    async verifyReset(email, code) {
-      if (!supabase) return { error: NOT_CONFIGURED };
-      const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'recovery' });
-      return { error };
-    },
-
-    async setNewPassword(password) {
-      if (!supabase) return { error: NOT_CONFIGURED };
-      const { error } = await supabase.auth.updateUser({ password });
-      return { error };
-    },
-
-    async changePassword(current, next) {
-      if (!supabase || !session?.user.email) return { error: NOT_CONFIGURED };
-      // Сначала проверяем текущий пароль — без него сменить нельзя
-      const check = await supabase.auth.signInWithPassword({ email: session.user.email, password: current });
-      if (check.error) return { error: check.error };
-      const { error } = await supabase.auth.updateUser({ password: next });
+      const { error } = await supabase.auth.verifyOtp({ phone, token: code, type: 'sms' });
       return { error };
     },
 
@@ -157,7 +104,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (!supabase || !session) return { error: NOT_CONFIGURED };
       const { error } = await supabase
         .from('profiles')
-        .update({ full_name: p.name || null, phone: p.phone || null, prefs: p.prefs, marketing: p.marketing })
+        .update({ full_name: p.name || null, prefs: p.prefs, marketing: p.marketing })
         .eq('id', session.user.id);
       if (!error) await loadProfile(session);
       return { error: error ? new Error(error.message) : null };

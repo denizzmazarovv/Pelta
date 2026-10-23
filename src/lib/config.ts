@@ -3,11 +3,10 @@
 // Supabase: аккаунты, заказы, сообщения, рассылка.
 // anon-ключ публичный (он и так виден в браузере), данные защищены правилами RLS.
 // service_role ключ сюда НИКОГДА не вставлять.
-export const SUPABASE_URL: string =
-  (import.meta.env.VITE_SUPABASE_URL as string | undefined) || 'https://srvuuwpjyuhmidyxyinl.supabase.co';
-export const SUPABASE_ANON_KEY: string =
-  (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNydnV1d3BqeXVobWlkeXh5aW5sIiwicm9sIjoiYW5vbiIsImlhdCI6MTc4NDM1NTg3MywiZXhwIjoyMDk5OTMxODczfQ.xzDM7AGSyemHtDxSD_Mfi5L00NddTX1YGIt7MEDYG8E';
+// Проект misuvgnzuustjptkvsvx. Значения заданы прямо здесь (а не через секреты GitHub),
+// чтобы сайт точно смотрел в нужный проект.
+export const SUPABASE_URL = 'https://misuvgnzuustjptkvsvx.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable_eBcdReBCxn6JwNoAQw8BKg_eb4JoXRA';
 
 // Заявки в Telegram-канал через Google Apps Script (ваши скрипты из .env).
 // Ссылки публичные: они всё равно видны в коде страницы.
@@ -17,6 +16,10 @@ export const GOOGLE_CART_URL: string =
 export const GOOGLE_CONTACT_URL: string =
   (import.meta.env.VITE_GOOGLE_SHEET_CONTACT_URL as string | undefined) ||
   'https://script.google.com/macros/s/AKfycbzQ1V8RdvlCK5yVZqfyJNSoOoTqb6sDOHfoDv3VmsTrYPt-5xg13DTxPQK46w6qclrCRA/exec';
+
+// Telegram-бот, который присылает коды входа (имя без @). Токен бота сюда НЕ вставлять —
+// он хранится только в Supabase → Edge Functions → Secrets.
+export const TELEGRAM_BOT_USERNAME = '';
 
 // Cloudflare Turnstile — защита от ботов на формах входа (необязательно).
 // Включайте одновременно здесь и в Supabase: Authentication → Attack Protection.
