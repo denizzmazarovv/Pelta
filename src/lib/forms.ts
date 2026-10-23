@@ -87,6 +87,7 @@ function deviceType(): string {
 export async function saveOrder(o: {
   name: string;
   phone: string;
+  telegram?: string;
   email?: string;
   userId?: string;
   address: string;
@@ -101,8 +102,10 @@ export async function saveOrder(o: {
     user_email: o.email ?? '',
     customer_name: clean(o.name) ?? '',
     phone: clean(o.phone) ?? '',
+    telegram: o.telegram ?? '',
     address: clean(o.address) ?? '',
-    comment: clean(o.comment) ?? '',
+    // Telegram дублируем в комментарий, чтобы он точно был виден в канале
+    comment: [o.telegram ? `Telegram: ${o.telegram}` : '', clean(o.comment) ?? ''].filter(Boolean).join(' | '),
     total: Math.round(o.total),
     items: o.items.map((i) => ({ ...i, subtotal: i.price * i.quantity })),
     items_summary: o.items.map((i) => `${i.name} (${i.color}) ×${i.quantity} = ${i.price * i.quantity}`).join('; '),
@@ -112,8 +115,9 @@ export async function saveOrder(o: {
   await toSupabase('pn_orders', {
     name: payload.customer_name,
     phone: payload.phone,
+    telegram: o.telegram || null,
     email: clean(o.email),
-    address: payload.address,
+    address: clean(o.address),
     comment: clean(o.comment),
     items: o.items,
     total: payload.total,

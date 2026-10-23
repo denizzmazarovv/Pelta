@@ -4,7 +4,17 @@ import { useLang } from '../context/LangContext';
 import { useProfile } from '../context/ProfileContext';
 import { formatPrice } from '../lib/format';
 import { href } from '../lib/router';
-import { MAX_ADDRESS, MAX_COMMENT, MAX_NAME, sanitizePhone } from '../lib/sanitize';
+import {
+  LIMITS,
+  filterName,
+  filterPhone,
+  filterTelegram,
+  filterText,
+  finalText,
+  normalizePhone,
+  normalizeTelegram,
+  validName,
+} from '../lib/validate';
 import { isRateLimited, RateLimitError, saveOrder } from '../lib/forms';
 import { Field } from '../pages/ContactPage';
 import { Mark } from './Logo';
@@ -14,7 +24,7 @@ export function CartDrawer() {
   const { items, isOpen, close, remove, setQty, total, count, clear } = useCart();
   const { profile, session } = useProfile();
   const [checkout, setCheckout] = useState(false);
-  const [form, setForm] = useState({ name: '', phone: '', address: '', comment: '' });
+  const [form, setForm] = useState({ name: '', phone: '', telegram: '', address: '', comment: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
 
@@ -36,7 +46,7 @@ export function CartDrawer() {
   // Подставляем данные зарегистрированного клиента
   useEffect(() => {
     if (checkout && profile) {
-      setForm((f) => ({ ...f, name: f.name || profile.name, phone: f.phone || profile.phone }));
+      setForm((f) => ({ ...f, name: f.name || filterName(profile.name), phone: f.phone || filterPhone(profile.phone) }));
     }
   }, [checkout, profile]);
 
@@ -47,9 +57,12 @@ export function CartDrawer() {
 
   function validate() {
     const e: Record<string, string> = {};
-    if (form.name.trim().length < 2) e.name = t('cart.error_name');
-    if (sanitizePhone(form.phone).replace(/\D/g, '').length < 9) e.phone = t('cart.error_phone');
-    if (form.address.trim().length < 3) e.address = t('cart.error_address');
+    if (!validName(form.name)) e.name = t('cart.error_name');
+    if (!normalizePhone(form.phone)) e.phone = t('cart.error_phone');
+    const tg = normalizeTelegram(form.telegram);
+    if (!tg) e.telegram = t('cart.error_telegram');
+    const addr = finalText(form.address, LIMITS.address);
+    if (addr && addr.length < 3) e.address = t('cart.error_address');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -61,12 +74,15 @@ export function CartDrawer() {
     setStatus('submitting');
     setErrors({});
     try {
+      const tg = normalizeTelegram(form.telegram) ?? '';
+      const comment = finalText(form.comment, LIMITS.comment);
       await saveOrder({
-        name: form.name.slice(0, MAX_NAME),
-        phone: sanitizePhone(form.phone),
+        name: form.name.trim(),
+        phone: normalizePhone(form.phone) ?? '',
+        telegram: tg,
         email: session?.user.email ?? '',
-        address: form.address.slice(0, MAX_ADDRESS),
-        comment: form.comment.slice(0, MAX_COMMENT),
+        address: finalText(form.address, LIMITS.address),
+        comment,
         total,
         userId: session?.user.id,
         items: items.map((i) => ({
@@ -86,7 +102,6 @@ export function CartDrawer() {
     }
   }
 
-  const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
 
   return (
     <div className="fixed inset-0 z-[110] flex justify-end" role="dialog" aria-modal="true" aria-label={t('cart.title')}>
@@ -128,24 +143,55 @@ export function CartDrawer() {
           <form onSubmit={submitOrder} noValidate className="flex-1 overflow-y-auto px-5 py-8 space-y-7">
             <h2 className="nav-caps text-[19px]">{t('cart.checkout')}</h2>
             <Field label={t('cart.name')} error={errors.name}>
-              <input className="field" value={form.name} onChange={set('name')} maxLength={MAX_NAME} autoComplete="name" />
+              <input
+                className="field"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: filterName(e.target.value) })}
+                maxLength={LIMITS.name}
+                autoComplete="name"
+              />
             </Field>
             <Field label={t('cart.phone')} error={errors.phone}>
               <input
                 className="field"
                 type="tel"
+                inputMode="tel"
                 value={form.phone}
-                onChange={set('phone')}
-                placeholder="+998 90 123 45 67"
+                onChange={(e) => setForm({ ...form, phone: filterPhone(e.target.value) })}
+                placeholder="+998 90 999 77 88"
                 maxLength={20}
                 autoComplete="tel"
               />
             </Field>
+            <Field label={t('cart.telegram')} error={errors.telegram}>
+              <input
+                className="field"
+                value={form.telegram}
+                onChange={(e) => setForm({ ...form, telegram: filterTelegram(e.target.value) })}
+                placeholder="@username"
+                maxLength={LIMITS.telegram}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+            </Field>
             <Field label={t('cart.address')} error={errors.address}>
-              <input className="field" value={form.address} onChange={set('address')} maxLength={MAX_ADDRESS} autoComplete="street-address" />
+              <input
+                className="field"
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: filterText(e.target.value, LIMITS.address) })}
+                maxLength={LIMITS.address}
+                autoComplete="street-address"
+              />
             </Field>
             <Field label={t('cart.comment')}>
-              <textarea className="field h-auto py-2 resize-none" rows={3} value={form.comment} onChange={set('comment')} maxLength={MAX_COMMENT} />
+              <textarea
+                className="field h-auto py-2 resize-none"
+                rows={3}
+                value={form.comment}
+                onChange={(e) => setForm({ ...form, comment: filterText(e.target.value, LIMITS.comment) })}
+                maxLength={LIMITS.comment}
+              />
             </Field>
 
             <div className="bg-fog p-4 font-mono text-[12px] space-y-1.5">
