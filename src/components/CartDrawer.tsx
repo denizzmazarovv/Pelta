@@ -7,10 +7,10 @@ import { href } from '../lib/router';
 import {
   LIMITS,
   filterName,
-  filterTelegram,
+  filterHandle,
   filterText,
   finalText,
-  normalizeTelegram,
+  normalizeHandle,
   validName,
 } from '../lib/validate';
 import { isRateLimited, RateLimitError, saveOrder } from '../lib/forms';
@@ -67,8 +67,7 @@ export function CartDrawer() {
     const e: Record<string, string> = {};
     if (!validName(form.name)) e.name = t('cart.error_name');
     if (!isComplete(phone, phoneCountry)) e.phone = t('cart.error_phone');
-    const tg = normalizeTelegram(form.telegram);
-    if (!tg) e.telegram = t('cart.error_telegram');
+    if (normalizeHandle(form.telegram) === null) e.telegram = t('cart.error_telegram');
     const addr = finalText(form.address, LIMITS.address);
     if (addr && addr.length < 3) e.address = t('cart.error_address');
     setErrors(e);
@@ -82,7 +81,7 @@ export function CartDrawer() {
     setStatus('submitting');
     setErrors({});
     try {
-      const tg = normalizeTelegram(form.telegram) ?? '';
+      const tg = normalizeHandle(form.telegram) ?? '';
       const comment = finalText(form.comment, LIMITS.comment);
       await saveOrder({
         name: form.name.trim(),
@@ -171,16 +170,25 @@ export function CartDrawer() {
               />
             </Field>
             <Field label={t('cart.telegram')} error={errors.telegram}>
-              <input
-                className="field"
-                value={form.telegram}
-                onChange={(e) => setForm({ ...form, telegram: filterTelegram(e.target.value) })}
-                placeholder="@username"
-                maxLength={LIMITS.telegram}
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-              />
+              <div
+                className={`flex items-center border-b transition-colors ${
+                  errors.telegram ? 'border-red-700' : 'border-ink/40 focus-within:border-ink'
+                }`}
+              >
+                <span className="font-mono text-[13px] text-ink/70 pr-1 select-none" aria-hidden="true">
+                  @
+                </span>
+                <input
+                  className="flex-1 min-w-0 h-11 bg-transparent font-mono text-[13px] placeholder:text-mute focus:outline-none"
+                  value={form.telegram}
+                  onChange={(e) => setForm({ ...form, telegram: filterHandle(e.target.value) })}
+                  placeholder="username"
+                  maxLength={LIMITS.telegram}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+              </div>
             </Field>
             <Field label={t('cart.address')} error={errors.address}>
               <input
@@ -199,9 +207,6 @@ export function CartDrawer() {
                 onChange={(e) => setForm({ ...form, comment: filterText(e.target.value, LIMITS.comment) })}
                 maxLength={LIMITS.comment}
               />
-              <span className="block text-right font-mono text-[10px] text-mute mt-1">
-                {form.comment.length}/{LIMITS.comment}
-              </span>
             </Field>
 
             <div className="bg-fog p-4 font-mono text-[12px] space-y-1.5">

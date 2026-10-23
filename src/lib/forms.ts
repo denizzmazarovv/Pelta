@@ -104,8 +104,8 @@ export async function saveOrder(o: {
     phone: clean(o.phone) ?? '',
     telegram: o.telegram ?? '',
     address: clean(o.address) ?? '',
-    // Telegram дублируем в комментарий, чтобы он точно был виден в канале
-    comment: [o.telegram ? `Telegram: ${o.telegram}` : '', clean(o.comment) ?? ''].filter(Boolean).join(' | '),
+    // Ник Telegram/Instagram дублируем в комментарий, чтобы он точно был виден в канале
+    comment: [o.telegram ? `Telegram/Instagram: ${o.telegram}` : '', clean(o.comment) ?? ''].filter(Boolean).join(' | '),
     total: Math.round(o.total),
     items: o.items.map((i) => ({ ...i, subtotal: i.price * i.quantity })),
     items_summary: o.items.map((i) => `${i.name} (${i.color}) ×${i.quantity} = ${i.price * i.quantity}`).join('; '),

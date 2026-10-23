@@ -44,15 +44,26 @@ export function normalizePhone(v: string): string | null {
   return null;
 }
 
-/** Telegram: латиница, цифры и «_», 5–32 символа (правила Telegram). Поле до 30 символов, «@» необязателен. */
-export function filterTelegram(raw: string): string {
-  const s = raw.replace(INVISIBLE, '').replace(/^https?:\/\/(t|telegram)\.me\//i, '').replace(/[^A-Za-z0-9_@]/g, '');
-  return (s.startsWith('@') ? '@' + s.slice(1).replace(/@/g, '') : s.replace(/@/g, '')).slice(0, LIMITS.telegram);
+/**
+ * Ник в Telegram или Instagram (без «@» — он стоит перед полем).
+ * Разрешены латиница, цифры, «_» и «.», до 30 символов. Поле необязательное.
+ * Ссылки t.me/… и instagram.com/… превращаются в ник.
+ */
+export function filterHandle(raw: string): string {
+  return raw
+    .replace(INVISIBLE, '')
+    .trim()
+    .replace(/^(https?:\/\/)?(www\.)?(t\.me|telegram\.me|instagram\.com)\//i, '')
+    .replace(/[/?#].*$/, '')
+    .replace(/^@+/, '')
+    .replace(/[^A-Za-z0-9._]/g, '')
+    .slice(0, LIMITS.telegram);
 }
-export function normalizeTelegram(v: string): string | null {
-  const u = v.trim().replace(/^@/, '');
+/** '' — не заполнено; null — неверный формат; иначе «@ник». */
+export function normalizeHandle(v: string): string | null {
+  const u = filterHandle(v);
   if (!u) return '';
-  if (!/^[A-Za-z][A-Za-z0-9_]{3,28}[A-Za-z0-9]$/.test(u) || u.includes('__')) return null;
+  if (u.length < 2 || /^\./.test(u) || /\.$/.test(u) || u.includes('..')) return null;
   return '@' + u;
 }
 

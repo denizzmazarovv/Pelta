@@ -123,8 +123,8 @@ const ru: Dict = {
   'cart.back': 'Назад',
   'cart.name': "Имя",
   'cart.phone': 'Телефон',
-  'cart.address': "Адрес доставки (необязательно)",
-  'cart.comment': "Комментарий (необязательно, до 300 символов)",
+  'cart.address': "Адрес доставки",
+  'cart.comment': "Комментарий",
   'cart.submit': 'Отправить заказ',
   'cart.submitting': 'Отправка…',
   'cart.success_title': "Благодарим за заказ",
@@ -207,8 +207,8 @@ const ru: Dict = {
   'cookie.necessary': "Только необходимые",
   'cookie.current': "Текущий выбор",
   'cookie.settings': "Настройки cookies",
-  'cart.telegram': "Ник в Telegram",
-  'cart.error_telegram': "Укажите ник в Telegram, например @username (5–30 символов: латиница, цифры, _)",
+  'cart.telegram': "Telegram / Instagram",
+  'cart.error_telegram': "Ник: латиница, цифры, «_» и «.»",
 };
 
 const uz: Dict = {
@@ -326,8 +326,8 @@ const uz: Dict = {
   'cart.back': 'Orqaga',
   'cart.name': "Ism",
   'cart.phone': 'Telefon',
-  'cart.address': "Yetkazib berish manzili (ixtiyoriy)",
-  'cart.comment': "Izoh (ixtiyoriy, 300 belgigacha)",
+  'cart.address': "Yetkazib berish manzili",
+  'cart.comment': "Izoh",
   'cart.submit': 'Buyurtmani yuborish',
   'cart.submitting': 'Yuborilmoqda…',
   'cart.success_title': "Buyurtmangiz uchun rahmat",
@@ -410,8 +410,8 @@ const uz: Dict = {
   'cookie.necessary': "Faqat zarurlari",
   'cookie.current': "Joriy tanlov",
   'cookie.settings': "Cookies sozlamalari",
-  'cart.telegram': "Telegram username",
-  'cart.error_telegram': "Telegram username kiriting, masalan @username (5–30 belgi: lotin harflari, raqamlar, _)",
+  'cart.telegram': "Telegram / Instagram",
+  'cart.error_telegram': "Username: lotin harflari, raqamlar, «_» va «.»",
 };
 
 const en: Dict = {
@@ -529,8 +529,8 @@ const en: Dict = {
   'cart.back': 'Back',
   'cart.name': "Name",
   'cart.phone': 'Phone',
-  'cart.address': "Delivery address (optional)",
-  'cart.comment': "Comment (optional, up to 300 characters)",
+  'cart.address': "Delivery address",
+  'cart.comment': "Comment",
   'cart.submit': "Place Order",
   'cart.submitting': 'Sending…',
   'cart.success_title': "Thank you for your order",
@@ -613,8 +613,8 @@ const en: Dict = {
   'cookie.necessary': "Necessary only",
   'cookie.current': "Current choice",
   'cookie.settings': "Cookie settings",
-  'cart.telegram': "Telegram username",
-  'cart.error_telegram': "Enter your Telegram username, e.g. @username (5–30 characters: letters, digits, _)",
+  'cart.telegram': "Telegram / Instagram",
+  'cart.error_telegram': "Username: Latin letters, digits, “_” and “.”",
 };
 
 export const translations: Record<Lang, Dict> = { ru, uz, en };
