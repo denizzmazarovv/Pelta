@@ -275,9 +275,9 @@ export function RegisterDrawer() {
   }
 
   const checkbox = (checked: boolean, set: (v: boolean) => void, label: ReactNode) => (
-    <label className="flex gap-2 font-mono text-[11px] leading-[1.5] cursor-pointer">
-      <input type="checkbox" checked={checked} onChange={(e) => set(e.target.checked)} className="sr-only" />
-      <span className="mt-[2px]">
+    <label className="flex items-start gap-3 font-mono text-[12px] leading-[1.55] cursor-pointer select-none">
+      <input type="checkbox" checked={checked} onChange={(e) => set(e.target.checked)} className="sr-only peer" />
+      <span className="peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 rounded-full">
         <Check checked={checked} />
       </span>
       <span>{label}</span>

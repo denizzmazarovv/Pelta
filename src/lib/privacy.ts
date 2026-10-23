@@ -87,7 +87,7 @@ const en: Policy = {
         [
           'Supabase Inc. — accounts, order and message records (database);',
           'Telegram (our sign-in bot) — confirming your number and delivering one-time sign-in codes; the bot stores your number only in encoded (hashed) form together with your Telegram chat ID;',
-          'Google LLC (Google Apps Script / Sheets) — receiving orders and messages;',
+          'Google LLC (Google Apps Script / Sheets) — receiving orders and messages and keeping the customer list (ID, name, phone number, registration and sign-in dates);',
           'Telegram — delivering new orders and messages to our private team channel;',
           'GitHub Inc. (GitHub Pages) — website hosting;',
           'an email delivery service — replies to your enquiries, if needed;',
@@ -237,7 +237,7 @@ const ru: Policy = {
         [
           'Supabase Inc. — аккаунты, записи заказов и сообщений (база данных);',
           'Telegram (наш бот входа) — подтверждение номера и доставка одноразовых кодов входа; бот хранит номер только в закодированном виде (хеш) вместе с ID чата в Telegram;',
-          'Google LLC (Google Apps Script / Таблицы) — приём заказов и сообщений;',
+          'Google LLC (Google Apps Script / Таблицы) — приём заказов и сообщений, учёт клиентов (ID, имя, номер телефона, даты регистрации и входа);',
           'Telegram — доставка новых заказов и сообщений в закрытый канал нашей команды;',
           'GitHub Inc. (GitHub Pages) — хостинг сайта;',
           'сервис отправки писем — ответы на ваши обращения при необходимости;',
@@ -387,7 +387,7 @@ const uz: Policy = {
         [
           'Supabase Inc. — hisoblar, buyurtma va xabarlar yozuvlari (ma’lumotlar bazasi);',
           'Telegram (kirish botimiz) — raqamni tasdiqlash va bir martalik kirish kodlarini yetkazish; bot raqamni faqat kodlangan (xesh) ko‘rinishda Telegram chat ID bilan birga saqlaydi;',
-          'Google LLC (Google Apps Script / Jadvallar) — buyurtma va xabarlarni qabul qilish;',
+          'Google LLC (Google Apps Script / Jadvallar) — buyurtma va xabarlarni qabul qilish, mijozlar ro‘yxatini yuritish (ID, ism, telefon raqami, ro‘yxatdan o‘tish va kirish sanalari);',
           'Telegram — yangi buyurtma va xabarlarni jamoamizning yopiq kanaliga yetkazish;',
           'GitHub Inc. (GitHub Pages) — sayt xostingi;',
           'xat yuborish xizmati — zarur bo‘lsa, murojaatlaringizga javoblar;',

@@ -55,12 +55,103 @@ function rateOk_(userId) {
   }
 }
 
+
+// ====================
+// КЛИЕНТЫ: лист «Users PeltaNera» и уведомление о новом клиенте
+// Supabase присылает только одноразовый ID события, данные скрипт забирает сам.
+// ====================
+const USERS_SHEET = "Users PeltaNera";
+const USERS_HEADER = ["ID", "Дата регистрации", "Имя", "Номер", "Статус", "Код запрошен", "Подтверждён"];
+
+function fmt_(iso) {
+  return iso ? Utilities.formatDate(new Date(iso), "Asia/Tashkent", "dd.MM.yyyy HH:mm:ss") : "";
+}
+
+function takeUserEvent_(eventId) {
+  // До 3 попыток: при одновременных событиях Supabase иногда отвечает ошибкой
+  for (let i = 0; i < 3; i++) {
+    const res = UrlFetchApp.fetch(SUPABASE_URL + "/rest/v1/rpc/pn_take_sheet_event", {
+      method: "post",
+      contentType: "application/json",
+      headers: { apikey: SUPABASE_PUBLIC_KEY },
+      payload: JSON.stringify({ p_id: eventId }),
+      muteHttpExceptions: true
+    });
+    if (res.getResponseCode() === 200) {
+      const u = JSON.parse(res.getContentText());
+      return u && u.id ? u : null;
+    }
+    Logger.log("pn_take_sheet_event " + res.getResponseCode() + ": " + res.getContentText().slice(0, 200));
+    Utilities.sleep(1000 * (i + 1));
+  }
+  return null;
+}
+
+function handleUserEvent_(eventId) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(eventId))) return reply_({ status: "error", code: "bad" });
+  const u = takeUserEvent_(eventId);
+  if (!u) return reply_({ status: "ignored" });
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  let isNew = false;
+  try {
+    const book = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = book.getSheetByName(USERS_SHEET);
+    if (!sheet) {
+      sheet = book.insertSheet(USERS_SHEET);
+      sheet.appendRow(USERS_HEADER);
+      sheet.setFrozenRows(1);
+      sheet.getRange(1, 1, 1, USERS_HEADER.length).setFontWeight("bold");
+    }
+    const found = sheet.getRange("A:A").createTextFinder(u.id).matchEntireCell(true).findNext();
+    const row = found ? found.getRow() : sheet.getLastRow() + 1;
+    const old = found ? sheet.getRange(row, 1, 1, USERS_HEADER.length).getValues()[0] : [];
+    const wasConfirmed = String(old[4] || "").indexOf("✅") === 0;
+
+    const values = [
+      u.id,
+      fmt_(u.created_at),
+      cell_(clean_(u.name || old[2] || "", 40)),
+      cell_(u.phone || old[3] || ""),
+      u.confirmed ? "✅ Подтверждён" : "⏳ Не подтверждён",
+      fmt_(u.last_code_at) || old[5] || "",
+      fmt_(u.confirmed_at) || old[6] || ""
+    ];
+    sheet.getRange(row, 1, 1, values.length).setValues([values]);
+    isNew = u.kind === "confirmed" && u.confirmed && !wasConfirmed;
+  } finally {
+    lock.releaseLock();
+  }
+
+  // Новый подтверждённый клиент — сообщение в канал
+  if (isNew) {
+    const text =
+`🆕 <b>НОВЫЙ КЛИЕНТ PELTA NERA</b>
+━━━━━━━━━━━━━━━━━━
+
+📞 <b>Номер:</b> ${html_(u.phone || "")} ✅
+🕒 <b>Регистрация:</b> ${fmt_(u.confirmed_at || u.created_at)}
+🆔 <code>${html_(u.id)}</code>`;
+    UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "post",
+      contentType: "application/json",
+      payload: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: "HTML" }),
+      muteHttpExceptions: true
+    });
+  }
+  return reply_({ status: "ok" });
+}
+
 // ====================
 // ОСНОВНАЯ ФУНКЦИЯ
 // ====================
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
+
+    // Событие о клиенте от Supabase
+    if (data.event_id) return handleUserEvent_(data.event_id);
 
     const user = verifiedUser_(data.access_token);
     if (!user) return reply_({ status: "error", code: "auth" });

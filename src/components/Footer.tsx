@@ -15,14 +15,19 @@ export function Arrow({ size = 12 }: { size?: number }) {
 }
 
 /** Чекбокс-лепесток: контур — не выбрано, чёрная заливка — выбрано. */
-export function Check({ checked, size = 14 }: { checked: boolean; size?: number }) {
+export function Check({ checked, size = 20 }: { checked: boolean; size?: number }) {
+  // Пустой белый круг → при отметке превращается в логотип
   return (
     <span className="relative inline-flex shrink-0 text-ink" style={{ width: size, height: size }} aria-hidden="true">
-      <Mark size={size} outline className="absolute inset-0" />
+      <span
+        className={`absolute inset-0 rounded-full border-[1.5px] border-ink bg-white transition-[opacity,transform] duration-200 ${
+          checked ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
+        }`}
+      />
       <Mark
         size={size}
         className={`absolute inset-0 transition-[opacity,transform] duration-200 ${
-          checked ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+          checked ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 -rotate-45'
         }`}
       />
     </span>
@@ -101,9 +106,9 @@ function Newsletter() {
         ))}
       </div>
 
-      <label className="flex gap-2 mt-4 font-mono text-[10.5px] leading-[1.45] cursor-pointer">
+      <label className="flex items-start gap-3 mt-4 font-mono text-[11px] leading-[1.5] cursor-pointer select-none">
         <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="sr-only peer" />
-        <span className="mt-[2px] peer-focus-visible:outline peer-focus-visible:outline-1">
+        <span className="peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 rounded-full">
           <Check checked={agree} />
         </span>
         <span>
