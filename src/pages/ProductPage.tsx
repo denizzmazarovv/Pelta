@@ -135,16 +135,8 @@ export function ProductPage({ id }: { id: string }) {
           </div>
 
           {/* Десктоп: фото столбцом */}
-          <div className="hidden lg:block">
-            <img src={first} alt={name} className="w-full aspect-[4/5] object-cover bg-smoke" />
-          </div>
-          <div className="bg-ash px-5 py-3 font-mono text-[15px] sm:text-[18px] leading-[1.6]">
-            <p>{name}</p>
-            <p>{product.specs.dimensions}</p>
-            <p>{t(product.specs.material)}</p>
-            <p>{t(product.colors[color].colorKey)}</p>
-          </div>
           <div className="hidden lg:flex flex-col gap-[3px] bg-white">
+            <img src={first} alt={name} className="w-full aspect-[4/5] object-cover bg-smoke" />
             {rest.map((src, i) => (
               <img key={src + i} src={src} alt="" loading="lazy" className="w-full aspect-[4/5] object-cover bg-smoke" />
             ))}
