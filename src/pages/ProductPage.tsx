@@ -1,4 +1,4 @@
-import { useEffect, useState, ReactNode } from 'react';
+import { useEffect, useRef, useState, ReactNode } from 'react';
 import { useLang } from '../context/LangContext';
 import { useCart } from '../context/CartContext';
 import { findProduct, products } from '../lib/products';
@@ -12,9 +12,54 @@ const SWATCH: Record<string, string> = { tan: '#5a3a22', black: '#151515', cogna
 
 function Block({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="mt-8">
+    <div className="mt-8 lg:mt-5">
       <h3 className="font-mono text-[17px] text-ink/85">{title}</h3>
       <div className="pl-[14px] mt-1 font-mono text-[13px] text-ink/60 leading-[1.7]">{children}</div>
+    </div>
+  );
+}
+
+/** Характеристика: раскрывается при наведении (компьютер) или по нажатию на стрелку. */
+function Fold({ title, children }: { title: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  // Раскрыли — показываем целиком, если панель невысокая
+  useEffect(() => {
+    if (open) setTimeout(() => ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 320);
+  }, [open]);
+  return (
+    <div
+      ref={ref}
+      className="mt-6 lg:mt-4"
+      onPointerEnter={(e) => e.pointerType === 'mouse' && setOpen(true)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && setOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex items-center gap-2 font-mono text-[15px] text-ink/85"
+      >
+        {title}
+        <svg
+          width="8"
+          height="8"
+          viewBox="0 0 8 8"
+          aria-hidden="true"
+          className={`transition-transform duration-300 ${open ? 'rotate-90' : ''}`}
+        >
+          <path d="M2 1 L6 4 L2 7" fill="none" stroke="currentColor" strokeWidth="1.3" />
+        </svg>
+      </button>
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+          open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="pl-[14px] pt-1 font-mono text-[13px] text-ink/60 leading-[1.7]">{children}</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -62,11 +107,11 @@ export function ProductPage({ id }: { id: string }) {
   const [first, ...rest] = product.gallery;
 
   const actions = (
-    <div className="mt-8 lg:mt-0 space-y-3 max-w-[420px]">
-      <button onClick={addToBag} className="btn-ink">
+    <div className="mt-8 lg:mt-0 space-y-2 max-w-[360px]">
+      <button onClick={addToBag} className="btn-ink !h-9 !text-[12px]">
         {added ? t('product.added') : t('product.add')}
       </button>
-      <a href={CONTACTS.telegramHref} target="_blank" rel="noopener noreferrer" className="btn-line">
+      <a href={CONTACTS.telegramHref} target="_blank" rel="noopener noreferrer" className="btn-line !h-9 !text-[12px]">
         {t('product.ask')}
       </a>
     </div>
@@ -110,13 +155,13 @@ export function ProductPage({ id }: { id: string }) {
             листают фото, кнопки внизу панели. Когда фото закончились, уезжает вместе со страницей. */}
         <div className="px-5 sm:px-7 pt-10 pb-16 lg:p-0">
           <div
-            className={`lg:sticky lg:flex lg:flex-col lg:px-7 lg:pt-8 lg:pb-7 transition-[top,height] duration-300 ease-out ${
+            className={`lg:sticky lg:flex lg:flex-col lg:px-7 lg:pt-6 lg:pb-6 transition-[top,height] duration-300 ease-out ${
               headerHidden ? 'lg:top-0 lg:h-[100dvh]' : 'lg:top-[50px] lg:h-[calc(100dvh-50px)]'
             }`}
           >
             <div className="max-w-[500px] lg:flex-1 lg:min-h-0 lg:overflow-y-auto hide-scrollbar">
               <h1 className="font-mono text-[20px] text-ink">{name}</h1>
-              <p className="pl-[14px] mt-6 font-mono text-[13px] leading-[1.7] text-ink/85">{desc}</p>
+              <p className="pl-[14px] mt-6 lg:mt-3 font-mono text-[13px] leading-[1.7] text-ink/85">{desc}</p>
 
               <Block title={t('product.price')}>
                 <p>{formatNumber(product.price)}</p>
@@ -145,26 +190,26 @@ export function ProductPage({ id }: { id: string }) {
               {/* Телефон: кнопки сразу после цвета */}
               <div className="lg:hidden">{actions}</div>
 
-            <Block title={t('product.material')}>
+            <Fold title={t('product.material')}>
               <p>{t(product.specs.material)}</p>
               <p>
                 {t('product.handmade')}: {product.specs.handmade ? t('product.handmade_yes') : t('product.handmade_no')}
               </p>
-            </Block>
+            </Fold>
 
-            <Block title={t('product.size_guide')}>
+            <Fold title={t('product.size_guide')}>
               <p>
                 {t('product.dimensions')}: {product.specs.dimensions}
               </p>
               <p>
                 {t('product.weight')}: {product.specs.weight}
               </p>
-            </Block>
+            </Fold>
 
             </div>
 
             {/* Компьютер: кнопки прижаты к низу панели */}
-            <div className="hidden lg:block pt-6 shrink-0">{actions}</div>
+            <div className="hidden lg:block pt-4 shrink-0">{actions}</div>
           </div>
         </div>
       </div>
