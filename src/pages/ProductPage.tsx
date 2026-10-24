@@ -6,6 +6,7 @@ import { formatNumber } from '../lib/format';
 import { href } from '../lib/router';
 import { CONTACTS } from '../lib/config';
 import { ProductCard } from '../components/ProductCard';
+import { useHeaderHidden } from '../lib/useHeaderHidden';
 
 const SWATCH: Record<string, string> = { tan: '#5a3a22', black: '#151515', cognac: '#8e4a1f' };
 
@@ -20,6 +21,7 @@ function Block({ title, children }: { title: string; children: ReactNode }) {
 
 export function ProductPage({ id }: { id: string }) {
   const { t, lang } = useLang();
+  const headerHidden = useHeaderHidden();
   const { add } = useCart();
   const product = findProduct(id);
   const [color, setColor] = useState(0);
@@ -59,6 +61,17 @@ export function ProductPage({ id }: { id: string }) {
 
   const [first, ...rest] = product.gallery;
 
+  const actions = (
+    <div className="mt-8 lg:mt-0 space-y-3 max-w-[420px]">
+      <button onClick={addToBag} className="btn-ink">
+        {added ? t('product.added') : t('product.add')}
+      </button>
+      <a href={CONTACTS.telegramHref} target="_blank" rel="noopener noreferrer" className="btn-line">
+        {t('product.ask')}
+      </a>
+    </div>
+  );
+
   return (
     <div>
       <div className="grid lg:grid-cols-2">
@@ -93,17 +106,21 @@ export function ProductPage({ id }: { id: string }) {
           </div>
         </div>
 
-        {/* Информация */}
-        <div className="px-5 sm:px-7 pt-10 lg:pt-10 pb-16">
-          <div className="lg:sticky lg:top-[110px] max-w-[500px]">
-            <h1 className="font-mono text-[20px] text-ink">{name}</h1>
-            <p className="pl-[14px] mt-6 font-mono text-[13px] leading-[1.7] text-ink/85">{desc}</p>
+        {/* Информация. На компьютере — панель во всю высоту экрана: стоит на месте, пока
+            листают фото, кнопки внизу панели. Когда фото закончились, уезжает вместе со страницей. */}
+        <div className="px-5 sm:px-7 pt-10 pb-16 lg:p-0">
+          <div
+            className={`lg:sticky lg:flex lg:flex-col lg:px-7 lg:pt-8 lg:pb-7 transition-[top,height] duration-300 ease-out ${
+              headerHidden ? 'lg:top-0 lg:h-[100dvh]' : 'lg:top-[50px] lg:h-[calc(100dvh-50px)]'
+            }`}
+          >
+            <div className="max-w-[500px] lg:flex-1 lg:min-h-0 lg:overflow-y-auto hide-scrollbar">
+              <h1 className="font-mono text-[20px] text-ink">{name}</h1>
+              <p className="pl-[14px] mt-6 font-mono text-[13px] leading-[1.7] text-ink/85">{desc}</p>
 
-            <Block title={t('product.price')}>
-              <p>
-                {formatNumber(product.price)}
-              </p>
-            </Block>
+              <Block title={t('product.price')}>
+                <p>{formatNumber(product.price)}</p>
+              </Block>
 
             {product.colors.length > 0 && (
               <Block title={t('product.color')}>
@@ -125,14 +142,8 @@ export function ProductPage({ id }: { id: string }) {
               </Block>
             )}
 
-            <div className="mt-8 space-y-3 max-w-[420px]">
-              <button onClick={addToBag} className="btn-ink">
-                {added ? t('product.added') : t('product.add')}
-              </button>
-              <a href={CONTACTS.telegramHref} target="_blank" rel="noopener noreferrer" className="btn-line">
-                {t('product.ask')}
-              </a>
-            </div>
+              {/* Телефон: кнопки сразу после цвета */}
+              <div className="lg:hidden">{actions}</div>
 
             <Block title={t('product.material')}>
               <p>{t(product.specs.material)}</p>
@@ -150,6 +161,10 @@ export function ProductPage({ id }: { id: string }) {
               </p>
             </Block>
 
+            </div>
+
+            {/* Компьютер: кнопки прижаты к низу панели */}
+            <div className="hidden lg:block pt-6 shrink-0">{actions}</div>
           </div>
         </div>
       </div>
