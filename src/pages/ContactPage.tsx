@@ -130,9 +130,9 @@ export function ContactPage() {
               />
             </Field>
 
-            <label className="flex items-start gap-3 font-mono text-[12px] leading-[1.55] cursor-pointer select-none">
+            <label className="flex items-start gap-2 font-mono text-[11px] leading-[1.5] cursor-pointer select-none">
               <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="sr-only peer" />
-              <span className="peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 rounded-full">
+              <span className="peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 rounded-full mt-[2px]">
                 <Check checked={agree} />
               </span>
               <span>

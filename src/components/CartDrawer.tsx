@@ -21,7 +21,8 @@ import { DEFAULT_COUNTRY, isComplete, parsePhone, toE164, type Country } from '.
 export function CartDrawer() {
   const { t, lang } = useLang();
   const { items, isOpen, close, remove, setQty, total, count, clear } = useCart();
-  const { profile, session, openRegister } = useProfile();
+  const { profile, session, openRegister, updateProfile } = useProfile();
+  const profileName = profile?.name?.trim() ?? '';
   const verifiedPhone = profile?.phone ?? '';
   const [checkout, setCheckout] = useState(false);
   const [form, setForm] = useState({ name: '', telegram: '', address: '', comment: '' });
@@ -48,7 +49,7 @@ export function CartDrawer() {
   // Подставляем данные зарегистрированного клиента
   useEffect(() => {
     if (checkout && profile) {
-      setForm((f) => ({ ...f, name: f.name || filterName(profile.name) }));
+      setForm((f) => ({ ...f, name: profileName ? filterName(profileName) : f.name }));
       if (profile.phone) {
         const p = parsePhone(profile.phone);
         setPhoneCountry(p.country);
@@ -65,7 +66,7 @@ export function CartDrawer() {
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!validName(form.name)) e.name = t('cart.error_name');
+    if (!validName(profileName || form.name)) e.name = t('cart.error_name');
     if (!verifiedPhone || !isComplete(phone, phoneCountry)) e.phone = t('cart.error_phone');
     if (normalizeHandle(form.telegram) === null) e.telegram = t('cart.error_telegram');
     const addr = finalText(form.address, LIMITS.address);
@@ -82,10 +83,14 @@ export function CartDrawer() {
     setStatus('submitting');
     setErrors({});
     try {
+      // Имя без профиля: сохраняем его в профиль, дальше оно меняется только там
+      if (!profileName && profile) {
+        await updateProfile({ name: form.name.trim(), prefs: profile.prefs, marketing: profile.marketing });
+      }
       const tg = normalizeHandle(form.telegram) ?? '';
       const comment = finalText(form.comment, LIMITS.comment);
       await saveOrder({
-        name: form.name.trim(),
+        name: (profileName || form.name).trim(),
         phone: verifiedPhone || toE164(phone, phoneCountry),
         accessToken: session.access_token,
         telegram: tg,
@@ -164,13 +169,22 @@ export function CartDrawer() {
           <form onSubmit={submitOrder} noValidate className="flex-1 overflow-y-auto px-5 py-8 space-y-7">
             <h2 className="nav-caps text-[19px]">{t('cart.checkout')}</h2>
             <Field label={t('cart.name')} error={errors.name}>
-              <input
-                className="field"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: filterName(e.target.value) })}
-                maxLength={LIMITS.name}
-                autoComplete="name"
-              />
+              {profileName ? (
+                <div className="flex items-center justify-between gap-3 h-11 border-b border-ink/20 font-mono text-[13px]">
+                  <span className="truncate">{profileName}</span>
+                  <button type="button" onClick={openRegister} className="text-[11px] text-mute link-u whitespace-nowrap">
+                    {t('cart.edit_in_profile')}
+                  </button>
+                </div>
+              ) : (
+                <input
+                  className="field"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: filterName(e.target.value) })}
+                  maxLength={LIMITS.name}
+                  autoComplete="name"
+                />
+              )}
             </Field>
             <Field label={t('cart.phone')} error={errors.phone}>
               <div className="flex items-center justify-between h-11 border-b border-ink/20 font-mono text-[13px]">

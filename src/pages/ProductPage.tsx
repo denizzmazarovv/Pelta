@@ -94,10 +94,10 @@ export function ProductPage({ id }: { id: string }) {
         </div>
 
         {/* Информация */}
-        <div className="px-5 sm:px-7 pt-10 lg:pt-[70px] pb-16">
-          <div className="lg:sticky lg:top-[90px] max-w-[500px]">
+        <div className="px-5 sm:px-7 pt-10 lg:pt-10 pb-16">
+          <div className="lg:sticky lg:top-[110px] max-w-[500px]">
             <h1 className="font-mono text-[20px] text-ink">{name}</h1>
-            <p className="pl-[14px] mt-10 font-mono text-[13px] leading-[1.7] text-ink/85">{desc}</p>
+            <p className="pl-[14px] mt-6 font-mono text-[13px] leading-[1.7] text-ink/85">{desc}</p>
 
             <Block title={t('product.price')}>
               <p>
@@ -125,6 +125,15 @@ export function ProductPage({ id }: { id: string }) {
               </Block>
             )}
 
+            <div className="mt-8 space-y-3 max-w-[420px]">
+              <button onClick={addToBag} className="btn-ink">
+                {added ? t('product.added') : t('product.add')}
+              </button>
+              <a href={CONTACTS.telegramHref} target="_blank" rel="noopener noreferrer" className="btn-line">
+                {t('product.ask')}
+              </a>
+            </div>
+
             <Block title={t('product.material')}>
               <p>{t(product.specs.material)}</p>
               <p>
@@ -141,14 +150,6 @@ export function ProductPage({ id }: { id: string }) {
               </p>
             </Block>
 
-            <div className="mt-12 space-y-3 max-w-[420px]">
-              <button onClick={addToBag} className="btn-ink">
-                {added ? t('product.added') : t('product.add')}
-              </button>
-              <a href={CONTACTS.telegramHref} target="_blank" rel="noopener noreferrer" className="btn-line">
-                {t('product.ask')}
-              </a>
-            </div>
           </div>
         </div>
       </div>

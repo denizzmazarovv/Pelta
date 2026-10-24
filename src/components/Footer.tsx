@@ -17,7 +17,7 @@ export function Arrow({ size = 12 }: { size?: number }) {
 }
 
 /** Чекбокс-лепесток: контур — не выбрано, чёрная заливка — выбрано. */
-export function Check({ checked, size = 20 }: { checked: boolean; size?: number }) {
+export function Check({ checked, size = 14 }: { checked: boolean; size?: number }) {
   // Пустой белый круг → при отметке превращается в логотип
   return (
     <span className="relative inline-flex shrink-0 text-ink" style={{ width: size, height: size }} aria-hidden="true">
@@ -46,7 +46,7 @@ export function PrefsPicker({ value, onChange }: { value: string[]; onChange: (v
     { key: 'men', on: value.includes('men'), next: () => (value.includes('men') ? value.filter((x) => x !== 'men') : [...value, 'men']) },
   ];
   return (
-    <div className="flex flex-wrap gap-x-8 gap-y-2 font-mono text-[13px] font-medium">
+    <div className="flex flex-wrap gap-x-10 gap-y-2 font-mono text-[13px] font-medium">
       {opts.map((o) => (
         <button key={o.key} type="button" onClick={() => onChange(o.next())} className="flex items-center gap-2" aria-pressed={o.on}>
           <Check checked={o.on} />
@@ -105,7 +105,7 @@ function Newsletter() {
           <button
             type="submit"
             disabled={state === 'busy'}
-            className="w-9 h-9 shrink-0 rounded-full border border-ink bg-transparent flex items-center justify-center hover:bg-ink hover:text-ash transition-colors disabled:opacity-50"
+            className="w-8 h-8 shrink-0 border border-ink flex items-center justify-center hover:bg-ink hover:text-ash transition-colors disabled:opacity-50"
             aria-label={t('contact.send')}
           >
             <Arrow />
@@ -123,7 +123,7 @@ function Newsletter() {
         <PrefsPicker value={prefs} onChange={setPrefs} />
       </div>
 
-      <label className="flex items-start gap-3 mt-4 font-mono text-[11px] leading-[1.5] cursor-pointer select-none">
+      <label className="flex items-start gap-2 mt-4 font-mono text-[10.5px] leading-[1.45] cursor-pointer select-none">
         <input
           type="checkbox"
           checked={agree}
@@ -133,7 +133,7 @@ function Newsletter() {
           }}
           className="sr-only peer"
         />
-        <span className="peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 rounded-full">
+        <span className="peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 rounded-full mt-[2px]">
           <Check checked={agree} />
         </span>
         <span>
@@ -145,7 +145,7 @@ function Newsletter() {
         </span>
       </label>
       {consentError && (
-        <p role="alert" className="font-mono text-[11px] mt-1.5 pl-8 text-red-700">
+        <p role="alert" className="font-mono text-[11px] mt-1.5 pl-[22px] text-red-700">
           {consentError}
         </p>
       )}
