@@ -20,7 +20,7 @@ const ROLES = ["VIP", "CEO"];
 
 // Ссылки на закрытые Telegram-каналы ролей: вставляете в колонку «Ссылка на закрытый канал»
 const ROLES_SHEET = "Roles PeltaNera";
-const ROLES_HEADER = ["Роль", "Ссылка на закрытый канал", "Скидка %"];
+const ROLES_HEADER = ["Роль", "Ссылка на закрытый канал", "Скидка %", "Нужно покупок"];
 
 const NEWS_SHEET = "Newsletter PeltaNera";
 const NEWS_HEADER = ["ID", "Дата подписки", "Email", "Интересы", "Язык"];
@@ -232,14 +232,9 @@ function onSheetEdit(e) {
   if (!key || (name !== USERS_SHEET && name !== ORDERS_SHEET && name !== ROLES_SHEET)) return;
 
   if (name === ROLES_SHEET) {
-    if (e.range.getColumn() > 2 || e.range.getLastColumn() < 2) return;
     for (let row = Math.max(2, e.range.getRow()); row <= e.range.getLastRow(); row++) {
-      const role = String(sheet.getRange(row, 1).getValue() || "").trim();
-      const target = sheet.getRange(row, 2);
-      if (!role) continue;
-      const r = rpc_("pn_sheet_set_link", { p_key: key, p_role: role, p_url: String(target.getValue() || "").trim() });
-      if (r.code === 200 && r.body === "ok") target.setNote("").setBackground(null);
-      else target.setNote("Не сохранено: " + (r.code === 200 ? r.body : "ошибка " + r.code) + " (нужна ссылка вида https://t.me/+...)").setBackground("#f4cccc");
+      if (e.range.getColumn() <= 2 && e.range.getLastColumn() >= 2) saveRoleLink_(sheet, row, key);
+      if (e.range.getLastColumn() >= 3) saveTier_(sheet, row, key);
     }
     return;
   }
@@ -266,6 +261,66 @@ function onSheetEdit(e) {
   }
 }
 
+// Ссылка на закрытый канал (только для ролей VIP / CEO)
+function saveRoleLink_(sheet, row, key) {
+  const role = String(sheet.getRange(row, 1).getValue() || "").trim();
+  const target = sheet.getRange(row, 2);
+  if (!role) return;
+  const url = String(target.getValue() || "").trim();
+  if (ROLES.indexOf(role.toUpperCase()) < 0) {
+    if (url) target.setNote("Ссылка работает только для ролей VIP и CEO").setBackground("#f4cccc");
+    return;
+  }
+  const r = rpc_("pn_sheet_set_link", { p_key: key, p_role: role, p_url: url });
+  if (r.code === 200 && r.body === "ok") target.setNote("").setBackground(null);
+  else target.setNote("Не сохранено: " + (r.code === 200 ? r.body : "ошибка " + r.code) + " (нужна ссылка вида https://t.me/+...)").setBackground("#f4cccc");
+}
+
+// Скидка % и (для уровней) сколько выполненных покупок нужно. Сразу уходит в базу.
+function saveTier_(sheet, row, key) {
+  const role = String(sheet.getRange(row, 1).getValue() || "").trim();
+  if (!role) return;
+  const cells = sheet.getRange(row, 3, 1, 2);
+  const vals = cells.getValues()[0];
+  const discount = Number(String(vals[0]).replace(",", ".").replace("%", ""));
+  const orders = vals[1] === "" ? null : Math.floor(Number(vals[1]));
+  const r = rpc_("pn_sheet_set_tier", { p_key: key, p_code: role, p_discount: discount, p_min_orders: orders });
+  if (r.code === 200 && r.body === "ok") {
+    cells.setNote("").setBackground(null);
+  } else {
+    const why = { bad_discount: "скидка должна быть от 0 до 90", bad_orders: "для уровня укажите число покупок (0 и больше)", bad_role: "неизвестная роль" };
+    cells.setNote("Не сохранено: " + (why[r.body] || r.body || "ошибка " + r.code)).setBackground("#f4cccc");
+  }
+}
+
+// Отправить в базу всё, что сейчас написано в листе ролей (если правили до включения синхронизации)
+function syncRolesFromSheet() {
+  const key = adminKey_();
+  if (!key) throw new Error("Сначала выполните setupPeltaAdmin");
+  const sheet = sheetWithHeader_(ROLES_SHEET, ROLES_HEADER);
+  for (let row = 2; row <= sheet.getLastRow(); row++) {
+    saveRoleLink_(sheet, row, key);
+    saveTier_(sheet, row, key);
+  }
+  fillRolesSheet_(key);
+  Logger.log("Лист ролей синхронизирован");
+}
+
+// Заполнить лист ролей значениями из базы
+function fillRolesSheet_(key) {
+  const sheet = sheetWithHeader_(ROLES_SHEET, ROLES_HEADER);
+  const current = rpc_("pn_sheet_get_roles", { p_key: key }).body;
+  if (!Array.isArray(current) || !current.length) return;
+  const last = sheet.getLastRow();
+  if (last > 1) sheet.getRange(2, 1, last - 1, ROLES_HEADER.length).clearContent().clearNote().setBackground(null);
+  sheet.getRange(2, 1, current.length, ROLES_HEADER.length).setValues(current.map(function (r) {
+    return [String(r.code).toUpperCase(), r.url || "", Number(r.discount) || 0, r.min_orders == null ? "" : r.min_orders];
+  }));
+  sheet.getRange(2, 1, current.length, 1).setFontWeight("bold");
+  sheet.getRange(1, 3).setNote("Меняйте прямо здесь — на сайте обновится при следующем открытии страницы");
+  sheet.getRange(1, 4).setNote("Только для уровней: сколько выполненных заказов нужно. Для VIP / CEO пусто");
+}
+
 // Один раз: Выполнить → setupPeltaAdmin. Создаёт секретный ключ скрипта (его не видит никто),
 // регистрирует его хеш в Supabase, включает реакцию на правки и выпадающие списки.
 function setupPeltaAdmin() {
@@ -289,16 +344,8 @@ function setupPeltaAdmin() {
   const users = sheetWithHeader_(USERS_SHEET, USERS_HEADER);
   users.getRange(2, USERS_HEADER.indexOf("Роль") + 1, Math.max(users.getMaxRows() - 1, 1), 1).setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(ROLES, true).setAllowInvalid(false).build());
-  // Лист ролей: заполняем из базы текущими ссылками
-  const roles = sheetWithHeader_(ROLES_SHEET, ROLES_HEADER);
-  const current = rpc_("pn_sheet_get_roles", { p_key: key }).body;
-  if (Array.isArray(current) && current.length) {
-    roles.getRange(2, 1, current.length, ROLES_HEADER.length).setValues(current.map(function (r) {
-      return [String(r.code).toUpperCase(), r.url || "", Number(r.discount) || 0];
-    }));
-    roles.getRange(2, 1, current.length, 1).setFontWeight("bold");
-    roles.getRange(2, 3, current.length, 1).setNote("Скидка меняется в Supabase: таблица pn_tiers, колонка discount_pct");
-  }
+  // Лист ролей: заполняем из базы
+  fillRolesSheet_(key);
 
   const orders = sheetWithHeader_(ORDERS_SHEET, ORDERS_HEADER);
   orders.getRange(2, ORDERS_HEADER.indexOf("Статус") + 1, Math.max(orders.getMaxRows() - 1, 1), 1).setDataValidation(

@@ -6,6 +6,7 @@ import { CONTACTS, SOCIALS } from '../lib/config';
 import { href, type Route } from '../lib/router';
 import { useCatalog } from '../context/CatalogContext';
 import { TierBadge } from './TierBadge';
+import { roleOf } from '../lib/tiers';
 import { Mark, Wordmark } from './Logo';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -102,7 +103,7 @@ export function MenuDrawer({ open, onClose, route }: { open: boolean; onClose: (
               }}
               className="block link-u uppercase text-left">
               {session ? profile?.name ? `${t('reg.hello')}, ${profile.name.split(' ')[0]}` : t('nav.account') : `${t('nav.signin')} / ${t('nav.signup')}`}
-              {session && <TierBadge tier={status?.tier} className="ml-2" />}
+              {session && <TierBadge tier={roleOf(status)} className="ml-2" />}
             </button>
           </Section>
 

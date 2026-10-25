@@ -3,7 +3,7 @@ import { useLang } from '../context/LangContext';
 import { useProfile } from '../context/ProfileContext';
 import { useCatalog } from '../context/CatalogContext';
 import { href } from '../lib/router';
-import { tierTitle } from '../lib/tiers';
+import { discountOf, roleOf, tierTitle } from '../lib/tiers';
 import { TierBadge } from './TierBadge';
 
 /**
@@ -11,19 +11,20 @@ import { TierBadge } from './TierBadge';
  * прогресс и, для VIP / CEO, ссылка на закрытый Telegram-канал (её отдаёт только сервер).
  */
 export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const { status } = useProfile();
   const { categories } = useCatalog();
   const [open, setOpen] = useState(false);
   if (!status?.tier) return null;
 
   const tier = status.tier;
+  const role = roleOf(status);
   const done = status.done_orders ?? 0;
-  const pct = Number(tier.discount_pct) || 0;
+  const pct = discountOf(status);
   const next = status.next;
   const need = next?.min_orders != null ? Math.max(0, next.min_orders - done) : 0;
   const progress = next?.min_orders ? Math.min(100, Math.round((done / next.min_orders) * 100)) : 100;
-  const isRole = tier.min_orders == null;
+  const roleDesc = role ? (t(`tier.desc_${role.code}`) === `tier.desc_${role.code}` ? t('tier.desc_role') : t(`tier.desc_${role.code}`)) : '';
   const hasPrivate = status.links?.length > 0 || categories.includes('exclusive');
 
   return (
@@ -36,7 +37,7 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
       >
         <span className="flex items-center gap-2 nav-caps text-[14px]">
           {t('tier.privileges')}
-          <TierBadge tier={tier} />
+          <TierBadge tier={role} />
         </span>
         <svg
           width="9"
@@ -58,8 +59,8 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
           <div className="px-4 pb-4 space-y-4 border-t border-ink/10 pt-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="field-label">{t('tier.status')}</p>
-                <p className="font-mono text-[15px] mt-1">{tierTitle(tier, lang)}</p>
+                <p className="field-label">{t('tier.your_level')}</p>
+                <p className="font-mono text-[15px] mt-1">{tierTitle(tier)}</p>
               </div>
               {pct > 0 && (
                 <div className="text-right">
@@ -69,9 +70,7 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
               )}
             </div>
 
-            <p className="font-mono text-[12px] leading-[1.6] text-ink/75">
-              {isRole ? (t(`tier.desc_${tier.code}`) === `tier.desc_${tier.code}` ? t('tier.desc_role') : t(`tier.desc_${tier.code}`)) : t('tier.desc_level')}
-            </p>
+            <p className="font-mono text-[12px] leading-[1.6] text-ink/75">{t('tier.desc_level')}</p>
 
             <p className="font-mono text-[12px] text-ink/70">
               {t('tier.purchases')}: {done}
@@ -83,12 +82,23 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
                   <div className="h-full bg-ink transition-[width] duration-500" style={{ width: `${progress}%` }} />
                 </div>
                 <p className="font-mono text-[11px] text-ink/60 mt-2">
-                  {t('tier.to_next').replace('{n}', String(need)).replace('{level}', tierTitle(next, lang))}
+                  {t('tier.to_next').replace('{n}', String(need)).replace('{level}', tierTitle(next))}
                   {Number(next.discount_pct) > 0 ? ` (−${Number(next.discount_pct)}%)` : ''}
                 </p>
               </div>
             )}
             <p className="font-mono text-[10.5px] text-mute leading-[1.5]">{t('tier.how')}</p>
+
+            {role && (
+              <div className="border-t border-ink/10 pt-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <p className="field-label">{t('tier.role')}</p>
+                  <TierBadge tier={role} />
+                </div>
+                <p className="font-mono text-[12px] leading-[1.6] text-ink/75">{roleDesc}</p>
+                <p className="font-mono text-[10.5px] text-mute leading-[1.5]">{t('tier.role_note')}</p>
+              </div>
+            )}
 
             {hasPrivate && (
               <div className="space-y-2 pt-1">

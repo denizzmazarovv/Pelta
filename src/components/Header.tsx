@@ -6,6 +6,7 @@ import { LANGS } from '../lib/i18n';
 import { href, type Route } from '../lib/router';
 import { useCatalog } from '../context/CatalogContext';
 import { TierBadge } from './TierBadge';
+import { roleOf } from '../lib/tiers';
 import { Wordmark } from './Logo';
 import { useHeaderHidden } from '../lib/useHeaderHidden';
 
@@ -117,7 +118,7 @@ export function Header({ route, onMenu }: { route: Route; onMenu: () => void }) 
           </div>
           <button onClick={openRegister} className="hidden lg:flex items-center gap-1.5 max-w-[220px]">
             <span className="link-u truncate">{session ? profile?.name.split(' ')[0] || t('nav.account') : t('nav.signin')}</span>
-            {session && <TierBadge tier={status?.tier} />}
+            {session && <TierBadge tier={roleOf(status)} />}
           </button>
           <button onClick={open} className="link-u whitespace-nowrap" aria-label={t('nav.bag')}>
             <span className="hidden sm:inline">{t('nav.bag')} </span>
