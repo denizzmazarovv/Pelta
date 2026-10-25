@@ -4,7 +4,8 @@ import { useProfile } from '../context/ProfileContext';
 import { LANGS } from '../lib/i18n';
 import { CONTACTS, SOCIALS } from '../lib/config';
 import { href, type Route } from '../lib/router';
-import { CATEGORIES } from '../lib/products';
+import { useCatalog } from '../context/CatalogContext';
+import { TierBadge } from './TierBadge';
 import { Mark, Wordmark } from './Logo';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -18,7 +19,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 export function MenuDrawer({ open, onClose, route }: { open: boolean; onClose: () => void; route: Route }) {
   const { t, lang, setLang } = useLang();
-  const { session, profile, openRegister } = useProfile();
+  const { session, profile, status, openRegister } = useProfile();
+  const { categories } = useCatalog();
 
   useEffect(() => {
     if (!open) return;
@@ -70,7 +72,7 @@ export function MenuDrawer({ open, onClose, route }: { open: boolean; onClose: (
             <a href={href.category('all')} className={`block ${cls(activeCat === 'all')}`}>
               {t('cat.all')}
             </a>
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <a key={c} href={href.category(c)} className={`block ${cls(activeCat === c)}`}>
                 {t(`cat.${c}`)}
               </a>
@@ -100,6 +102,7 @@ export function MenuDrawer({ open, onClose, route }: { open: boolean; onClose: (
               }}
               className="block link-u uppercase text-left">
               {session ? profile?.name ? `${t('reg.hello')}, ${profile.name.split(' ')[0]}` : t('nav.account') : `${t('nav.signin')} / ${t('nav.signup')}`}
+              {session && <TierBadge tier={status?.tier} className="ml-2" />}
             </button>
           </Section>
 

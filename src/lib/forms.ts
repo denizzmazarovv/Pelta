@@ -84,6 +84,18 @@ function deviceType(): string {
   return /Mobi/i.test(ua) ? 'Mobile' : 'Desktop';
 }
 
+export class NameRequiredError extends Error {
+  constructor() {
+    super('name_required');
+  }
+}
+
+export class ItemsUnavailableError extends Error {
+  constructor() {
+    super('items_unavailable');
+  }
+}
+
 export class AuthRequiredError extends Error {
   constructor() {
     super('auth_required');
@@ -127,26 +139,18 @@ export async function saveOrder(o: {
   const res = await fetch(GOOGLE_CART_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ ...payload, access_token: o.accessToken }),
+    body: JSON.stringify({ ...payload, lang: o.lang, access_token: o.accessToken }),
   });
   const out = (await res.json().catch(() => null)) as { status?: string; code?: string } | null;
   if (out?.status !== 'ok') {
     if (out?.code === 'auth') throw new AuthRequiredError();
     if (out?.code === 'rate') throw new RateLimitError();
+    if (out?.code === 'name') throw new NameRequiredError();
+    if (out?.code === 'items') throw new ItemsUnavailableError();
     throw new Error(out?.code || 'order_failed');
   }
   record('order');
-  await toSupabase('pn_orders', {
-    name: payload.customer_name,
-    phone: payload.phone,
-    telegram: o.telegram || null,
-    email: clean(o.email),
-    address: clean(o.address),
-    comment: clean(o.comment),
-    items: o.items,
-    total: payload.total,
-    lang: o.lang,
-  });
+  // Запись заказа в базу делает сервер (pn_create_order): там же считаются цены и скидка
 }
 
 export async function saveMessage(m: { name: string; phone?: string; email?: string; message: string; lang: Lang }) {

@@ -9,7 +9,7 @@ export type Route =
   | { name: 'contact' }
   | { name: 'privacy' };
 
-const CATS = ['cardholder', 'keychain', 'bag', 'belt'];
+const CATS = ['cardholder', 'keychain', 'bag', 'belt', 'exclusive'];
 
 export function parseHash(hash: string): Route {
   const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);

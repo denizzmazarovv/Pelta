@@ -17,6 +17,7 @@ import { LIMITS, filterName, validName } from '../lib/validate';
 import { Field } from '../pages/ContactPage';
 import { Captcha, captchaEnabled, type CaptchaHandle } from './Captcha';
 import { Check, PrefsPicker } from './Footer';
+import { MemberCard } from './MemberCard';
 import { Mark } from './Logo';
 import { PhoneInput } from './PhoneInput';
 
@@ -76,6 +77,7 @@ export function RegisterDrawer() {
   const toMsg = useAuthError();
   const cart = useCart();
   const captcha = useRef<CaptchaHandle>(null);
+  const needNameRef = useRef(false);
 
   const [view, setView] = useState<View>('phone');
   const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
@@ -110,7 +112,7 @@ export function RegisterDrawer() {
       setView('telegram');
     }
     document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRegister();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !needNameRef.current && closeRegister();
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = '';
@@ -188,6 +190,14 @@ export function RegisterDrawer() {
     const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
     return () => clearTimeout(id);
   }, [cooldown]);
+
+  // Новый клиент обязательно указывает имя: пока имени нет, панель не закрывается
+  const needName = view === 'account' && !!session && !!profile && !profile.name;
+  needNameRef.current = needName;
+  const tryClose = () => {
+    if (needNameRef.current) return setError(t('reg.name_required'));
+    closeRegister();
+  };
 
   if (!registerOpen) return null;
 
@@ -267,7 +277,7 @@ export function RegisterDrawer() {
 
   function onSaveProfile(e: FormEvent) {
     e.preventDefault();
-    if (name && !validName(name)) return setError(t('cart.error_name'));
+    if (!validName(name)) return setError(t('reg.name_required'));
     run(async () => {
       const { error } = await auth.updateProfile({ name: name.trim(), prefs, marketing });
       if (error) return setError(t('auth.err.generic'));
@@ -309,12 +319,12 @@ export function RegisterDrawer() {
 
   return (
     <div className="fixed inset-0 z-[110] flex justify-end" role="dialog" aria-modal="true" aria-label={title[view]}>
-      <div className="absolute inset-0 bg-white/30 backdrop-blur-[10px] animate-fade-in" onClick={closeRegister} />
+      <div className="absolute inset-0 bg-white/30 backdrop-blur-[10px] animate-fade-in" onClick={tryClose} />
       <aside className="relative w-full sm:w-[440px] h-full bg-white flex flex-col animate-slide-right border-l border-ink/10 pt-safe">
         <div className="h-header shrink-0 flex items-center justify-between px-5 border-b border-ink/10">
           <span className="nav-caps">{title[view]}</span>
           <button
-            onClick={closeRegister}
+            onClick={tryClose}
             className="w-9 h-9 flex items-center justify-center hover:rotate-45 transition-transform duration-300"
             aria-label={t('common.close')}
           >
@@ -470,6 +480,7 @@ export function RegisterDrawer() {
                   <p className="font-mono text-[12px] text-ink/60 mt-2">{profile?.phone}</p>
                   {newcomer && <p className="font-mono text-[12px] text-ink/70 mt-4">{t('auth.complete_profile')}</p>}
                 </div>
+                {!newcomer && <MemberCard onNavigate={closeRegister} />}
                 <Field label={t('reg.name')}>
                   <input
                     className="field"

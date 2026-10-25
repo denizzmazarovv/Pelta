@@ -3,6 +3,8 @@ import { useCart } from '../context/CartContext';
 import { useLang } from '../context/LangContext';
 import { useProfile } from '../context/ProfileContext';
 import { formatPrice } from '../lib/format';
+import { useCatalog } from '../context/CatalogContext';
+import { Price } from './Price';
 import { href } from '../lib/router';
 import {
   LIMITS,
@@ -13,14 +15,15 @@ import {
   normalizeHandle,
   validName,
 } from '../lib/validate';
-import { AuthRequiredError, isRateLimited, RateLimitError, saveOrder } from '../lib/forms';
+import { AuthRequiredError, ItemsUnavailableError, NameRequiredError, isRateLimited, RateLimitError, saveOrder } from '../lib/forms';
 import { Field } from '../pages/ContactPage';
 import { Mark } from './Logo';
 import { DEFAULT_COUNTRY, isComplete, parsePhone, toE164, type Country } from '../lib/phone';
 
 export function CartDrawer() {
   const { t, lang } = useLang();
-  const { items, isOpen, close, remove, setQty, total, count, clear } = useCart();
+  const { items, isOpen, close, remove, setQty, total, baseTotal, count, clear } = useCart();
+  const { priceOf } = useCatalog();
   const { profile, session, openRegister, updateProfile } = useProfile();
   const profileName = profile?.name?.trim() ?? '';
   const verifiedPhone = profile?.phone ?? '';
@@ -104,7 +107,7 @@ export function CartDrawer() {
           name: name(i.product),
           color: colorLabel(i),
           quantity: i.quantity,
-          price: i.product.price,
+          price: priceOf(i.product).final,
         })),
         lang,
       });
@@ -112,6 +115,11 @@ export function CartDrawer() {
       clear();
     } catch (err) {
       setStatus('idle');
+      if (err instanceof NameRequiredError) {
+        setErrors({ form: t('reg.name_required') });
+        return openRegister();
+      }
+      if (err instanceof ItemsUnavailableError) return setErrors({ form: t('cart.error_items') });
       if (err instanceof AuthRequiredError) {
         setErrors({ form: t('cart.login_required') });
         return openRegister();
@@ -240,12 +248,12 @@ export function CartDrawer() {
                   <span>
                     {name(i.product)} ×{i.quantity}
                   </span>
-                  <span className="whitespace-nowrap">{formatPrice(i.product.price * i.quantity, lang)}</span>
+                  <span className="whitespace-nowrap">{formatPrice(priceOf(i.product).final * i.quantity, lang)}</span>
                 </div>
               ))}
               <div className="flex justify-between pt-2 mt-2 border-t border-ink/20 text-[13px] font-medium">
                 <span>{t('cart.total')}</span>
-                <span>{formatPrice(total, lang)}</span>
+                <Price base={baseTotal} final={total} />
               </div>
             </div>
 
@@ -272,7 +280,9 @@ export function CartDrawer() {
                   <div className="flex-1 min-w-0 flex flex-col">
                     <p className="font-display uppercase text-[14px] leading-tight">{name(i.product)}</p>
                     <p className="font-mono text-[11px] text-ink/60 mt-1">{colorLabel(i)}</p>
-                    <p className="font-mono text-[12px] mt-1">{formatPrice(i.product.price * i.quantity, lang)}</p>
+                    <p className="font-mono text-[12px] mt-1">
+                      <Price base={i.product.price * i.quantity} final={priceOf(i.product).final * i.quantity} />
+                    </p>
                     <div className="mt-auto pt-3 flex items-center justify-between">
                       <div className="flex items-center border border-ink/30 font-mono text-[12px]">
                         <button onClick={() => setQty(i.id, i.quantity - 1)} className="w-7 h-7 hover:bg-fog" aria-label="−">
@@ -294,7 +304,7 @@ export function CartDrawer() {
             <div className="border-t border-ink/10 px-5 pt-4 pb-safe space-y-4 shrink-0">
               <div className="flex items-baseline justify-between">
                 <span className="nav-caps">{t('cart.total')}</span>
-                <span className="font-mono text-[15px]">{formatPrice(total, lang)}</span>
+                <Price base={baseTotal} final={total} className="font-mono text-[15px]" />
               </div>
               <button onClick={() => setCheckout(true)} className="btn-ink">
                 {t('cart.checkout')}

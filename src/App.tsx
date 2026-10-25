@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useState } from 'react';
 import { LangProvider } from './context/LangContext';
 import { CartProvider } from './context/CartContext';
 import { ProfileProvider } from './context/ProfileContext';
+import { CatalogProvider } from './context/CatalogContext';
 import { useRoute } from './lib/router';
 import { Header } from './components/Header';
 import { MenuDrawer } from './components/MenuDrawer';
@@ -50,9 +51,11 @@ export default function App() {
     <LangProvider>
       <ConsentProvider>
       <ProfileProvider>
-        <CartProvider>
-          <AppContent />
-        </CartProvider>
+        <CatalogProvider>
+          <CartProvider>
+            <AppContent />
+          </CartProvider>
+        </CatalogProvider>
       </ProfileProvider>
       </ConsentProvider>
     </LangProvider>

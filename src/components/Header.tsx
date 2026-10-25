@@ -4,7 +4,8 @@ import { useCart } from '../context/CartContext';
 import { useProfile } from '../context/ProfileContext';
 import { LANGS } from '../lib/i18n';
 import { href, type Route } from '../lib/router';
-import { findProduct } from '../lib/products';
+import { useCatalog } from '../context/CatalogContext';
+import { TierBadge } from './TierBadge';
 import { Wordmark } from './Logo';
 import { useHeaderHidden } from '../lib/useHeaderHidden';
 
@@ -28,11 +29,12 @@ function Chevron() {
 
 function useCrumbs(route: Route) {
   const { t, lang } = useLang();
+  const { find } = useCatalog();
   const crumbs: { label: string; to?: string }[] = [{ label: t('nav.home'), to: href.home }];
   if (route.name === 'catalog' && route.category !== 'all') {
     crumbs.push({ label: t(`cat.${route.category}`) });
   } else if (route.name === 'product') {
-    const p = findProduct(route.id);
+    const p = find(route.id);
     if (p) {
       crumbs.push({ label: t(`cat.${p.category}`), to: href.category(p.category) });
       crumbs.push({ label: p[`name_${lang}`] });
@@ -52,7 +54,7 @@ function useCrumbs(route: Route) {
 export function Header({ route, onMenu }: { route: Route; onMenu: () => void }) {
   const { t, lang, setLang } = useLang();
   const { count, open } = useCart();
-  const { session, profile, openRegister } = useProfile();
+  const { session, profile, status, openRegister } = useProfile();
   const crumbs = useCrumbs(route);
   const hidden = useHeaderHidden();
 
@@ -113,8 +115,9 @@ export function Header({ route, onMenu }: { route: Route; onMenu: () => void }) 
               </button>
             ))}
           </div>
-          <button onClick={openRegister} className="hidden lg:block link-u max-w-[160px] truncate">
-            {session ? profile?.name.split(' ')[0] || t('nav.account') : t('nav.signin')}
+          <button onClick={openRegister} className="hidden lg:flex items-center gap-1.5 max-w-[220px]">
+            <span className="link-u truncate">{session ? profile?.name.split(' ')[0] || t('nav.account') : t('nav.signin')}</span>
+            {session && <TierBadge tier={status?.tier} />}
           </button>
           <button onClick={open} className="link-u whitespace-nowrap" aria-label={t('nav.bag')}>
             <span className="hidden sm:inline">{t('nav.bag')} </span>

@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useLang } from '../context/LangContext';
 import { useCart } from '../context/CartContext';
-import { formatPrice } from '../lib/format';
+import { useCatalog } from '../context/CatalogContext';
+import { Price } from './Price';
 import { href } from '../lib/router';
 import type { Product } from '../lib/products';
 import { Mark } from './Logo';
@@ -21,6 +22,7 @@ function SlideArrow({ dir }: { dir: 'l' | 'r' }) {
 
 export function ProductCard({ product, eager = false }: { product: Product; eager?: boolean }) {
   const { t, lang } = useLang();
+  const { priceOf } = useCatalog();
   const { add } = useCart();
   const [slide, setSlide] = useState(0);
   const [added, setAdded] = useState(false);
@@ -74,7 +76,7 @@ export function ProductCard({ product, eager = false }: { product: Product; eage
         <h3 className="font-display uppercase text-[13px] sm:text-[14px] leading-tight text-ink/85 group-hover:text-ink">
           {name}
         </h3>
-        <p className="font-mono text-[12px] text-ink/60 mt-[3px]">{formatPrice(product.price, lang)}</p>
+        <p className="font-mono text-[12px] text-ink/60 mt-[3px]"><Price {...priceOf(product)} /></p>
       </div>
     </a>
       <div className="absolute inset-x-0 top-0 aspect-[7/9] pointer-events-none [&>*]:pointer-events-auto">

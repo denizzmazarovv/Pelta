@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLang } from '../context/LangContext';
-import { CATEGORIES, products, type Category } from '../lib/products';
+import type { Category } from '../lib/products';
+import { useCatalog } from '../context/CatalogContext';
 import { href } from '../lib/router';
 import { Mark } from '../components/Logo';
 import { ProductCard } from '../components/ProductCard';
@@ -21,6 +22,7 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
   const [sort, setSort] = useState<Sort>('featured');
   const [sortOpen, setSortOpen] = useState(false);
   const headerHidden = useHeaderHidden();
+  const { products, categories } = useCatalog();
 
   useEffect(() => {
     document.title = category === 'all' ? 'Pelta Nera' : `${t(`cat.${category}`)} — Pelta Nera`;
@@ -33,9 +35,9 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
     else if (sort === 'price_desc') arr.sort((a, b) => b.price - a.price);
     else arr.sort((a, b) => Number(b.featured) - Number(a.featured));
     return arr;
-  }, [category, sort]);
+  }, [category, sort, products]);
 
-  const tabs: (Category | 'all')[] = ['all', ...CATEGORIES];
+  const tabs: (Category | 'all')[] = ['all', ...categories];
 
   return (
     <div className="bg-ash min-h-[calc(100vh-50px)] flex flex-col">

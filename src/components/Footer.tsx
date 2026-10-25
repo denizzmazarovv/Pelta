@@ -2,7 +2,7 @@ import { useState, FormEvent } from 'react';
 import { useLang } from '../context/LangContext';
 import { CONTACTS, SOCIALS } from '../lib/config';
 import { href } from '../lib/router';
-import { CATEGORIES } from '../lib/products';
+import { useCatalog } from '../context/CatalogContext';
 import { sanitizeEmail } from '../lib/sanitize';
 import { isRateLimited, subscribe } from '../lib/forms';
 import { Mark } from './Logo';
@@ -156,6 +156,7 @@ function Newsletter() {
 /** Разделы меню — только на больших экранах, чтобы левая часть подвала не пустовала. */
 function FooterNav() {
   const { t } = useLang();
+  const { categories } = useCatalog();
   const col = (title: string, links: { label: string; to: string; external?: boolean }[]) => (
     <div>
       <h3 className="font-display uppercase text-[15px] leading-none mb-4">{title}</h3>
@@ -178,7 +179,7 @@ function FooterNav() {
     <nav aria-label={t('nav.menu')} className="hidden lg:grid grid-cols-4 gap-10 xl:gap-16 pt-1">
       {col(t('menu.collection'), [
         { label: t('cat.all'), to: href.category('all') },
-        ...CATEGORIES.map((c) => ({ label: t(`cat.${c}`), to: href.category(c) })),
+        ...categories.map((c) => ({ label: t(`cat.${c}`), to: href.category(c) })),
       ])}
       {col(t('menu.house'), [
         { label: t('nav.about'), to: href.about },

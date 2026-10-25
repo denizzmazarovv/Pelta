@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, ReactNode } from 'react';
 import { useLang } from '../context/LangContext';
 import { useCart } from '../context/CartContext';
-import { findProduct, products } from '../lib/products';
-import { formatNumber } from '../lib/format';
+import { useCatalog } from '../context/CatalogContext';
+import { Price } from '../components/Price';
 import { href } from '../lib/router';
 import { CONTACTS } from '../lib/config';
 import { ProductCard } from '../components/ProductCard';
@@ -68,7 +68,8 @@ export function ProductPage({ id }: { id: string }) {
   const { t, lang } = useLang();
   const headerHidden = useHeaderHidden();
   const { add } = useCart();
-  const product = findProduct(id);
+  const { find, products, priceOf } = useCatalog();
+  const product = find(id);
   const [color, setColor] = useState(0);
   const [added, setAdded] = useState(false);
 
@@ -156,7 +157,9 @@ export function ProductPage({ id }: { id: string }) {
               <p className="pl-[14px] mt-6 lg:mt-3 font-mono text-[13px] leading-[1.7] text-ink/85">{desc}</p>
 
               <Block title={t('product.price')}>
-                <p>{formatNumber(product.price)}</p>
+                <p>
+                  <Price {...priceOf(product)} />
+                </p>
               </Block>
 
             {product.colors.length > 0 && (

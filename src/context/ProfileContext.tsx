@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, ReactNode 
 import type { AuthError, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { isNonce, saveNonce } from '../lib/telegramLogin';
+import type { MemberStatus } from '../lib/tiers';
 
 /**
  * Аккаунт клиента. Вход и регистрация — только по номеру телефона:
@@ -22,6 +23,9 @@ type AuthContextType = {
   ready: boolean;
   session: Session | null;
   profile: Profile | null;
+  /** Уровень, роль, скидка, прогресс — с сервера. */
+  status: MemberStatus | null;
+  refreshStatus: () => void;
   registerOpen: boolean;
   openRegister: () => void;
   closeRegister: () => void;
@@ -44,6 +48,7 @@ const plusPhone = (p?: string | null) => (p ? '+' + p.replace(/\D/g, '') : '');
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [status, setStatus] = useState<MemberStatus | null>(null);
   const [ready, setReady] = useState(!supabase);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
@@ -75,8 +80,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const loadProfile = useCallback(async (s: Session | null) => {
     if (!supabase || !s) {
       setProfile(null);
+      setStatus(null);
       return;
     }
+    supabase.rpc('pn_my_status').then(({ data }) => setStatus((data as MemberStatus | null) ?? null));
     const { data } = await supabase
       .from('profiles')
       .select('full_name, prefs, marketing')
@@ -104,11 +111,27 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, [loadProfile]);
 
+  // Вернулись на вкладку — обновляем уровень (роль могли назначить в таблице)
+  useEffect(() => {
+    if (!supabase || !session) return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        supabase!.rpc('pn_my_status').then(({ data }) => setStatus((data as MemberStatus | null) ?? null));
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [session]);
+
   const value: AuthContextType = {
     enabled: !!supabase,
     ready,
     session,
     profile,
+    status,
+    refreshStatus: () => {
+      if (supabase && session) supabase.rpc('pn_my_status').then(({ data }) => setStatus((data as MemberStatus | null) ?? null));
+    },
     registerOpen,
     openRegister,
     closeRegister,

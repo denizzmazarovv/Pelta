@@ -1,4 +1,4 @@
-export type Category = 'cardholder' | 'keychain' | 'bag' | 'belt';
+export type Category = 'cardholder' | 'keychain' | 'bag' | 'belt' | 'exclusive';
 
 export type Spec = {
   material: string;
@@ -25,6 +25,8 @@ export type Product = {
   colors: ColorOption[];
   specs: Spec;
   featured: boolean;
+  /** Закрытый товар: виден только клиентам с нужным уровнем или ролью. */
+  exclusive?: boolean;
 };
 
 const tan: ColorOption = { id: 'tan', colorKey: 'product.color_tan' };
@@ -32,6 +34,7 @@ const black: ColorOption = { id: 'black', colorKey: 'product.color_black' };
 const cognac: ColorOption = { id: 'cognac', colorKey: 'product.color_cognac' };
 
 export const CATEGORIES: Category[] = ['cardholder', 'keychain', 'bag', 'belt'];
+export const DEFAULT_COLOR: ColorOption = { id: 'default', colorKey: 'product.color_default' };
 
 export function findProduct(id: string): Product | undefined {
   return products.find((p) => p.id === id);
