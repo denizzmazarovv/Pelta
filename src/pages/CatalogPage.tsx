@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLang } from '../context/LangContext';
 import type { Category } from '../lib/products';
 import { useCatalog } from '../context/CatalogContext';
@@ -24,9 +24,6 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
   const headerHidden = useHeaderHidden();
   const { products, categories } = useCatalog();
 
-  useEffect(() => {
-    document.title = category === 'all' ? 'Pelta Nera' : `${t(`cat.${category}`)} — Pelta Nera`;
-  }, [category, t]);
 
   const list = useMemo(() => {
     const base = category === 'all' ? products : products.filter((p) => p.category === category);

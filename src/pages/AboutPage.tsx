@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useLang } from '../context/LangContext';
 import { href } from '../lib/router';
 import { Mark } from '../components/Logo';
@@ -6,9 +5,6 @@ import { Mark } from '../components/Logo';
 export function AboutPage() {
   const { t } = useLang();
 
-  useEffect(() => {
-    document.title = `${t('nav.about')} — Pelta Nera`;
-  }, [t]);
 
   const stats = [
     { value: '25+', label: t('about.stat1') },

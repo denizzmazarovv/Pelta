@@ -1,4 +1,5 @@
-import { useEffect, useState, FormEvent } from 'react';
+import { href } from '../lib/router';
+import { useState, FormEvent } from 'react';
 import { useLang } from '../context/LangContext';
 import { useProfile } from '../context/ProfileContext';
 import { CONTACTS, SOCIALS } from '../lib/config';
@@ -19,9 +20,6 @@ export function ContactPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [state, setState] = useState<'idle' | 'busy' | 'done'>('idle');
 
-  useEffect(() => {
-    document.title = `${t('nav.contact')} — Pelta Nera`;
-  }, [t]);
 
   function validate() {
     const e: Record<string, string> = {};
@@ -136,7 +134,7 @@ export function ContactPage() {
               </span>
               <span>
                 {t('consent.pre')}{' '}
-                <a href="#/privacy" className="underline underline-offset-2">
+                <a href={href.privacy} className="underline underline-offset-2">
                   {t('consent.link')}
                 </a>{' '}
                 {t('consent.post')}

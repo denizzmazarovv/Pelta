@@ -1,4 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
+import { navigate, subscribeLocation } from '../lib/router';
+import { parsePath, pathFor } from '../lib/paths';
 import type { AuthError, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { isNonce, saveNonce } from '../lib/telegramLogin';
@@ -60,20 +62,22 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [toast]);
   const openRegister = useCallback(() => setRegisterOpen(true), []);
 
-  // Ссылка #/login (кнопка «Вернуться на сайт» в боте) сразу открывает вход.
-  // #/login?tg=<ключ> — вход уже подтверждён в боте, панель сама завершит его.
+  // Ссылка /login (кнопка «Вернуться на сайт» в боте; старая /#/login тоже работает) сразу открывает вход.
+  // /login?tg=<ключ> — вход уже подтверждён в боте, панель сама завершит его.
   useEffect(() => {
     const check = () => {
-      const h = window.location.hash.replace(/^#\/?/, '');
-      if (h.split(/[/?]/)[0] !== 'login') return;
-      const tg = new URLSearchParams(h.split('?')[1] ?? '').get('tg');
+      const parsed = parsePath(window.location.pathname);
+      if (!parsed.login) return;
+      const tg = new URLSearchParams(window.location.search).get('tg');
       if (isNonce(tg)) saveNonce(tg);
-      history.replaceState(null, '', '#/');
+      navigate(pathFor({ name: 'catalog', category: 'all' }, parsed.lang), { replace: true });
       setRegisterOpen(true);
     };
     check();
-    window.addEventListener('hashchange', check);
-    return () => window.removeEventListener('hashchange', check);
+    const off = subscribeLocation(check);
+    return () => {
+      off();
+    };
   }, []);
   const closeRegister = useCallback(() => setRegisterOpen(false), []);
 

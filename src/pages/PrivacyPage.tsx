@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useLang } from '../context/LangContext';
 import { useConsent } from '../context/ConsentContext';
 import { POLICIES, type Block } from '../lib/privacy';
@@ -32,9 +31,6 @@ export default function PrivacyPage() {
   const { openSettings } = useConsent();
   const p = POLICIES[lang];
 
-  useEffect(() => {
-    document.title = `${p.title} — Pelta Nera`;
-  }, [p.title]);
 
   return (
     <div className="px-5 sm:px-10 lg:px-14 py-14 lg:py-20">
@@ -50,7 +46,7 @@ export default function PrivacyPage() {
               <ol className="space-y-2 font-mono text-[12px]">
                 {p.sections.map((s) => (
                   <li key={s.id}>
-                    <a href={`#/privacy`} onClick={(e) => { e.preventDefault(); document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="link-u text-ink/70 hover:text-ink">
+                    <a href={`#${s.id}`} onClick={(e) => { e.preventDefault(); document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="link-u text-ink/70 hover:text-ink">
                       {s.title}
                     </a>
                   </li>

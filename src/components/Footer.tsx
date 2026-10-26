@@ -138,7 +138,7 @@ function Newsletter() {
         </span>
         <span>
           {t('consent.pre')}{' '}
-          <a href="#/privacy" className="font-medium underline underline-offset-2">
+          <a href={href.privacy} className="font-medium underline underline-offset-2">
             {t('consent.link')}
           </a>{' '}
           {t('consent.post')}
@@ -236,7 +236,7 @@ export function Footer() {
           <span className="whitespace-nowrap">
             © {year} Pelta Nera. {t('footer.rights')}
           </span>
-          <a href="#/privacy" className="whitespace-nowrap link-u">
+          <a href={href.privacy} className="whitespace-nowrap link-u">
             {t('footer.privacy')}
           </a>
           <button onClick={openSettings} className="whitespace-nowrap link-u text-left">

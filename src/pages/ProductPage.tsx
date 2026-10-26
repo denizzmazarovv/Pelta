@@ -78,9 +78,6 @@ export function ProductPage({ id }: { id: string }) {
     setAdded(false);
   }, [id]);
 
-  useEffect(() => {
-    if (product) document.title = `${product[`name_${lang}`]} — Pelta Nera`;
-  }, [product, lang]);
 
   if (!product) {
     return (

@@ -1,3 +1,4 @@
+import { href } from '../lib/router';
 import { useEffect, useRef, useState, FormEvent, ReactNode } from 'react';
 import type { AuthError } from '@supabase/supabase-js';
 import { useLang } from '../context/LangContext';
@@ -348,7 +349,7 @@ export function RegisterDrawer() {
                   },
                   <>
                     {t('consent.pre')}{' '}
-                    <a href="#/privacy" className="underline underline-offset-2">
+                    <a href={href.privacy} className="underline underline-offset-2">
                       {t('consent.link')}
                     </a>{' '}
                     {t('consent.post')}

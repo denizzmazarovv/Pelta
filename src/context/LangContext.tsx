@@ -1,4 +1,6 @@
-import { createContext, useCallback, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, ReactNode } from 'react';
+import { installRouter, navigate, usePath } from '../lib/router';
+import { parsePath, withLang } from '../lib/paths';
 import { Lang, translations } from '../lib/i18n';
 
 type LangContextType = {
@@ -9,37 +11,52 @@ type LangContextType = {
 
 const LangContext = createContext<LangContextType | undefined>(undefined);
 
-// Основной язык — английский. Новый ключ, чтобы старое автосохранение 'ru' не мешало.
+// Выбор посетителя запоминаем. Новый ключ, чтобы старое автосохранение 'ru' не мешало.
 const KEY = 'pelta_lang_v2';
 const isLang = (v: unknown): v is Lang => v === 'ru' || v === 'uz' || v === 'en';
 
 /**
- * Язык при открытии:
- * 1) ссылка с ?lang=uz|ru|en (так открывается peltanera.uz — пересылка на peltanera.com/?lang=uz);
+ * Язык задаётся адресом: /… — английский, /ru/… — русский, /uz/… — узбекский.
+ * Так поисковики видят каждую страницу на каждом языке.
+ *
+ * При открытии сайта адрес без языка может смениться на язык посетителя:
+ * 1) ссылка с ?lang=uz|ru|en (старая пересылка с peltanera.uz; лучше пересылать сразу на https://peltanera.com/uz/);
  * 2) сайт открыт прямо на домене .uz;
- * 3) язык, который посетитель выбрал раньше;
- * 4) английский.
+ * 3) язык, который посетитель выбрал раньше.
  */
-function initialLang(): Lang {
+let booted = false;
+function bootLang() {
+  if (booted) return;
+  booted = true;
   try {
+    installRouter();
     const url = new URL(window.location.href);
+    const parsed = parsePath(url.pathname);
+    let target: Lang | null = null;
     const fromUrl = url.searchParams.get('lang');
-    if (isLang(fromUrl)) {
-      url.searchParams.delete('lang');
-      history.replaceState(null, '', url.pathname + url.search + url.hash);
-      return fromUrl;
+    if (fromUrl !== null) url.searchParams.delete('lang');
+    if (isLang(fromUrl)) target = fromUrl;
+    else if (!parsed.prefixed) {
+      if (/\.uz$/i.test(window.location.hostname)) target = 'uz';
+      else {
+        const saved = localStorage.getItem(KEY);
+        if (isLang(saved)) target = saved;
+      }
     }
-    if (/\.uz$/i.test(window.location.hostname)) return 'uz';
-    const saved = localStorage.getItem(KEY);
-    if (isLang(saved)) return saved;
+    const path = target && target !== parsed.lang ? withLang(url.pathname, target) : url.pathname;
+    const next = path + url.search + url.hash;
+    if (next !== window.location.pathname + window.location.search + window.location.hash) {
+      history.replaceState(null, '', next);
+    }
   } catch {
     /* ignore */
   }
-  return 'en';
 }
 
 export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>(initialLang);
+  bootLang();
+  const path = usePath();
+  const lang = parsePath(path).lang;
 
   useEffect(() => {
     try {
@@ -49,6 +66,10 @@ export function LangProvider({ children }: { children: ReactNode }) {
     }
     document.documentElement.lang = lang;
   }, [lang]);
+
+  const setLang = useCallback((l: Lang) => {
+    navigate(withLang(window.location.pathname, l) + window.location.search + window.location.hash);
+  }, []);
 
   const t = useCallback((key: string) => translations[lang][key] ?? translations.en[key] ?? key, [lang]);
 

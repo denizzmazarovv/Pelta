@@ -4,6 +4,9 @@ import { CartProvider } from './context/CartContext';
 import { ProfileProvider } from './context/ProfileContext';
 import { CatalogProvider } from './context/CatalogContext';
 import { useRoute } from './lib/router';
+import { useSeoHead } from './lib/useSeoHead';
+import { useLang } from './context/LangContext';
+import { useCatalog } from './context/CatalogContext';
 import { Header } from './components/Header';
 import { MenuDrawer } from './components/MenuDrawer';
 import { Footer } from './components/Footer';
@@ -20,6 +23,9 @@ const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 
 function AppContent() {
   const route = useRoute();
+  const { lang } = useLang();
+  const { find } = useCatalog();
+  useSeoHead(route, lang, route.name === 'product' ? find(route.id) : undefined);
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
