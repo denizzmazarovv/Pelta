@@ -46,7 +46,7 @@ export function PrefsPicker({ value, onChange }: { value: string[]; onChange: (v
     { key: 'men', on: value.includes('men'), next: () => (value.includes('men') ? value.filter((x) => x !== 'men') : [...value, 'men']) },
   ];
   return (
-    <div className="flex flex-wrap gap-x-10 gap-y-2 font-mono text-[13px] font-medium">
+    <div className="flex flex-wrap gap-x-10 gap-y-2 font-mono text-[11.5px] font-medium">
       {opts.map((o) => (
         <button key={o.key} type="button" onClick={() => onChange(o.next())} className="flex items-center gap-2" aria-pressed={o.on}>
           <Check checked={o.on} />
@@ -88,9 +88,9 @@ function Newsletter() {
 
   return (
     <form onSubmit={submit} className="w-full max-w-[400px]" noValidate>
-      <p className="font-sans text-[15px] mb-5">{t('news.title')}</p>
+      <p className="font-sans text-[13px] mb-4">{t('news.title')}</p>
       {state === 'done' ? (
-        <p className="font-mono text-[13px] border-b border-ink pb-3">{t('news.done')}</p>
+        <p className="font-mono text-[12px] border-b border-ink pb-3">{t('news.done')}</p>
       ) : (
         <div className="flex items-center gap-3 border-b border-ink pb-2">
           <input
@@ -98,7 +98,7 @@ function Newsletter() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t('news.placeholder')}
-            className="flex-1 bg-transparent font-mono text-[14px] placeholder:text-ink/70 focus:outline-none min-w-0"
+            className="flex-1 bg-transparent font-mono text-[12.5px] placeholder:text-ink/70 focus:outline-none min-w-0"
             aria-label="Email"
             maxLength={120}
           />
@@ -159,8 +159,8 @@ function FooterNav() {
   const { categories } = useCatalog();
   const col = (title: string, links: { label: string; to: string; external?: boolean }[]) => (
     <div>
-      <h3 className="font-display uppercase text-[15px] leading-none mb-4">{title}</h3>
-      <ul className="space-y-[7px] font-display uppercase text-[13px] leading-tight text-ink/75">
+      <h3 className="font-display uppercase text-[13px] leading-none mb-3">{title}</h3>
+      <ul className="space-y-[6px] font-display uppercase text-[11.5px] leading-tight text-ink/75">
         {links.map((l) => (
           <li key={l.label}>
             <a
@@ -220,7 +220,7 @@ export function Footer() {
         </div>
       </div>
       <div className="px-4 sm:px-5 pb-safe">
-        <div className="border-t-2 border-ink pt-4 pb-8 flex flex-wrap gap-x-5 gap-y-2 font-sans text-[13px] sm:text-[15px] text-ink/75">
+        <div className="border-t-2 border-ink pt-4 pb-8 flex flex-wrap gap-x-5 gap-y-2 font-sans text-[11.5px] sm:text-[12.5px] text-ink/75">
           {items.map((i) => (
             <span key={i.label} className="whitespace-nowrap">
               {i.label}:{' '}
