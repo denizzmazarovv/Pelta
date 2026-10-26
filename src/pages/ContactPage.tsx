@@ -70,7 +70,6 @@ export function ContactPage() {
             [t('menu.email'), CONTACTS.email, `mailto:${CONTACTS.email}`],
             [t('menu.phone'), CONTACTS.phone, CONTACTS.phoneHref],
             [t('menu.telegram'), CONTACTS.telegramHandle, CONTACTS.telegramHref],
-            [t('footer.collab'), CONTACTS.collabEmail, `mailto:${CONTACTS.collabEmail}`],
           ].map(([l, v, h]) => (
             <div key={l} className="grid grid-cols-[150px_1fr] items-baseline">
               <dt>{l}</dt>

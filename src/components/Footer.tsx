@@ -206,10 +206,9 @@ export function Footer() {
 
   const items: { label: string; value: string; to?: string }[] = [
     { label: t('footer.company'), value: CONTACTS.company },
-    { label: t('footer.ceo'), value: CONTACTS.ceo },
+    { label: t('footer.founder'), value: CONTACTS.founder },
     { label: t('footer.phone'), value: CONTACTS.phone, to: CONTACTS.phoneHref },
     { label: t('footer.mail'), value: CONTACTS.email, to: `mailto:${CONTACTS.email}` },
-    { label: t('footer.collab'), value: CONTACTS.collabEmail, to: `mailto:${CONTACTS.collabEmail}` },
   ];
 
   return (

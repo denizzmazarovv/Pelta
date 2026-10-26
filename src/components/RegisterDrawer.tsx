@@ -332,7 +332,7 @@ export function RegisterDrawer() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-8 pb-safe">
+        <div className="flex-1 overflow-y-auto px-5 py-8 pb-safe flex flex-col">
           {!auth.enabled && <p className="font-mono text-[12px] mb-6">{t('auth.err.disabled')}</p>}
 
           {/* ШАГ 1: ВХОД */}
@@ -471,7 +471,7 @@ export function RegisterDrawer() {
 
           {/* АККАУНТ */}
           {view === 'account' && session && (
-            <div className="space-y-12">
+            <div className="flex-1 flex flex-col space-y-12">
               <form onSubmit={onSaveProfile} noValidate className="space-y-7">
                 <div>
                   <h2 className="font-mono text-[20px]">
@@ -503,28 +503,31 @@ export function RegisterDrawer() {
                 </button>
               </form>
 
-              <div className="space-y-3 border-t border-ink/10 pt-8">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await auth.signOut();
-                    closeRegister();
-                  }}
-                  className="btn-ink"
-                >
-                  {t('reg.logout')}
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await auth.signOut(true);
-                    closeRegister();
-                  }}
-                  className="btn-line"
-                >
-                  {t('auth.logout_all')}
-                </button>
-                <p className="font-mono text-[11px] text-ink/60 pt-3">
+              {/* Выход — внизу окна, маленькие кнопки */}
+              <div className="!mt-auto border-t border-ink/10 pt-5 space-y-3">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await auth.signOut();
+                      closeRegister();
+                    }}
+                    className="btn-line !h-auto min-h-8 py-1.5 !text-[11px] leading-tight !w-auto flex-1 px-3"
+                  >
+                    {t('reg.logout')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await auth.signOut(true);
+                      closeRegister();
+                    }}
+                    className="btn-line !h-auto min-h-8 py-1.5 !text-[11px] leading-tight !w-auto flex-[1.4] px-3 !border-ink/30 text-ink/70"
+                  >
+                    {t('auth.logout_all')}
+                  </button>
+                </div>
+                <p className="font-mono text-[10.5px] text-ink/50 leading-[1.5]">
                   {t('auth.delete_hint')}{' '}
                   <a href={`mailto:${CONTACTS.email}`} className="underline underline-offset-2">
                     {CONTACTS.email}

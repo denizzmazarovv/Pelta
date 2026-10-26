@@ -175,10 +175,9 @@ const ru: Dict = {
   'news.error_consent': 'Подтвердите согласие',
 
   'footer.company': 'Компания',
-  'footer.ceo': 'CEO',
+  'footer.founder': 'Founder',
   'footer.phone': 'Телефон',
   'footer.mail': 'Почта',
-  'footer.collab': 'Сотрудничество',
   'footer.rights': 'Все права защищены',
 
   'reg.title': 'Регистрация',
@@ -437,10 +436,9 @@ const uz: Dict = {
   'news.error_consent': 'Rozilikni tasdiqlang',
 
   'footer.company': 'Kompaniya',
-  'footer.ceo': 'CEO',
+  'footer.founder': 'Founder',
   'footer.phone': 'Telefon',
   'footer.mail': 'Pochta',
-  'footer.collab': 'Hamkorlik',
   'footer.rights': 'Barcha huquqlar himoyalangan',
 
   'reg.title': 'Ro‘yxatdan o‘tish',
@@ -699,10 +697,9 @@ const en: Dict = {
   'news.error_consent': 'Please confirm your consent',
 
   'footer.company': "Company",
-  'footer.ceo': 'CEO',
+  'footer.founder': 'Founder',
   'footer.phone': 'Phone',
   'footer.mail': "Email",
-  'footer.collab': "Collaborations",
   'footer.rights': 'All rights reserved',
 
   'reg.title': 'Sign up',

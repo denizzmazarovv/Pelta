@@ -28,9 +28,10 @@ export const TURNSTILE_SITE_KEY: string =
 
 export const CONTACTS = {
   company: 'Pelta Nera',
-  ceo: 'Deniz Oztyurk',
+  founder: 'O. Deniz',
+  // Полное имя владельца — только для политики конфиденциальности
+  owner: 'Deniz Oztyurk',
   email: 'peltanera@gmail.com',
-  collabEmail: 'deniz4work@gmail.com',
   phone: '+998 94 171 71 94',
   phoneHref: 'tel:+998941717194',
   telegramHandle: '@npcceo',

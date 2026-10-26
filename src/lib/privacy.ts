@@ -25,7 +25,7 @@ const en: Policy = {
       id: 'operator',
       title: '1. Who we are',
       body: [
-        `The operator of your personal data is Pelta Nera (owner: ${CONTACTS.ceo}), ${CONTACTS.city}.`,
+        `The operator of your personal data is Pelta Nera (owner: ${CONTACTS.owner}), ${CONTACTS.city}.`,
         [`Email: ${E}`, `Phone: ${CONTACTS.phone}`, `Telegram: ${CONTACTS.telegramHandle}`],
         'We process personal data in accordance with the Law of the Republic of Uzbekistan “On Personal Data” and, for visitors from the European Union, with the principles of the GDPR.',
       ],
@@ -175,7 +175,7 @@ const ru: Policy = {
       id: 'operator',
       title: '1. Кто мы',
       body: [
-        `Оператор персональных данных — Pelta Nera (владелец: ${CONTACTS.ceo}), г. Ташкент, Узбекистан.`,
+        `Оператор персональных данных — Pelta Nera (владелец: ${CONTACTS.owner}), г. Ташкент, Узбекистан.`,
         [`Email: ${E}`, `Телефон: ${CONTACTS.phone}`, `Telegram: ${CONTACTS.telegramHandle}`],
         'Мы обрабатываем персональные данные в соответствии с Законом Республики Узбекистан «О персональных данных», а для посетителей из Европейского союза — с учётом принципов GDPR.',
       ],
@@ -325,7 +325,7 @@ const uz: Policy = {
       id: 'operator',
       title: '1. Biz kimmiz',
       body: [
-        `Shaxsiy ma’lumotlar operatori — Pelta Nera (egasi: ${CONTACTS.ceo}), Toshkent sh., O‘zbekiston.`,
+        `Shaxsiy ma’lumotlar operatori — Pelta Nera (egasi: ${CONTACTS.owner}), Toshkent sh., O‘zbekiston.`,
         [`Email: ${E}`, `Telefon: ${CONTACTS.phone}`, `Telegram: ${CONTACTS.telegramHandle}`],
         'Biz shaxsiy ma’lumotlarni O‘zbekiston Respublikasining «Shaxsga doir ma’lumotlar to‘g‘risida»gi Qonuniga muvofiq, Yevropa Ittifoqidan tashrif buyuruvchilar uchun esa GDPR tamoyillarini hisobga olgan holda qayta ishlaymiz.',
       ],
