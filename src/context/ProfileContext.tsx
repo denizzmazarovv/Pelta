@@ -186,7 +186,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         <div
           key={toast.id}
           role="status"
-          className="fixed z-[130] left-1/2 -translate-x-1/2 bottom-[max(24px,env(safe-area-inset-bottom))] px-5 h-11 flex items-center gap-2 rounded-full bg-ink text-white font-mono text-[13px] shadow-lg animate-fade-in"
+          className="fixed z-[130] left-1/2 -translate-x-1/2 bottom-[max(24px,env(safe-area-inset-bottom))] px-5 h-11 flex items-center gap-2 rounded-full bg-navy text-paper font-mono text-[13px] shadow-lg animate-fade-in"
         >
           <span aria-hidden="true">✓</span>
           {toast.text}

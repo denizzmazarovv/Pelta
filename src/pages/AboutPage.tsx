@@ -31,7 +31,7 @@ export function AboutPage() {
           {stats.map((s) => (
             <div key={s.label} className="pt-5 pr-3">
               <dt className="font-display text-[36px] leading-none">{s.value}</dt>
-              <dd className="font-mono text-[11px] text-ink/60 mt-2 leading-snug">{s.label}</dd>
+              <dd className="font-mono text-[11px] text-ink/70 mt-2 leading-snug">{s.label}</dd>
             </div>
           ))}
         </dl>

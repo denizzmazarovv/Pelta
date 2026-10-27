@@ -6,7 +6,7 @@ export function Price({ base, final, className = '' }: { base: number; final: nu
   return (
     <span className={className}>
       {formatNumber(final)}{' '}
-      <s className="text-ink/40" aria-label={`${formatNumber(base)}`}>
+      <s className="text-mute" aria-label={`${formatNumber(base)}`}>
         {formatNumber(base)}
       </s>
     </span>

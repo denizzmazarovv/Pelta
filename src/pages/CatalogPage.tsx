@@ -40,7 +40,7 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
     <div className="bg-ash min-h-[calc(100vh-50px)] flex flex-col">
       {/* Подзаголовок: знак, категории, фильтр */}
       <div
-        className={`sticky z-40 bg-white transition-[top] duration-300 ease-out ${
+        className={`sticky z-40 bg-paper transition-[top] duration-300 ease-out ${
           headerHidden ? 'top-0' : 'top-[calc(50px+env(safe-area-inset-top))]'
         }`}
       >
@@ -66,7 +66,7 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
                     key={c}
                     href={href.category(c)}
                     className={`nav-caps text-[15px] sm:text-[16px] lg:text-[14px] xl:text-[16px] px-[5px] lg:px-[4px] xl:px-[5px] py-[4px] border whitespace-nowrap transition-colors ${
-                      active ? 'border-ink' : 'border-transparent hover:border-ink/30'
+                      active ? 'border-burgundy text-burgundy' : 'border-transparent hover:border-ink/30'
                     }`}
                     aria-current={active ? 'page' : undefined}
                   >
@@ -89,7 +89,7 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
               {sortOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
-                  <div className="absolute right-0 top-full mt-3 z-20 bg-white border border-ink w-[230px] py-2 animate-fade-in">
+                  <div className="absolute right-0 top-full mt-3 z-20 bg-paper border border-ink w-[230px] py-2 animate-fade-in">
                     {(['featured', 'price_asc', 'price_desc'] as Sort[]).map((s) => (
                       <button
                         key={s}
@@ -123,7 +123,7 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
         </div>
       )}
 
-      <p className="font-mono text-[11px] text-ink/50 px-[15px] py-6 mt-auto">
+      <p className="font-mono text-[11px] text-mute px-[15px] py-6 mt-auto">
         {list.length} {t('catalog.items')}
       </p>
     </div>

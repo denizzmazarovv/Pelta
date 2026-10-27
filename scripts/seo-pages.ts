@@ -102,7 +102,7 @@ function body(route: Route, lang: Lang, seo: Seo): string {
   return (
     // Посетитель обычно не видит этот текст: сайт загружается раньше. Без JavaScript он появляется через 2 секунды.
     `<style>@keyframes pn-seo{to{opacity:1}}.pn-seo{opacity:0;animation:pn-seo .3s 2s forwards}.pn-seo a{color:inherit;text-decoration:underline}.pn-seo h1{font-size:28px;font-weight:600;margin:20px 0 12px}.pn-seo p,.pn-seo ul,.pn-seo nav{margin:8px 0}.pn-seo li{list-style:disc;margin-left:20px}</style>` +
-    `<div class="pn-seo" style="max-width:760px;margin:0 auto;padding:72px 20px;font-family:system-ui,sans-serif;line-height:1.6;color:#111">` +
+    `<div class="pn-seo" style="max-width:760px;margin:0 auto;padding:72px 20px;font-family:system-ui,sans-serif;line-height:1.6;color:#1A2540">` +
     `<header><a href="${esc(home)}"><strong>${BRAND}</strong></a><nav>${nav}</nav><p>${langs}</p></header>` +
     `<main>${main}</main>` +
     `<footer><p>${BRAND} — Tashkent, Uzbekistan · ${link(pathFor({ name: 'privacy' }, lang), tr(lang, 'footer.privacy'))}</p></footer>` +

@@ -79,9 +79,9 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
             {next && (
               <div>
                 <div className="h-[3px] bg-ink/10" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
-                  <div className="h-full bg-ink transition-[width] duration-500" style={{ width: `${progress}%` }} />
+                  <div className="h-full bg-burgundy transition-[width] duration-500" style={{ width: `${progress}%` }} />
                 </div>
-                <p className="font-mono text-[11px] text-ink/60 mt-2">
+                <p className="font-mono text-[11px] text-ink/70 mt-2">
                   {t('tier.to_next').replace('{n}', String(need)).replace('{level}', tierTitle(next))}
                   {Number(next.discount_pct) > 0 ? ` (−${Number(next.discount_pct)}%)` : ''}
                 </p>

@@ -61,7 +61,7 @@ export function Header({ route, onMenu }: { route: Route; onMenu: () => void }) 
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 bg-white pt-safe transition-transform duration-300 ease-out ${
+      className={`fixed top-0 inset-x-0 z-50 bg-paper pt-safe transition-transform duration-300 ease-out ${
         hidden ? '-translate-y-full' : 'translate-y-0'
       }`}
     >

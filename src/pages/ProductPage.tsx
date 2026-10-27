@@ -14,7 +14,7 @@ function Block({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="mt-8 lg:mt-5">
       <h3 className="font-mono text-[17px] text-ink/85">{title}</h3>
-      <div className="pl-[14px] mt-1 font-mono text-[13px] text-ink/60 leading-[1.7]">{children}</div>
+      <div className="pl-[14px] mt-1 font-mono text-[13px] text-ink/70 leading-[1.7]">{children}</div>
     </div>
   );
 }
@@ -57,7 +57,7 @@ function Fold({ title, children }: { title: string; children: ReactNode }) {
         }`}
       >
         <div className="overflow-hidden">
-          <div className="pl-[14px] pt-1 font-mono text-[13px] text-ink/60 leading-[1.7]">{children}</div>
+          <div className="pl-[14px] pt-1 font-mono text-[13px] text-ink/70 leading-[1.7]">{children}</div>
         </div>
       </div>
     </div>
@@ -133,7 +133,7 @@ export function ProductPage({ id }: { id: string }) {
           </div>
 
           {/* Десктоп: фото столбцом */}
-          <div className="hidden lg:flex flex-col gap-[3px] bg-white">
+          <div className="hidden lg:flex flex-col gap-[3px] bg-paper">
             <img src={first} alt={name} className="w-full aspect-[4/5] object-cover bg-smoke" />
             {rest.map((src, i) => (
               <img key={src + i} src={src} alt="" loading="lazy" className="w-full aspect-[4/5] object-cover bg-smoke" />
@@ -166,7 +166,7 @@ export function ProductPage({ id }: { id: string }) {
                     <button
                       key={c.id}
                       onClick={() => setColor(i)}
-                      className={`w-7 h-7 p-[3px] border ${color === i ? 'border-ink' : 'border-transparent hover:border-ink/30'}`}
+                      className={`w-7 h-7 p-[3px] border ${color === i ? 'border-burgundy' : 'border-transparent hover:border-ink/30'}`}
                       aria-label={t(c.colorKey)}
                       aria-pressed={color === i}
                       title={t(c.colorKey)}
@@ -208,7 +208,7 @@ export function ProductPage({ id }: { id: string }) {
 
       {/* Похожие */}
       {related.length > 0 && (
-        <section className="bg-ash border-t-[3px] border-smoke">
+        <section className="bg-ash border-t-[3px] border-navy">
           <h2 className="nav-caps px-5 py-5">{t('product.related')}</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4">
             {related.map((p) => (

@@ -320,8 +320,8 @@ export function RegisterDrawer() {
 
   return (
     <div className="fixed inset-0 z-[110] flex justify-end" role="dialog" aria-modal="true" aria-label={title[view]}>
-      <div className="absolute inset-0 bg-white/30 backdrop-blur-[10px] animate-fade-in" onClick={tryClose} />
-      <aside className="relative w-full sm:w-[440px] h-full bg-white flex flex-col animate-slide-right border-l border-ink/10 pt-safe">
+      <div className="absolute inset-0 bg-navy/30 backdrop-blur-[10px] animate-fade-in" onClick={tryClose} />
+      <aside className="relative w-full sm:w-[440px] h-full bg-paper flex flex-col animate-slide-right border-l border-ink/10 pt-safe">
         <div className="h-header shrink-0 flex items-center justify-between px-5 border-b border-ink/10">
           <span className="nav-caps">{title[view]}</span>
           <button
@@ -419,7 +419,7 @@ export function RegisterDrawer() {
               {nonce ? (
                 <>
                   <p className="font-mono text-[11px] text-mute flex items-center gap-2" aria-live="polite">
-                    <span className="inline-block w-2 h-2 rounded-full bg-ink animate-pulse" />
+                    <span className="inline-block w-2 h-2 rounded-full bg-burgundy animate-pulse" />
                     {t('auth.tg.waiting')}
                   </p>
                   <a href={botLink(nonce)} target="_blank" rel="noopener noreferrer" className="btn-ink inline-flex items-center justify-center w-full">
@@ -478,7 +478,7 @@ export function RegisterDrawer() {
                   <h2 className="font-mono text-[20px]">
                     {newcomer ? t('auth.welcome') : `${t('reg.hello')}${profile?.name ? `, ${profile.name.split(' ')[0]}` : ''}`}
                   </h2>
-                  <p className="font-mono text-[12px] text-ink/60 mt-2">{profile?.phone}</p>
+                  <p className="font-mono text-[12px] text-ink/70 mt-2">{profile?.phone}</p>
                   {newcomer && <p className="font-mono text-[12px] text-ink/70 mt-4">{t('auth.complete_profile')}</p>}
                 </div>
                 {!newcomer && <MemberCard onNavigate={closeRegister} />}
@@ -528,7 +528,7 @@ export function RegisterDrawer() {
                     {t('auth.logout_all')}
                   </button>
                 </div>
-                <p className="font-mono text-[10.5px] text-ink/50 leading-[1.5]">
+                <p className="font-mono text-[10.5px] text-mute leading-[1.5]">
                   {t('auth.delete_hint')}{' '}
                   <a href={`mailto:${CONTACTS.email}`} className="underline underline-offset-2">
                     {CONTACTS.email}

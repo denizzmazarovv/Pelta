@@ -48,10 +48,10 @@ export function MenuDrawer({ open, onClose, route }: { open: boolean; onClose: (
   return (
     <div className="fixed inset-0 z-[90]" role="dialog" aria-modal="true" aria-label={t('nav.menu')}>
       <div
-        className="absolute inset-0 bg-white/30 backdrop-blur-[10px] animate-fade-in"
+        className="absolute inset-0 bg-navy/30 backdrop-blur-[10px] animate-fade-in"
         onClick={onClose}
       />
-      <aside className="relative h-full w-full sm:w-[350px] bg-white overflow-y-auto hide-scrollbar animate-slide-left pt-safe">
+      <aside className="relative h-full w-full sm:w-[350px] bg-paper overflow-y-auto hide-scrollbar animate-slide-left pt-safe">
         <div className="relative h-header flex items-center px-4 sm:px-5">
           <button
             onClick={onClose}

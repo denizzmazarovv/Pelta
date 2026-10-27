@@ -76,7 +76,7 @@ export function ProductCard({ product, eager = false }: { product: Product; eage
         <h3 className="font-display uppercase text-[13px] sm:text-[14px] leading-tight text-ink/85 group-hover:text-ink">
           {name}
         </h3>
-        <p className="font-mono text-[12px] text-ink/60 mt-[3px]"><Price {...priceOf(product)} /></p>
+        <p className="font-mono text-[12px] text-mute mt-[3px]"><Price {...priceOf(product)} /></p>
       </div>
     </a>
       <div className="absolute inset-x-0 top-0 aspect-[7/9] pointer-events-none [&>*]:pointer-events-auto">

@@ -131,9 +131,9 @@ export function CartDrawer() {
 
   return (
     <div className="fixed inset-0 z-[110] flex justify-end" role="dialog" aria-modal="true" aria-label={t('cart.title')}>
-      <div className="absolute inset-0 bg-white/30 backdrop-blur-[10px] animate-fade-in" onClick={close} />
+      <div className="absolute inset-0 bg-navy/30 backdrop-blur-[10px] animate-fade-in" onClick={close} />
 
-      <aside className="relative w-full sm:w-[440px] h-full bg-white flex flex-col animate-slide-right border-l border-ink/10 pt-safe">
+      <aside className="relative w-full sm:w-[440px] h-full bg-paper flex flex-col animate-slide-right border-l border-ink/10 pt-safe">
         <div className="h-header shrink-0 flex items-center justify-between px-5 border-b border-ink/10">
           <div className="flex items-center gap-3 nav-caps">
             {checkout && status !== 'success' && (
@@ -279,7 +279,7 @@ export function CartDrawer() {
                   </a>
                   <div className="flex-1 min-w-0 flex flex-col">
                     <p className="font-display uppercase text-[14px] leading-tight">{name(i.product)}</p>
-                    <p className="font-mono text-[11px] text-ink/60 mt-1">{colorLabel(i)}</p>
+                    <p className="font-mono text-[11px] text-ink/70 mt-1">{colorLabel(i)}</p>
                     <p className="font-mono text-[12px] mt-1">
                       <Price base={i.product.price * i.quantity} final={priceOf(i.product).final * i.quantity} />
                     </p>
@@ -293,7 +293,7 @@ export function CartDrawer() {
                           +
                         </button>
                       </div>
-                      <button onClick={() => remove(i.id)} className="font-mono text-[11px] text-ink/60 link-u">
+                      <button onClick={() => remove(i.id)} className="font-mono text-[11px] text-ink/70 link-u">
                         {t('cart.remove')}
                       </button>
                     </div>

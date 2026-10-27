@@ -16,13 +16,13 @@ export function Arrow({ size = 12 }: { size?: number }) {
   );
 }
 
-/** Чекбокс-лепесток: контур — не выбрано, чёрная заливка — выбрано. */
+/** Чекбокс-лепесток: контур — не выбрано, заливка знаком — выбрано. Цвет берётся от текста вокруг. */
 export function Check({ checked, size = 14 }: { checked: boolean; size?: number }) {
-  // Пустой белый круг → при отметке превращается в логотип
+  // Пустой круг → при отметке превращается в логотип
   return (
-    <span className="relative inline-flex shrink-0 text-ink" style={{ width: size, height: size }} aria-hidden="true">
+    <span className="relative inline-flex shrink-0" style={{ width: size, height: size }} aria-hidden="true">
       <span
-        className={`absolute inset-0 rounded-full border-[1.5px] border-ink bg-transparent transition-[opacity,transform] duration-200 ${
+        className={`absolute inset-0 rounded-full border-[1.5px] border-current bg-transparent transition-[opacity,transform] duration-200 ${
           checked ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
         }`}
       />
@@ -88,24 +88,24 @@ function Newsletter() {
 
   return (
     <form onSubmit={submit} className="w-full max-w-[400px]" noValidate>
-      <p className="font-sans text-[13px] mb-4">{t('news.title')}</p>
+      <p className="font-sans text-[13px] mb-4 text-paper">{t('news.title')}</p>
       {state === 'done' ? (
-        <p className="font-mono text-[12px] border-b border-ink pb-3">{t('news.done')}</p>
+        <p className="font-mono text-[12px] border-b border-mist/60 pb-3 text-paper">{t('news.done')}</p>
       ) : (
-        <div className="flex items-center gap-3 border-b border-ink pb-2">
+        <div className="flex items-center gap-3 border-b border-mist/60 focus-within:border-paper pb-2 transition-colors">
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t('news.placeholder')}
-            className="flex-1 bg-transparent font-mono text-[12.5px] placeholder:text-ink/70 focus:outline-none min-w-0"
+            className="flex-1 bg-transparent font-mono text-[12.5px] text-paper placeholder:text-mist focus:outline-none min-w-0"
             aria-label="Email"
             maxLength={120}
           />
           <button
             type="submit"
             disabled={state === 'busy'}
-            className="w-8 h-8 shrink-0 border border-ink flex items-center justify-center hover:bg-ink hover:text-ash transition-colors disabled:opacity-50"
+            className="w-8 h-8 shrink-0 border border-mist/70 text-paper flex items-center justify-center hover:bg-paper hover:border-paper hover:text-navy transition-colors disabled:opacity-50"
             aria-label={t('contact.send')}
           >
             <Arrow />
@@ -114,7 +114,7 @@ function Newsletter() {
       )}
 
       {error && (
-        <p role="alert" className="font-mono text-[11px] mt-2 text-red-700">
+        <p role="alert" className="font-mono text-[11px] mt-2 text-burgundy-light">
           {error}
         </p>
       )}
@@ -138,14 +138,14 @@ function Newsletter() {
         </span>
         <span>
           {t('consent.pre')}{' '}
-          <a href={href.privacy} className="font-medium underline underline-offset-2">
+          <a href={href.privacy} className="font-medium underline underline-offset-2 text-paper">
             {t('consent.link')}
           </a>{' '}
           {t('consent.post')}
         </span>
       </label>
       {consentError && (
-        <p role="alert" className="font-mono text-[11px] mt-1.5 pl-[22px] text-red-700">
+        <p role="alert" className="font-mono text-[11px] mt-1.5 pl-[22px] text-burgundy-light">
           {consentError}
         </p>
       )}
@@ -159,13 +159,13 @@ function FooterNav() {
   const { categories } = useCatalog();
   const col = (title: string, links: { label: string; to: string; external?: boolean }[]) => (
     <div>
-      <h3 className="font-display uppercase text-[13px] leading-none mb-3">{title}</h3>
-      <ul className="space-y-[6px] font-display uppercase text-[11.5px] leading-tight text-ink/75">
+      <h3 className="font-display uppercase text-[13px] leading-none mb-3 text-paper">{title}</h3>
+      <ul className="space-y-[6px] font-display uppercase text-[11.5px] leading-tight text-mist">
         {links.map((l) => (
           <li key={l.label}>
             <a
               href={l.to}
-              className="link-u hover:text-ink"
+              className="link-u hover:text-paper"
               {...(l.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
             >
               {l.label}
@@ -212,15 +212,15 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-ash border-t-[3px] border-burgundy">
-      <div className="flex justify-end lg:justify-between gap-10 px-4 sm:px-5 pt-5 pb-8">
+    <footer className="bg-navy text-mist border-t-[3px] border-burgundy">
+      <div className="flex justify-end lg:justify-between gap-10 px-4 sm:px-5 pt-6 pb-9">
         <FooterNav />
         <div className="w-full sm:w-[400px] shrink-0">
           <Newsletter />
         </div>
       </div>
       <div className="px-4 sm:px-5 pb-safe">
-        <div className="border-t-2 border-ink pt-4 pb-8 flex flex-wrap gap-x-5 gap-y-2 font-sans text-[11.5px] sm:text-[12.5px] text-ink/75">
+        <div className="border-t border-mist/25 pt-4 pb-8 flex flex-wrap gap-x-5 gap-y-2 font-sans text-[11.5px] sm:text-[12.5px] text-mist">
           {items.map((i) => (
             <span key={i.label} className="whitespace-nowrap">
               {i.label}:{' '}
