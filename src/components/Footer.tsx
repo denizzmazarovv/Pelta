@@ -212,7 +212,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-ash border-t-[3px] border-smoke">
+    <footer className="bg-ash border-t-[3px] border-burgundy">
       <div className="flex justify-end lg:justify-between gap-10 px-4 sm:px-5 pt-5 pb-8">
         <FooterNav />
         <div className="w-full sm:w-[400px] shrink-0">

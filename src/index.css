@@ -10,10 +10,10 @@
     @apply bg-white text-ink font-display antialiased;
   }
   ::selection {
-    @apply bg-ink text-white;
+    @apply bg-burgundy text-white;
   }
   :focus-visible {
-    outline: 1px solid #111;
+    outline: 1px solid #14233D;
     outline-offset: 2px;
   }
 }
@@ -28,11 +28,11 @@
   }
   .btn-ink {
     @apply w-full h-12 bg-ink text-white font-display uppercase tracking-[0.06em] text-[14px]
-      hover:bg-black transition-colors disabled:opacity-50 flex items-center justify-center gap-2;
+      hover:bg-burgundy transition-colors disabled:opacity-50 flex items-center justify-center gap-2;
   }
   .btn-line {
     @apply w-full h-12 border border-ink text-ink font-display uppercase tracking-[0.06em] text-[14px]
-      hover:bg-ink hover:text-white transition-colors flex items-center justify-center gap-2;
+      hover:bg-burgundy hover:border-burgundy hover:text-white transition-colors flex items-center justify-center gap-2;
   }
   .field {
     @apply w-full h-11 bg-transparent border-0 border-b border-ink/40 font-mono text-[13px]
@@ -52,5 +52,5 @@
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #fff; }
-::-webkit-scrollbar-thumb { background: #bdbdbd; }
-::-webkit-scrollbar-thumb:hover { background: #111; }
+::-webkit-scrollbar-thumb { background: #9AA1B0; }
+::-webkit-scrollbar-thumb:hover { background: #5C1A2B; }
