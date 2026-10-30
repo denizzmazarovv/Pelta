@@ -21,3 +21,15 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Секреты и личные файлы — никогда не отправлять на GitHub (репозиторий публичный)
+.env*
+!.env.example
+*.pem
+*.key
+*.p12
+*secret*
+*credentials*
+service-account*.json
+# Скриншоты и файлы от Claude
+Claude outputs/

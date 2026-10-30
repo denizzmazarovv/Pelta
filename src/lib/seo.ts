@@ -1,6 +1,7 @@
 import { translations, type Lang } from './i18n';
 import { CATEGORIES, products, type Category, type Product } from './products';
 import { LANG_CODES, DEFAULT_LANG, pathFor, type Route } from './paths';
+import { formatPrice } from './format';
 
 /**
  * Всё для поисковиков: заголовки, описания, разметка schema.org.
@@ -77,6 +78,12 @@ const PRIVACY_DESC: Record<Lang, string> = {
   uz: 'Pelta Nera shaxsiy ma’lumotlarni qanday yig‘adi, ishlatadi va himoya qiladi.',
 };
 
+const TERMS_DESC: Record<Lang, string> = {
+  en: 'Terms of sale of Pelta Nera: seller, ordering, prices in UZS, payment, delivery, returns, warranty and the loyalty programme.',
+  ru: 'Публичная оферта Pelta Nera: продавец, оформление заказа, цены в сумах, оплата, доставка, возврат, гарантия и программа лояльности.',
+  uz: 'Pelta Nera ommaviy ofertasi: sotuvchi, buyurtma, so‘mdagi narxlar, to‘lov, yetkazib berish, qaytarish, kafolat va sodiqlik dasturi.',
+};
+
 const tr = (lang: Lang, key: string) => translations[lang][key] ?? translations.en[key] ?? key;
 export const abs = (path: string) => (/^https?:\/\//.test(path) ? path : SITE + path);
 const clip = (s: string, n = 160) => (s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…' : s);
@@ -93,6 +100,7 @@ export function publicRoutes(): Route[] {
     { name: 'about' },
     { name: 'contact' },
     { name: 'privacy' },
+    { name: 'terms' },
   ];
 }
 
@@ -157,7 +165,7 @@ function productLd(p: Product, lang: Lang, path: string) {
     offers: {
       '@type': 'Offer',
       url: abs(path),
-      priceCurrency: 'USD',
+      priceCurrency: 'UZS',
       price: p.price,
       availability: 'https://schema.org/InStock',
       itemCondition: 'https://schema.org/NewCondition',
@@ -220,7 +228,7 @@ export function seoFor(route: Route, lang: Lang, product?: Product): Seo {
       }
       const name = product[`name_${lang}`];
       title = `${name} — ${BRAND}`;
-      description = clip(`${product[`desc_${lang}`]} ${PRICE_WORD[lang]}: ${product.price} USD. ${HANDMADE[lang]}`);
+      description = clip(`${product[`desc_${lang}`]} ${PRICE_WORD[lang]}: ${formatPrice(product.price, lang)}. ${HANDMADE[lang]}`);
       image = product.image;
       type = 'product';
       if (product.exclusive || product.category === 'exclusive') index = false;
@@ -255,6 +263,10 @@ export function seoFor(route: Route, lang: Lang, product?: Product): Seo {
     case 'privacy':
       title = `${tr(lang, 'footer.privacy')} — ${BRAND}`;
       description = PRIVACY_DESC[lang];
+      break;
+    case 'terms':
+      title = `${tr(lang, 'footer.terms')} — ${BRAND}`;
+      description = TERMS_DESC[lang];
       break;
   }
 

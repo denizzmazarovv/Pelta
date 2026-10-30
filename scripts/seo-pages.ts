@@ -5,6 +5,7 @@ import { translations, type Lang } from '../src/lib/i18n';
 import { CATEGORIES, type Product } from '../src/lib/products';
 import { LANG_CODES, pathFor, type Route } from '../src/lib/paths';
 import { BRAND, SITE, abs, findPublicProduct, publicProducts, publicRoutes, seoFor, type Seo } from '../src/lib/seo';
+import { formatPrice } from '../src/lib/format';
 
 /**
  * После сборки: готовая HTML-страница для каждого адреса и языка
@@ -63,7 +64,7 @@ function body(route: Route, lang: Lang, seo: Seo): string {
   ].join(' · ');
   const langs = LANG_CODES.map((l) => link(pathFor(route, l), l.toUpperCase())).join(' ');
   const productItem = (p: Product) =>
-    `<li>${link(pathFor({ name: 'product', id: p.id }, lang), p[`name_${lang}`])} — ${p.price} USD</li>`;
+    `<li>${link(pathFor({ name: 'product', id: p.id }, lang), p[`name_${lang}`])} — ${formatPrice(p.price, lang)}</li>`;
 
   let main = '';
   switch (route.name) {
@@ -81,7 +82,7 @@ function body(route: Route, lang: Lang, seo: Seo): string {
         `<h1>${esc(p[`name_${lang}`])}</h1>` +
         (/\.(jpe?g|png|webp)$/i.test(p.image) ? `<img src="${esc(p.image)}" alt="${esc(p[`name_${lang}`])}" width="320" />` : '') +
         `<p>${esc(p[`desc_${lang}`])}</p>` +
-        `<p><strong>${p.price} USD</strong></p>` +
+        `<p><strong>${formatPrice(p.price, lang)}</strong></p>` +
         `<ul><li>${esc(tr(lang, s.material))}</li><li>${esc(s.dimensions)}</li><li>${esc(s.weight)}</li></ul>`;
       break;
     }
@@ -97,6 +98,9 @@ function body(route: Route, lang: Lang, seo: Seo): string {
     case 'privacy':
       main = `<h1>${esc(tr(lang, 'footer.privacy'))}</h1><p>${esc(seo.description)}</p>`;
       break;
+    case 'terms':
+      main = `<h1>${esc(tr(lang, 'footer.terms'))}</h1><p>${esc(seo.description)}</p>`;
+      break;
   }
 
   return (
@@ -105,7 +109,7 @@ function body(route: Route, lang: Lang, seo: Seo): string {
     `<div class="pn-seo" style="max-width:760px;margin:0 auto;padding:72px 20px;font-family:system-ui,sans-serif;line-height:1.6;color:#1A2540">` +
     `<header><a href="${esc(home)}"><strong>${BRAND}</strong></a><nav>${nav}</nav><p>${langs}</p></header>` +
     `<main>${main}</main>` +
-    `<footer><p>${BRAND} — Tashkent, Uzbekistan · ${link(pathFor({ name: 'privacy' }, lang), tr(lang, 'footer.privacy'))}</p></footer>` +
+    `<footer><p>${BRAND} — Tashkent, Uzbekistan · ${link(pathFor({ name: 'terms' }, lang), tr(lang, 'footer.terms'))} · ${link(pathFor({ name: 'privacy' }, lang), tr(lang, 'footer.privacy'))}</p></footer>` +
     `</div>`
   );
 }

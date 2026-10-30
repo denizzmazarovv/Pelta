@@ -39,6 +39,19 @@ export const CONTACTS = {
   city: 'Tashkent, Uzbekistan',
 };
 
+// Продавец — для публичной оферты и политики конфиденциальности (обязательно по закону).
+// После регистрации самозанятым или ИП заполните status и taxId — они сразу появятся на сайте.
+export const SELLER = {
+  /** ФИО продавца (или название ИП/компании) */
+  name: 'Deniz Oztyurk',
+  /** '' — не указан; 'self' — самозанятый; 'ip' — индивидуальный предприниматель */
+  status: '' as '' | 'self' | 'ip',
+  /** ИНН или ПИНФЛ */
+  taxId: '',
+  /** Гарантия на швы, края и фурнитуру, месяцев */
+  warrantyMonths: 6,
+};
+
 export const SOCIALS: { label: string; href: string }[] = [
   { label: 'Telegram', href: 'https://t.me/+eOUaJZn_SsNhNzdi' },
   { label: 'Instagram', href: 'https://instagram.com/peltanera' },

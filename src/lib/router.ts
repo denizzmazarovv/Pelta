@@ -88,6 +88,9 @@ export const href = {
   get contact() {
     return pathFor({ name: 'contact' }, currentLang());
   },
+  get terms() {
+    return pathFor({ name: 'terms' }, currentLang());
+  },
   get privacy() {
     return pathFor({ name: 'privacy' }, currentLang());
   },

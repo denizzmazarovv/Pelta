@@ -1,11 +1,14 @@
 import { supabase } from './supabase';
-import { GOOGLE_CART_URL, GOOGLE_CONTACT_URL } from './config';
+import { GOOGLE_CART_URL } from './config';
 import type { Lang } from './i18n';
 
 /**
- * Заказы и сообщения уходят в Telegram-канал через ваши Google Apps Script
- * (как раньше), и параллельно сохраняются в Supabase, если таблицы уже созданы.
- * Подписки на рассылку — только в Supabase.
+ * Заказы: через Google Apps Script (он проверяет вход клиента, заказ создаёт база).
+ * Сообщения и подписки: только в Supabase. База сама ограничивает частоту отправок
+ * (по IP и в целом по сайту) и передаёт их в Google-таблицу и Telegram-канал.
+ *
+ * trap — скрытое поле-ловушка: человек его не видит и не заполняет, бот заполняет.
+ * Если оно заполнено, форма «успешно» закрывается, но ничего не отправляется.
  */
 
 type Kind = 'order' | 'contact' | 'newsletter';
@@ -58,30 +61,10 @@ async function insert(table: string, row: Record<string, unknown>, kind: Kind, i
 
 export type OrderItem = { id: string; name: string; color: string; quantity: number; price: number };
 
-/** Отправка в Google Apps Script → Telegram. no-cors: ответ не читается, ошибка только при сбое сети. */
-async function toGoogle(url: string, body: string, contentType: string) {
-  if (!url) throw new Error('not_configured');
-  await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': contentType }, body });
-}
-
-/** Копия в Supabase: не мешает отправке, если база ещё не настроена. */
-async function toSupabase(table: string, row: Record<string, unknown>) {
-  try {
-    if (supabase) await supabase.from(table).insert(row);
-  } catch {
-    /* ignore */
-  }
-}
-
-/** Тип устройства без лишних подробностей (для удобства ответа). */
-function deviceType(): string {
-  const ua = navigator.userAgent;
-  if (/iPad/i.test(ua) || (/Mac/i.test(navigator.platform) && navigator.maxTouchPoints > 1)) return 'iPad';
-  if (/iPhone|iPod/i.test(ua)) return 'iPhone';
-  if (/Android/i.test(ua)) return /Mobi/i.test(ua) ? 'Android phone' : 'Android tablet';
-  if (/Windows/i.test(ua)) return 'Windows PC';
-  if (/Mac/i.test(ua)) return 'Mac';
-  return /Mobi/i.test(ua) ? 'Mobile' : 'Desktop';
+/** Признаки бота: заполнено скрытое поле или форма отправлена быстрее чем за 2 секунды. */
+export function looksLikeBot(trap: string | undefined, openedAt: number | undefined): boolean {
+  if (trap && trap.trim()) return true;
+  return typeof openedAt === 'number' && Date.now() - openedAt < 2000;
 }
 
 export class NameRequiredError extends Error {
@@ -153,25 +136,25 @@ export async function saveOrder(o: {
   // Запись заказа в базу делает сервер (pn_create_order): там же считаются цены и скидка
 }
 
-export async function saveMessage(m: { name: string; phone?: string; email?: string; message: string; lang: Lang }) {
-  const form = new URLSearchParams();
-  form.append('name', clean(m.name) ?? '');
-  form.append('phone', clean(m.phone) ?? '');
-  form.append('email', clean(m.email) ?? '');
-  form.append('message', clean(m.message) ?? '');
-  form.append('device', deviceType());
-  await toGoogle(GOOGLE_CONTACT_URL, form.toString(), 'application/x-www-form-urlencoded');
-  record('contact');
-  await toSupabase('pn_contact_messages', {
-    name: clean(m.name),
-    phone: clean(m.phone),
-    email: clean(m.email),
-    message: clean(m.message),
-    lang: m.lang,
-  });
+export async function saveMessage(m: {
+  name: string;
+  phone?: string;
+  email?: string;
+  message: string;
+  lang: Lang;
+  trap?: string;
+  openedAt?: number;
+}) {
+  if (looksLikeBot(m.trap, m.openedAt)) return;
+  await insert(
+    'pn_contact_messages',
+    { name: clean(m.name), phone: clean(m.phone), email: clean(m.email), message: clean(m.message), lang: m.lang },
+    'contact'
+  );
 }
 
-export function subscribe(email: string, prefs: string[], lang: Lang) {
+export function subscribe(email: string, prefs: string[], lang: Lang, trap?: string, openedAt?: number) {
+  if (looksLikeBot(trap, openedAt)) return Promise.resolve();
   // Повторная подписка того же email — не ошибка
   return insert('pn_newsletter', { email: clean(email), prefs, lang }, 'newsletter', true);
 }

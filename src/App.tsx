@@ -37,9 +37,9 @@ function AppContent() {
         {route.name === 'product' && <ProductPage id={route.id} />}
         {route.name === 'about' && <AboutPage />}
         {route.name === 'contact' && <ContactPage />}
-        {route.name === 'privacy' && (
+        {(route.name === 'privacy' || route.name === 'terms') && (
           <Suspense fallback={<div className="min-h-screen" />}>
-            <PrivacyPage />
+            <PrivacyPage kind={route.name} />
           </Suspense>
         )}
       </main>

@@ -15,8 +15,26 @@ if ('scrollRestoration' in history) {
 }
 window.scrollTo(0, 0);
 
+// Защита от «кликджекинга»: если сайт открыли внутри чужой страницы (iframe),
+// вместо магазина показываем только ссылку на настоящий сайт.
+const framed = (() => {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+})();
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {framed ? (
+      <p style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
+        <a href="https://peltanera.com" target="_top" rel="noopener">
+          peltanera.com
+        </a>
+      </p>
+    ) : (
+      <App />
+    )}
   </StrictMode>
 );

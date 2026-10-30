@@ -1,6 +1,7 @@
 import { useLang } from '../context/LangContext';
 import { useConsent } from '../context/ConsentContext';
 import { POLICIES, type Block } from '../lib/privacy';
+import { TERMS } from '../lib/terms';
 import { Mark } from '../components/Logo';
 
 function renderBlock(b: Block, i: number) {
@@ -26,11 +27,12 @@ function renderBlock(b: Block, i: number) {
   return <p key={i}>{b}</p>;
 }
 
-export default function PrivacyPage() {
+/** Политика конфиденциальности (kind="privacy") или публичная оферта (kind="terms"). */
+export default function PrivacyPage({ kind = 'privacy' }: { kind?: 'privacy' | 'terms' }) {
   const { lang, t } = useLang();
   const { openSettings } = useConsent();
-  const p = POLICIES[lang];
-
+  const p = (kind === 'terms' ? TERMS : POLICIES)[lang];
+  const isPrivacy = kind === 'privacy';
 
   return (
     <div className="px-5 sm:px-10 lg:px-14 py-14 lg:py-20">
@@ -52,9 +54,11 @@ export default function PrivacyPage() {
                   </li>
                 ))}
               </ol>
-              <button onClick={openSettings} className="btn-line mt-8 h-10 text-[12px]">
-                {t('cookie.settings')}
-              </button>
+              {isPrivacy && (
+                <button onClick={openSettings} className="btn-line mt-8 h-10 text-[12px]">
+                  {t('cookie.settings')}
+                </button>
+              )}
             </div>
           </nav>
 
@@ -68,9 +72,11 @@ export default function PrivacyPage() {
                 </div>
               </section>
             ))}
-            <button onClick={openSettings} className="btn-line mt-14 lg:hidden">
-              {t('cookie.settings')}
-            </button>
+            {isPrivacy && (
+              <button onClick={openSettings} className="btn-line mt-14 lg:hidden">
+                {t('cookie.settings')}
+              </button>
+            )}
           </article>
         </div>
       </div>

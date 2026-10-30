@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { CONTACTS, TELEGRAM_BOT_USERNAME } from '../lib/config';
 import {
   botLink,
+  checkNumber,
   claimTelegramLogin,
   clearNonce,
   loadNonce,
@@ -96,6 +97,8 @@ export function RegisterDrawer() {
   const [cooldown, setCooldown] = useState(0);
   const [nonce, setNonce] = useState<string | null>(null);
   const [consentError, setConsentError] = useState('');
+  const [checkNum, setCheckNum] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const phoneE164 = toE164(national, country);
 
@@ -121,6 +124,21 @@ export function RegisterDrawer() {
       setCode('');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registerOpen]);
+
+  // Проверочное число для входа через бота (то же число бот попросит нажать)
+  useEffect(() => {
+    let alive = true;
+    setCheckNum(null);
+    if (nonce) checkNumber(nonce).then((n) => alive && setCheckNum(n));
+    return () => {
+      alive = false;
+    };
+  }, [nonce]);
+
+  // Окно закрыли — подтверждение удаления сбрасывается
+  useEffect(() => {
+    if (!registerOpen) setConfirmDelete(false);
   }, [registerOpen]);
 
   // Данные профиля в форму аккаунта
@@ -150,11 +168,11 @@ export function RegisterDrawer() {
           if (cart.isOpen) return closeRegister();
           return setView('account');
         }
-        if (r.status === 'expired' || r.status === 'used') {
+        if (r.status === 'expired' || r.status === 'used' || r.status === 'rejected') {
           stop = true;
           clearNonce();
           setNonce(null);
-          return setError(t(r.status === 'used' ? 'auth.tg.used' : 'auth.tg.expired'));
+          return setError(t(r.status === 'used' ? 'auth.tg.used' : r.status === 'rejected' ? 'auth.tg.rejected' : 'auth.tg.expired'));
         }
         if (!loadNonce()) {
           stop = true;
@@ -418,6 +436,14 @@ export function RegisterDrawer() {
               </ol>
               {nonce ? (
                 <>
+                  {checkNum !== null && (
+                    <div className="flex items-center gap-4 border border-ink/15 bg-fog px-4 py-3">
+                      <span className="font-display text-[44px] leading-none tabular-nums text-burgundy" aria-live="polite">
+                        {checkNum}
+                      </span>
+                      <p className="font-mono text-[11px] leading-[1.6] text-ink/80">{t('auth.tg.check')}</p>
+                    </div>
+                  )}
                   <p className="font-mono text-[11px] text-mute flex items-center gap-2" aria-live="polite">
                     <span className="inline-block w-2 h-2 rounded-full bg-burgundy animate-pulse" />
                     {t('auth.tg.waiting')}
@@ -528,6 +554,44 @@ export function RegisterDrawer() {
                     {t('auth.logout_all')}
                   </button>
                 </div>
+                {confirmDelete ? (
+                  <div className="border border-burgundy/40 p-4 space-y-3" role="alertdialog" aria-label={t('auth.delete_title')}>
+                    <p className="nav-caps text-[13px] text-burgundy">{t('auth.delete_title')}</p>
+                    <p className="font-mono text-[11px] leading-[1.6] text-ink/80">{t('auth.delete_text')}</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          run(async () => {
+                            const { error } = await auth.deleteAccount();
+                            if (error) return setError(t('auth.err.generic'));
+                            auth.flash(t('auth.deleted'));
+                            closeRegister();
+                          })
+                        }
+                        className="btn-ink !h-auto min-h-8 py-1.5 !text-[11px] leading-tight !w-auto flex-1 px-3"
+                      >
+                        {busy ? '…' : t('auth.delete_confirm')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDelete(false)}
+                        className="btn-line !h-auto min-h-8 py-1.5 !text-[11px] leading-tight !w-auto flex-1 px-3"
+                      >
+                        {t('auth.delete_cancel')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(true)}
+                    className="font-mono text-[11px] text-burgundy link-u text-left"
+                  >
+                    {t('auth.delete')}
+                  </button>
+                )}
                 <p className="font-mono text-[10.5px] text-mute leading-[1.5]">
                   {t('auth.delete_hint')}{' '}
                   <a href={`mailto:${CONTACTS.email}`} className="underline underline-offset-2">

@@ -19,7 +19,8 @@ export function ContactPage() {
   const [agree, setAgree] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [state, setState] = useState<'idle' | 'busy' | 'done'>('idle');
-
+  const [trap, setTrap] = useState('');
+  const [openedAt] = useState(() => Date.now());
 
   function validate() {
     const e: Record<string, string> = {};
@@ -46,6 +47,8 @@ export function ContactPage() {
         email: sanitizeEmail(form.email),
         message: form.message.slice(0, MAX_MESSAGE),
         lang,
+        trap,
+        openedAt,
       });
       setState('done');
       setForm((f) => ({ ...f, message: '' }));
@@ -99,7 +102,14 @@ export function ContactPage() {
             </button>
           </div>
         ) : (
-          <form onSubmit={submit} noValidate className="max-w-[440px] space-y-7">
+          <form onSubmit={submit} noValidate className="max-w-[440px] space-y-7 relative">
+            {/* Ловушка для ботов: человек это поле не видит */}
+            <div className="hp" aria-hidden="true">
+              <label>
+                Website
+                <input tabIndex={-1} autoComplete="off" value={trap} onChange={(e) => setTrap(e.target.value)} />
+              </label>
+            </div>
             <Field label={t('contact.name')} error={errors.name}>
               <input className="field" value={form.name} onChange={set('name')} maxLength={MAX_NAME} autoComplete="name" />
             </Field>

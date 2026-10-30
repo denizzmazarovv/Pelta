@@ -59,6 +59,8 @@
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   .pt-safe { padding-top: env(safe-area-inset-top); }
   .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+  /* Скрытое поле-ловушка для ботов (не display:none — некоторые боты такие пропускают) */
+  .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }

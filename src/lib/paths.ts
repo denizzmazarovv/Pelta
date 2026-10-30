@@ -4,7 +4,7 @@ import type { Lang } from './i18n';
 /**
  * Адреса страниц. Без React — используется и сайтом, и сборкой (sitemap, страницы для поисковиков).
  *
- * Английский — основной язык, без приставки:  /  /c/bag  /p/ch-01  /about  /contact  /privacy
+ * Английский — основной язык, без приставки:  /  /c/bag  /p/ch-01  /about  /contact  /privacy  /terms
  * Русский и узбекский — с приставкой:          /ru/  /ru/c/bag  /uz/p/ch-01 …
  */
 
@@ -13,7 +13,8 @@ export type Route =
   | { name: 'product'; id: string }
   | { name: 'about' }
   | { name: 'contact' }
-  | { name: 'privacy' };
+  | { name: 'privacy' }
+  | { name: 'terms' };
 
 export const LANG_CODES: Lang[] = ['en', 'ru', 'uz'];
 export const DEFAULT_LANG: Lang = 'en';
@@ -50,6 +51,7 @@ export function parsePath(pathname: string): ParsedPath {
   if (parts[0] === 'about') return { ...base, route: { name: 'about' } };
   if (parts[0] === 'contact') return { ...base, route: { name: 'contact' } };
   if (parts[0] === 'privacy') return { ...base, route: { name: 'privacy' } };
+  if (parts[0] === 'terms') return { ...base, route: { name: 'terms' } };
   return { ...base, route: { name: 'catalog', category: 'all' } };
 }
 

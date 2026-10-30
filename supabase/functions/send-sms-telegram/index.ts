@@ -16,9 +16,13 @@
  *
  *  3) Сайт → { action: "claim", nonce } — сайт спрашивает, подтвердил ли клиент вход
  *     в боте. Если да — функция сама получает и проверяет код и возвращает сессию.
+ *     Сайт → { action: "forget" } с токеном входа — клиент удаляет аккаунт: функция стирает
+ *     связь номера с ботом. Та же очистка — командой /delete в боте.
  *
  * Защита:
  *  - подпись Supabase (Standard Webhooks) и секретный заголовок Telegram;
+ *  - проверочное число: сайт показывает число (из ключа входа), в боте нужно нажать то же
+ *    число. Так нельзя войти в чужой аккаунт, прислав человеку свою ссылку для входа;
  *  - ключ входа: 32 случайных байта, в базе только его хеш, действует 10 минут, один раз;
  *  - номер в базе: хеш для поиска и шифр AES-GCM (нужен для автоматического входа);
  *  - лимиты: на номер 5 кодов в час и 10 в сутки, на весь сайт OTP_DAILY_LIMIT в сутки.
@@ -99,6 +103,21 @@ const toE164 = (raw: string) => {
 const maskPhone = (p: string) => p.slice(0, 6) + ' *** ** ' + p.slice(-2);
 const isNonce = (s: unknown): s is string => typeof s === 'string' && /^[A-Za-z0-9_-]{40,60}$/.test(s);
 
+/** Проверочное число 10–99 из ключа входа. Сайт считает его так же (src/lib/telegramLogin.ts). */
+const checkNumber = async (nonce: string) => (parseInt((await sha256(nonce)).slice(0, 4), 16) % 90) + 10;
+
+/** Три кнопки с числами: верное и два случайных, в случайном порядке. */
+function numberKeyboard(right: number) {
+  const set = new Set<number>([right]);
+  while (set.size < 3) set.add(10 + (crypto.getRandomValues(new Uint8Array(1))[0] % 90));
+  const nums = [...set].map(String);
+  for (let i = nums.length - 1; i > 0; i--) {
+    const j = crypto.getRandomValues(new Uint8Array(1))[0] % (i + 1);
+    [nums[i], nums[j]] = [nums[j], nums[i]];
+  }
+  return { keyboard: [nums.map((text) => ({ text }))], resize_keyboard: true, one_time_keyboard: true };
+}
+
 function safeEqual(a: string, b: string) {
   if (!a || a.length !== b.length) return false;
   let r = 0;
@@ -135,6 +154,13 @@ const T: Record<L, Record<string, string>> = {
     hint: 'Нажмите кнопку «Поделиться номером» ниже.',
     code:
       '🔐 Код подтверждения: {code}\n\nЭтот код нужен только для подтверждения номера телефона на сайте peltanera.com. Действует 10 минут.\n\nНикому не сообщайте код — сотрудники Pelta Nera никогда его не спрашивают.',
+    check:
+      '🔐 Вход на сайт peltanera.com\n\nНажмите число, которое показано на сайте рядом с кнопкой входа.\n\n⚠️ Если вы сейчас не входите на сайт сами или эту ссылку вам кто-то прислал — ничего не нажимайте: так пытаются получить доступ к чужому аккаунту.',
+    checkOk: '✅ Число верное. Теперь нажмите «📱 Поделиться номером».',
+    checkFail:
+      '❌ Число не совпало — вход отменён.\n\nЕсли ссылку для входа вам прислал другой человек, это была попытка получить доступ к вашему аккаунту. Входите только сами, на сайте peltanera.com.',
+    forgot:
+      '🗑 Готово: бот удалил ваш номер. Чтобы снова войти на сайт, нажмите «Войти через Telegram» на peltanera.com.',
   },
   uz: {
     hello:
@@ -153,6 +179,13 @@ const T: Record<L, Record<string, string>> = {
     hint: 'Quyidagi «Raqamni ulashish» tugmasini bosing.',
     code:
       '🔐 Tasdiqlash kodi: {code}\n\nBu kod faqat peltanera.com saytida telefon raqamingizni tasdiqlash uchun kerak. 10 daqiqa amal qiladi.\n\nKodni hech kimga aytmang — Pelta Nera xodimlari uni hech qachon so‘ramaydi.',
+    check:
+      '🔐 peltanera.com saytiga kirish\n\nSaytda kirish tugmasi yonida ko‘rsatilgan sonni bosing.\n\n⚠️ Agar hozir saytga o‘zingiz kirmayotgan bo‘lsangiz yoki bu havolani sizga kimdir yuborgan bo‘lsa — hech narsani bosmang: shu yo‘l bilan boshqa birovning akkauntiga kirishga urinishadi.',
+    checkOk: '✅ Son to‘g‘ri. Endi «📱 Raqamni ulashish» tugmasini bosing.',
+    checkFail:
+      '❌ Son mos kelmadi — kirish bekor qilindi.\n\nAgar kirish havolasini sizga boshqa odam yuborgan bo‘lsa, bu akkauntingizga kirishga urinish edi. Saytga faqat o‘zingiz, peltanera.com orqali kiring.',
+    forgot:
+      '🗑 Tayyor: bot raqamingizni o‘chirdi. Saytga qayta kirish uchun peltanera.com saytida «Telegram orqali kirish» tugmasini bosing.',
   },
   en: {
     hello:
@@ -171,6 +204,13 @@ const T: Record<L, Record<string, string>> = {
     hint: 'Tap the “Share my number” button below.',
     code:
       '🔐 Confirmation code: {code}\n\nThis code is only for confirming your phone number on peltanera.com. Valid for 10 minutes.\n\nNever share it — Pelta Nera staff will never ask for it.',
+    check:
+      '🔐 Sign in to peltanera.com\n\nTap the number shown on the website next to the sign-in button.\n\n⚠️ If you are not signing in yourself right now, or someone sent you this link, do not tap anything: this is how people try to get into other people’s accounts.',
+    checkOk: '✅ Correct number. Now tap “📱 Share my number”.',
+    checkFail:
+      '❌ The number did not match — sign-in cancelled.\n\nIf another person sent you this sign-in link, it was an attempt to access your account. Only sign in yourself, on peltanera.com.',
+    forgot:
+      '🗑 Done: the bot has deleted your number. To sign in again, tap “Sign in with Telegram” on peltanera.com.',
   },
 };
 const langOf = (code?: string): L => (code?.startsWith('uz') ? 'uz' : code?.startsWith('ru') ? 'ru' : 'en');
@@ -182,14 +222,24 @@ type Client = ReturnType<typeof db>;
 async function pendingLogin(client: Client, chatId: number) {
   const { data } = await client
     .from('pn_login_requests')
-    .select('nonce_hash, nonce_enc')
+    .select('nonce_hash, nonce_enc, checked')
     .eq('chat_id', chatId)
     .eq('status', 'pending')
     .gt('created_at', new Date(Date.now() - LOGIN_TTL_MS).toISOString())
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
-  return data as { nonce_hash: string; nonce_enc: string } | null;
+  return data as { nonce_hash: string; nonce_enc: string; checked: boolean } | null;
+}
+
+/** Просьба нажать проверочное число (то же, что показано на сайте). */
+async function askNumber(chatId: number, req: { nonce_enc: string }, t: Record<string, string>) {
+  const nonce = await decrypt(req.nonce_enc);
+  if (!nonce) {
+    await tg('sendMessage', { chat_id: chatId, text: t.expired, reply_markup: { remove_keyboard: true } });
+    return;
+  }
+  await tg('sendMessage', { chat_id: chatId, text: t.check, reply_markup: numberKeyboard(await checkNumber(nonce)) });
 }
 
 /** Подтверждает вход и отвечает в чат кнопкой возврата на сайт. */
@@ -247,6 +297,11 @@ async function handleTelegram(req: Request) {
     if (error) return json({ ok: true });
 
     const login = await pendingLogin(client, chatId);
+    if (login && !login.checked) {
+      // Номер сохранён, но вход ещё не подтверждён проверочным числом
+      await askNumber(chatId, login, t);
+      return json({ ok: true });
+    }
     if (login && (await confirmLogin(client, chatId, login, phone, t))) return json({ ok: true });
 
     await tg('sendMessage', {
@@ -258,6 +313,15 @@ async function handleTelegram(req: Request) {
   }
 
   const text = typeof msg.text === 'string' ? msg.text.trim() : '';
+
+  // /delete — удалить номер и связь с ботом (то же делает удаление аккаунта на сайте)
+  if (/^\/(delete|forget)(@\w+)?$/i.test(text)) {
+    await client.from('pn_telegram_links').delete().eq('chat_id', chatId);
+    await client.from('pn_login_requests').delete().eq('chat_id', chatId);
+    await tg('sendMessage', { chat_id: chatId, text: t.forgot, reply_markup: { remove_keyboard: true } });
+    return json({ ok: true });
+  }
+
   const known = await client
     .from('pn_telegram_links')
     .select('phone_enc')
@@ -284,21 +348,47 @@ async function handleTelegram(req: Request) {
         return json({ ok: true });
       }
     }
+    // Сначала — проверочное число с сайта
     await tg('sendMessage', {
       chat_id: chatId,
-      text: knownPhone ? t.loginKnown.replace('{phone}', maskPhone(knownPhone)) : t.login,
-      reply_markup: knownPhone
-        ? { keyboard: [[{ text: t.enter }], [{ text: t.share, request_contact: true }]], resize_keyboard: true, one_time_keyboard: true }
-        : shareKeyboard,
+      text: knownPhone ? `${t.check}\n\n📱 ${maskPhone(knownPhone)}` : t.check,
+      reply_markup: numberKeyboard(await checkNumber(m[1])),
     });
     return json({ ok: true });
   }
 
-  // «✅ Войти на сайт» — для уже подтверждённого номера
+  // Нажато проверочное число
+  if (/^\d{2}$/.test(text)) {
+    const login = await pendingLogin(client, chatId);
+    if (!login) {
+      await tg('sendMessage', { chat_id: chatId, text: t.expired, reply_markup: { remove_keyboard: true } });
+      return json({ ok: true });
+    }
+    const nonce = await decrypt(login.nonce_enc);
+    if (!nonce || Number(text) !== (await checkNumber(nonce))) {
+      await client.from('pn_login_requests').update({ status: 'rejected' }).eq('nonce_hash', login.nonce_hash).eq('status', 'pending');
+      await tg('sendMessage', { chat_id: chatId, text: t.checkFail, reply_markup: { remove_keyboard: true } });
+      return json({ ok: true });
+    }
+    await client.from('pn_login_requests').update({ checked: true }).eq('nonce_hash', login.nonce_hash).eq('status', 'pending');
+    if (knownPhone) {
+      // Знакомый номер: число верное — сразу входим
+      await confirmLogin(client, chatId, login, knownPhone, t);
+      return json({ ok: true });
+    }
+    await tg('sendMessage', { chat_id: chatId, text: t.checkOk, reply_markup: shareKeyboard });
+    return json({ ok: true });
+  }
+
+  // «✅ Войти на сайт» (кнопка из старых сообщений) — только после проверочного числа
   if (ENTER_TEXTS.has(text)) {
     const login = await pendingLogin(client, chatId);
     if (!login || !knownPhone) {
       await tg('sendMessage', { chat_id: chatId, text: t.expired, reply_markup: { remove_keyboard: true } });
+      return json({ ok: true });
+    }
+    if (!login.checked) {
+      await askNumber(chatId, login, t);
       return json({ ok: true });
     }
     await confirmLogin(client, chatId, login, knownPhone, t);
@@ -379,9 +469,26 @@ async function handleHook(req: Request) {
 }
 
 // ---------- 3. Сайт: забрать вход, подтверждённый в боте ----------
-async function handleClaim(req: Request) {
+/** Клиент удаляет аккаунт на сайте: стираем связь его номера с ботом и запросы входа. */
+async function handleForget(req: Request) {
   const reply = (body: Record<string, unknown>) => json(body, 200, CORS);
-  const body = await req.json().catch(() => null);
+  const jwt = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
+  if (!jwt || jwt.length > 4000) return reply({ status: 'auth' });
+  const { data, error } = await db().auth.getUser(jwt);
+  const phone = toE164(data?.user?.phone ?? '');
+  if (error || !phone) return reply({ status: 'auth' });
+  const client = db();
+  const hash = await phoneHash(phone);
+  const { data: links } = await client.from('pn_telegram_links').select('chat_id').eq('phone_hash', hash);
+  const chats = (links ?? []).map((l: { chat_id: number }) => l.chat_id);
+  await client.from('pn_telegram_links').delete().eq('phone_hash', hash);
+  await client.from('pn_login_requests').delete().eq('phone_hash', hash);
+  if (chats.length) await client.from('pn_login_requests').delete().in('chat_id', chats);
+  return reply({ status: 'ok' });
+}
+
+async function handleClaim(body: { action?: string; nonce?: unknown } | null) {
+  const reply = (body: Record<string, unknown>) => json(body, 200, CORS);
   if (body?.action !== 'claim' || !isNonce(body.nonce)) return reply({ status: 'bad_request' });
 
   const client = db();
@@ -394,6 +501,7 @@ async function handleClaim(req: Request) {
   if (!row) return reply({ status: 'waiting' }); // бот ещё не открыт
   if (Date.now() - new Date(row.created_at).getTime() > 2 * LOGIN_TTL_MS) return reply({ status: 'expired' });
   if (row.status === 'pending') return reply({ status: 'waiting' });
+  if (row.status === 'rejected') return reply({ status: 'rejected' });
   if (row.status !== 'confirmed') return reply({ status: 'used' });
 
   const phone = row.phone_enc ? await decrypt(row.phone_enc) : null;
@@ -443,5 +551,7 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('ok', { status: 200 });
   if (req.headers.has('x-telegram-bot-api-secret-token')) return handleTelegram(req);
   if (req.headers.has('webhook-signature')) return handleHook(req);
-  return handleClaim(req);
+  if (new URL(req.url).searchParams.get('action') === 'forget') return handleForget(req);
+  const body = await req.json().catch(() => null);
+  return handleClaim(body);
 });

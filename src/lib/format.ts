@@ -7,8 +7,10 @@ export function formatNumber(n: number): string {
     .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 }
 
-/** Цена в долларах США: просто число, без знака и без валюты (например, «60»). */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function formatPrice(n: number, _lang?: Lang): string {
-  return formatNumber(n);
+/** Валюта: цены на сайте только в сумах (закон о валютном регулировании). */
+export const CURRENCY: Record<Lang, string> = { ru: 'сум', uz: 'so‘m', en: 'UZS' };
+
+/** Цена в сумах: «710 000 сум». */
+export function formatPrice(n: number, lang: Lang = 'ru'): string {
+  return `${formatNumber(n)} ${CURRENCY[lang]}`;
 }

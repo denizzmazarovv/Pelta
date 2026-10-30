@@ -18,6 +18,7 @@ import {
 import { AuthRequiredError, ItemsUnavailableError, NameRequiredError, isRateLimited, RateLimitError, saveOrder } from '../lib/forms';
 import { Field } from '../pages/ContactPage';
 import { Mark } from './Logo';
+import { Check } from './Footer';
 import { DEFAULT_COUNTRY, isComplete, parsePhone, toE164, type Country } from '../lib/phone';
 
 export function CartDrawer() {
@@ -33,6 +34,7 @@ export function CartDrawer() {
   const [phone, setPhone] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [acceptOffer, setAcceptOffer] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -74,6 +76,7 @@ export function CartDrawer() {
     if (normalizeHandle(form.telegram) === null) e.telegram = t('cart.error_telegram');
     const addr = finalText(form.address, LIMITS.address);
     if (addr && addr.length < 3) e.address = t('cart.error_address');
+    if (!acceptOffer) e.offer = t('cart.offer_required');
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -255,6 +258,28 @@ export function CartDrawer() {
                 <span>{t('cart.total')}</span>
                 <Price base={baseTotal} final={total} />
               </div>
+            </div>
+
+            <div>
+              <label className="flex items-start gap-2 font-mono text-[11px] leading-[1.5] cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={acceptOffer}
+                  onChange={(e) => setAcceptOffer(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <span className="peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 rounded-full mt-[2px]">
+                  <Check checked={acceptOffer} />
+                </span>
+                <span>
+                  {t('cart.offer_pre')}{' '}
+                  <a href={href.terms} target="_blank" rel="noopener" className="underline underline-offset-2">
+                    {t('cart.offer_link')}
+                  </a>{' '}
+                  {t('cart.offer_post')}
+                </span>
+              </label>
+              {errors.offer && <p className="font-mono text-[11px] text-red-700 mt-1.5 pl-[22px]">{errors.offer}</p>}
             </div>
 
             {errors.form && <p className="font-mono text-[12px] text-red-700">{errors.form}</p>}

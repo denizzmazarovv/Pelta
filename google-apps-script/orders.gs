@@ -25,6 +25,10 @@ const ROLES_HEADER = ["Роль", "Ссылка на закрытый канал
 const NEWS_SHEET = "Newsletter PeltaNera";
 const NEWS_HEADER = ["ID", "Дата подписки", "Email", "Интересы", "Язык"];
 
+// Сообщения с формы «Связаться» (приходят через базу, с защитой от спама)
+const MESSAGES_SHEET = "Messages PeltaNera";
+const MESSAGES_HEADER = ["ID", "Дата", "Имя", "Телефон", "Email", "Сообщение", "Язык", "Аккаунт"];
+
 function reply_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -42,7 +46,12 @@ function html_(v) {
 // Для таблицы: значение не должно стать формулой
 function cell_(v) {
   const s = String(v);
-  return /^[=+\-@]/.test(s) ? "'" + s : s;
+  return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+}
+
+// Сумма в сумах: 1 234 000 сум
+function money_(n) {
+  return Math.round(Number(n) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " сум";
 }
 
 function fmt_(iso) {
@@ -160,11 +169,83 @@ function handleNewsletter_(n) {
   return reply_({ status: "ok" });
 }
 
+// Сообщение с сайта: строка в листе и уведомление в канал
+function handleContact_(m) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sheet = sheetWithHeader_(MESSAGES_SHEET, MESSAGES_HEADER);
+    const id = String(m.id);
+    const found = sheet.getRange("A:A").createTextFinder(id).matchEntireCell(true).findNext();
+    if (found) return reply_({ status: "ok" });
+    sheet.appendRow([
+      id,
+      fmt_(m.created_at),
+      cell_(clean_(m.name, 60)),
+      cell_(clean_(m.phone, 20)),
+      cell_(clean_(m.email, 120)),
+      cell_(clean_(m.message, 500)),
+      clean_(m.lang || "", 5).toUpperCase(),
+      m.user_id ? "Да" : "Нет"
+    ]);
+  } finally {
+    lock.releaseLock();
+  }
+
+  const text =
+`✉️ <b>СООБЩЕНИЕ С САЙТА PELTA NERA</b>
+━━━━━━━━━━━━━━━━━━
+
+👤 <b>Имя:</b> ${html_(clean_(m.name, 60))}
+📞 <b>Телефон:</b> ${html_(clean_(m.phone, 20) || "—")}
+📧 <b>Email:</b> ${html_(clean_(m.email, 120) || "—")}
+
+💬 ${html_(clean_(m.message, 500))}
+
+🕒 ${fmt_(m.created_at)}`;
+  UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: "HTML" }),
+    muteHttpExceptions: true
+  });
+  return reply_({ status: "ok" });
+}
+
+// Клиент удалил аккаунт: стираем его личные данные в таблице клиентов и подписке.
+// Заказы остаются (их нужно хранить для учёта продаж).
+function handleDeleted_(d) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const users = sheetWithHeader_(USERS_SHEET, USERS_HEADER);
+    const found = users.getRange("A:A").createTextFinder(String(d.id)).matchEntireCell(true).findNext();
+    if (found) {
+      const row = found.getRow();
+      const col = function (h) { return USERS_HEADER.indexOf(h) + 1; };
+      ["Имя", "Номер", "Роль", "Уровень", "Интересы", "Рассылка", "Код запрошен"].forEach(function (h) {
+        users.getRange(row, col(h)).clearContent().setNote("").setBackground(null);
+      });
+      users.getRange(row, col("Статус")).setValue("🗑 Удалён " + fmt_(new Date().toISOString()));
+    }
+    if (d.newsletter_id) {
+      const news = sheetWithHeader_(NEWS_SHEET, NEWS_HEADER);
+      const n = news.getRange("A:A").createTextFinder(String(d.newsletter_id)).matchEntireCell(true).findNext();
+      if (n) news.deleteRow(n.getRow());
+    }
+  } finally {
+    lock.releaseLock();
+  }
+  return reply_({ status: "ok" });
+}
+
 function handleUserEvent_(eventId) {
   if (!/^[0-9a-f-]{36}$/i.test(String(eventId))) return reply_({ status: "error", code: "bad" });
   const u = takeUserEvent_(eventId);
   if (!u) return reply_({ status: "ignored" });
   if (u.kind === "newsletter") return handleNewsletter_(u);
+  if (u.kind === "contact") return handleContact_(u);
+  if (u.kind === "deleted") return handleDeleted_(u);
 
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -392,7 +473,7 @@ function doPost(e) {
     const disc = Number(ord.discount_pct) || 0;
     const summary = (ord.lines || []).map(function (l) {
       return clean_(l.name, 80) + (l.color ? " (" + clean_(l.color, 40) + ")" : "") + " ×" + l.quantity + " = " +
-        Number(l.line_total).toLocaleString("ru-RU") + " USD";
+        money_(l.line_total);
     }).join("; ");
     const order = {
       id: ord.id,
@@ -401,7 +482,7 @@ function doPost(e) {
       phone: ord.phone,
       address: clean_(data.address, 200) || "Не указан",
       comment: clean_(data.comment, 400) || "Нет",
-      total: Number(ord.total).toLocaleString("ru-RU") + " USD" + (disc ? " (скидка " + disc + "%, " + String(ord.tier).toUpperCase() + ")" : ""),
+      total: money_(ord.total) + (disc ? " (скидка " + disc + "%, " + String(ord.tier).toUpperCase() + ")" : ""),
       summary: summary
     };
 

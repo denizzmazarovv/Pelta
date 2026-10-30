@@ -3,7 +3,7 @@ import { navigate, subscribeLocation } from '../lib/router';
 import { parsePath, pathFor } from '../lib/paths';
 import type { AuthError, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { isNonce, saveNonce } from '../lib/telegramLogin';
+import { forgetTelegram, isNonce, saveNonce } from '../lib/telegramLogin';
 import type { MemberStatus } from '../lib/tiers';
 
 /**
@@ -38,6 +38,8 @@ type AuthContextType = {
   applySession: (tokens: { access_token: string; refresh_token: string }) => Promise<Result>;
   updateProfile: (p: Pick<Profile, 'name' | 'prefs' | 'marketing'>) => Promise<Result>;
   signOut: (everywhere?: boolean) => Promise<void>;
+  /** Удалить аккаунт и личные данные (заказы остаются без привязки к аккаунту — для учёта продаж). */
+  deleteAccount: () => Promise<Result>;
   /** Короткое уведомление внизу экрана (например, «Сохранено»). */
   flash: (message: string) => void;
 };
@@ -176,6 +178,18 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (!supabase) return;
       await supabase.auth.signOut({ scope: everywhere ? 'global' : 'local' });
       setProfile(null);
+    },
+
+    async deleteAccount() {
+      if (!supabase || !session) return { error: NOT_CONFIGURED };
+      // Сначала бот забывает номер (нужен действующий вход), затем база удаляет аккаунт
+      await forgetTelegram(session.access_token);
+      const { error } = await supabase.rpc('pn_delete_my_account');
+      if (error) return { error: new Error(error.message) };
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      setProfile(null);
+      setStatus(null);
+      return { error: null };
     },
   };
 

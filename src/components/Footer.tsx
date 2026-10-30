@@ -4,7 +4,7 @@ import { CONTACTS, SOCIALS } from '../lib/config';
 import { href } from '../lib/router';
 import { useCatalog } from '../context/CatalogContext';
 import { sanitizeEmail } from '../lib/sanitize';
-import { isRateLimited, subscribe } from '../lib/forms';
+import { isRateLimited, RateLimitError, subscribe } from '../lib/forms';
 import { Mark } from './Logo';
 import { useConsent } from '../context/ConsentContext';
 
@@ -65,6 +65,8 @@ function Newsletter() {
   const [state, setState] = useState<'idle' | 'busy' | 'done'>('idle');
   const [error, setError] = useState('');
   const [consentError, setConsentError] = useState('');
+  const [trap, setTrap] = useState('');
+  const [openedAt] = useState(() => Date.now());
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -77,17 +79,24 @@ function Newsletter() {
     setError('');
     setState('busy');
     try {
-      await subscribe(clean, prefs, lang);
+      await subscribe(clean, prefs, lang, trap, openedAt);
       setState('done');
       setEmail('');
-    } catch {
+    } catch (err) {
       setState('idle');
-      setError(t('contact.error'));
+      setError(err instanceof RateLimitError ? t('common.rate_limit') : t('contact.error'));
     }
   }
 
   return (
-    <form onSubmit={submit} className="w-full max-w-[400px]" noValidate>
+    <form onSubmit={submit} className="w-full max-w-[400px] relative" noValidate>
+      {/* Ловушка для ботов: человек это поле не видит */}
+      <div className="hp" aria-hidden="true">
+        <label>
+          Website
+          <input tabIndex={-1} autoComplete="off" value={trap} onChange={(e) => setTrap(e.target.value)} />
+        </label>
+      </div>
       <p className="font-sans text-[13px] mb-4 text-paper">{t('news.title')}</p>
       {state === 'done' ? (
         <p className="font-mono text-[12px] border-b border-mist/60 pb-3 text-paper">{t('news.done')}</p>
@@ -184,6 +193,7 @@ function FooterNav() {
       {col(t('menu.house'), [
         { label: t('nav.about'), to: href.about },
         { label: t('nav.contact'), to: href.contact },
+        { label: t('footer.terms'), to: href.terms },
         { label: t('footer.privacy'), to: href.privacy },
       ])}
       {col(t('menu.contacts'), [
@@ -236,6 +246,9 @@ export function Footer() {
           <span className="whitespace-nowrap">
             © {year} Pelta Nera. {t('footer.rights')}
           </span>
+          <a href={href.terms} className="whitespace-nowrap link-u">
+            {t('footer.terms')}
+          </a>
           <a href={href.privacy} className="whitespace-nowrap link-u">
             {t('footer.privacy')}
           </a>

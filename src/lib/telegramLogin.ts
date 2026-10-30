@@ -7,6 +7,9 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, TELEGRAM_BOT_USERNAME } from './config
  * ссылкой t.me/<бот>?start=L_<ключ>. Клиент в боте делится номером (первый раз)
  * или нажимает «✅ Войти на сайт». Сайт в это время спрашивает сервер по ключу и,
  * как только вход подтверждён, получает сессию. Ключ живёт 10 минут и срабатывает один раз.
+ *
+ * Защита от входа по чужой ссылке: сайт показывает проверочное число (из ключа), и в боте
+ * нужно нажать то же число. Человек, которому прислали чужую ссылку, этого числа не видит.
  */
 
 const KEY = 'pelta_tg_login';
@@ -60,9 +63,28 @@ export function startTelegramLogin(): string {
   return nonce;
 }
 
+/** Проверочное число 10–99 из ключа входа (бот считает его так же). */
+export async function checkNumber(nonce: string): Promise<number> {
+  const d = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(nonce)));
+  return ((d[0] * 256 + d[1]) % 90) + 10;
+}
+
+/** Удаление аккаунта: бот стирает связь номера с Telegram. Ошибка не мешает удалению. */
+export async function forgetTelegram(accessToken: string): Promise<void> {
+  try {
+    await fetch(`${FN_URL}?action=forget`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${accessToken}` },
+      body: '{}',
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
 export type ClaimResult =
   | { status: 'ok'; access_token: string; refresh_token: string }
-  | { status: 'waiting' | 'retry' | 'used' | 'expired' | 'error' };
+  | { status: 'waiting' | 'retry' | 'used' | 'expired' | 'rejected' | 'error' };
 
 export async function claimTelegramLogin(nonce: string): Promise<ClaimResult> {
   try {
