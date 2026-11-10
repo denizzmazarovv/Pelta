@@ -12,11 +12,11 @@ const SUPABASE_PUBLIC_KEY = "sb_publishable_eBcdReBCxn6JwNoAQw8BKg_eb4JoXRA";
 const ORDERS_PER_HOUR = 5;
 
 const ORDERS_SHEET = "Orders PeltaNera";
-const ORDERS_HEADER = ["Дата и время", "Имя клиента", "Телефон", "Адрес", "Комментарий", "Итого", "Товары", "Статус", "ID"];
+const ORDERS_HEADER = ["Дата и время", "Имя клиента", "Телефон", "Адрес", "Комментарий", "Итого", "Товары", "Статус", "ID", "Связь"];
 const ORDER_STATUSES = ["Новый", "Подтверждён", "Отправлен", "Выполнен", "Отменён"];
 
 const USERS_SHEET = "Users PeltaNera";
-const USERS_HEADER = ["ID", "Дата регистрации", "Имя", "Номер", "Статус", "Подтверждён", "Роль", "Уровень", "Покупок", "Код запрошен", "Интересы", "Рассылка", "Баллы"];
+const USERS_HEADER = ["ID", "Дата регистрации", "Имя", "Номер", "Статус", "Подтверждён", "Роль", "Уровень", "Покупок", "Код запрошен", "Интересы", "Рассылка", "Баллы", "Telegram", "Telegram ID", "Instagram"];
 const ROLES = ["VIP", "CEO"];
 
 // Ссылки на закрытые Telegram-каналы ролей: вставляете в колонку «Ссылка на закрытый канал»
@@ -50,6 +50,16 @@ function html_(v) {
 function cell_(v) {
   const s = String(v);
   return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+}
+
+// Ник Telegram / Instagram → ячейка-ссылка (ник проверен, поэтому формула безопасна)
+function tgCell_(handle) {
+  const h = String(handle || "");
+  return /^@[A-Za-z0-9_]{3,32}$/.test(h) ? '=HYPERLINK("https://t.me/' + h.slice(1) + '","' + h + '")' : cell_(clean_(h, 40));
+}
+function igCell_(handle) {
+  const h = String(handle || "");
+  return /^@[A-Za-z0-9._]{1,30}$/.test(h) ? '=HYPERLINK("https://instagram.com/' + h.slice(1) + '","' + h + '")' : cell_(clean_(h, 40));
 }
 
 // Сумма в сумах: 1 234 000 сум
@@ -229,7 +239,7 @@ function handleDeleted_(d) {
     if (found) {
       const row = found.getRow();
       const col = function (h) { return USERS_HEADER.indexOf(h) + 1; };
-      ["Имя", "Номер", "Роль", "Уровень", "Интересы", "Рассылка", "Код запрошен", "Баллы"].forEach(function (h) {
+      ["Имя", "Номер", "Роль", "Уровень", "Интересы", "Рассылка", "Код запрошен", "Баллы", "Telegram", "Telegram ID", "Instagram"].forEach(function (h) {
         users.getRange(row, col(h)).clearContent().setNote("").setBackground(null);
       });
       users.getRange(row, col("Статус")).setValue("🗑 Удалён " + fmt_(new Date().toISOString()));
@@ -277,7 +287,10 @@ function handleUserEvent_(eventId) {
       fmt_(u.last_code_at) || old[col("Код запрошен")] || "",
       Array.isArray(u.prefs) ? prefsLabel_(u.prefs) : old[col("Интересы")] || "",
       typeof u.marketing === "boolean" ? (u.marketing ? "Да" : "Нет") : old[col("Рассылка")] || "",
-      typeof u.points === "number" ? u.points : old[col("Баллы")] || 0
+      typeof u.points === "number" ? u.points : old[col("Баллы")] || 0,
+      u.telegram ? tgCell_(u.telegram) : "",
+      u.tg_id ? String(u.tg_id) : "",
+      u.instagram ? igCell_(u.instagram) : ""
     ];
     sheet.getRange(row, 1, 1, values.length).setValues([values]);
     sheet.getRange(row, col("Роль") + 1).setNote("").setBackground(null);
@@ -522,8 +535,21 @@ function doPost(e) {
       order.total,
       cell_(order.summary),
       "Новый",
-      order.id
+      order.id,
+      ord.tg_username ? tgCell_("@" + ord.tg_username) : ord.telegram ? tgCell_(ord.telegram) : (ord.tg_id ? "Telegram ID " + ord.tg_id : "")
     ]);
+
+    // Связь с покупателем: ссылка на чат в Telegram (главное) и Instagram
+    const contact = [];
+    if (ord.tg_username) contact.push('<a href="https://t.me/' + html_(ord.tg_username) + '">✉️ Написать в Telegram @' + html_(ord.tg_username) + "</a>");
+    else if (ord.tg_id) contact.push('<a href="tg://user?id=' + Number(ord.tg_id) + '">✉️ Написать в Telegram</a>');
+    if (ord.telegram && (!ord.tg_username || String(ord.telegram).toLowerCase() !== "@" + String(ord.tg_username).toLowerCase())) {
+      contact.push("Telegram/Instagram из заказа: " + html_(clean_(ord.telegram, 40)));
+    }
+    if (ord.instagram && /^@[A-Za-z0-9._]{1,30}$/.test(ord.instagram)) {
+      contact.push('<a href="https://instagram.com/' + html_(String(ord.instagram).slice(1)) + '">📷 Instagram ' + html_(ord.instagram) + "</a>");
+    }
+    const contactText = contact.length ? contact.join("\n") : "—";
 
     // Сообщение в Telegram
     const message =
@@ -537,6 +563,9 @@ ${html_(order.phone)}
 
 📍 <b>Адрес:</b>
 ${html_(order.address)}
+
+💬 <b>Связь:</b>
+${contactText}
 
 💬 <b>Комментарий:</b>
 ${html_(order.comment)}

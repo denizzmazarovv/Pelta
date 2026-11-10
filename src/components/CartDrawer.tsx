@@ -87,7 +87,11 @@ export function CartDrawer() {
   // Подставляем данные зарегистрированного клиента
   useEffect(() => {
     if (checkout && profile) {
-      setForm((f) => ({ ...f, name: profileName ? filterName(profileName) : f.name }));
+      setForm((f) => ({
+        ...f,
+        name: profileName ? filterName(profileName) : f.name,
+        telegram: f.telegram || filterHandle(profile.telegram || profile.instagram || ''),
+      }));
       if (profile.phone) {
         const p = parsePhone(profile.phone);
         setPhoneCountry(p.country);

@@ -27,6 +27,9 @@
  *  - номер в базе: хеш для поиска и шифр AES-GCM (нужен для автоматического входа);
  *  - лимиты: на номер 5 кодов в час и 10 в сутки, на весь сайт OTP_DAILY_LIMIT в сутки.
  *
+ * Контакты: при каждом сообщении знакомого клиента, отправке номера и входе бот записывает
+ * его Telegram ID и @ник в профиль (pn_bot_set_telegram) — для ссылки на чат в заказах.
+ *
  * Секреты (Edge Functions → Secrets):
  *  SEND_SMS_HOOK_SECRET     — из Authentication → Hooks (вид v1,whsec_...)
  *  TELEGRAM_BOT_TOKEN       — от @BotFather
@@ -218,6 +221,16 @@ const ENTER_TEXTS = new Set(Object.values(T).map((t) => t.enter));
 
 type Client = ReturnType<typeof db>;
 
+/** Записать Telegram ID и @ник клиента в профиль (по номеру). Ошибки не мешают входу. */
+async function saveTelegram(client: Client, phone: string, tgId: number | undefined, username: string | undefined) {
+  if (!tgId) return;
+  try {
+    await client.rpc('pn_bot_set_telegram', { p_phone: phone, p_tg_id: tgId, p_username: username ?? null });
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Последний ожидающий вход этого чата (не старше 10 минут). */
 async function pendingLogin(client: Client, chatId: number) {
   const { data } = await client
@@ -292,9 +305,11 @@ async function handleTelegram(req: Request) {
       phone_hash: await phoneHash(phone),
       chat_id: chatId,
       phone_enc: await encrypt(phone),
+      tg_username: msg.from?.username ?? null,
       linked_at: new Date().toISOString(),
     });
     if (error) return json({ ok: true });
+    await saveTelegram(client, phone, msg.from?.id, msg.from?.username);
 
     const login = await pendingLogin(client, chatId);
     if (login && !login.checked) {
@@ -331,6 +346,12 @@ async function handleTelegram(req: Request) {
     .limit(1)
     .maybeSingle();
   const knownPhone = known.data?.phone_enc ? await decrypt(known.data.phone_enc) : null;
+
+  // Знакомый клиент написал боту («Старт» и т. п.) — обновляем его Telegram в профиле
+  if (knownPhone) {
+    await client.from('pn_telegram_links').update({ tg_username: msg.from?.username ?? null }).eq('chat_id', chatId);
+    await saveTelegram(client, knownPhone, msg.from?.id, msg.from?.username);
+  }
 
   // Вход с сайта: /start L_<ключ>
   const m = text.match(/^\/start\s+L_([A-Za-z0-9_-]{40,60})$/);
@@ -538,6 +559,14 @@ async function handleClaim(body: { action?: string; nonce?: unknown } | null) {
     .update({ status: verifyError ? 'confirmed' : 'done', otp_enc: null, phone_enc: verifyError ? row.phone_enc : null })
     .eq('nonce_hash', nonceHash);
   if (verifyError || !verified.session) return reply({ status: 'retry' });
+
+  // Аккаунт мог только что появиться — записываем в него Telegram из бота
+  const { data: link } = await client
+    .from('pn_telegram_links')
+    .select('chat_id, tg_username')
+    .eq('phone_hash', await phoneHash(phone))
+    .maybeSingle();
+  if (link?.chat_id) await saveTelegram(client, phone, link.chat_id, link.tg_username ?? undefined);
 
   return reply({
     status: 'ok',

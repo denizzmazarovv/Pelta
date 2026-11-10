@@ -15,7 +15,7 @@ import {
   telegramEnabled,
 } from '../lib/telegramLogin';
 import { DEFAULT_COUNTRY, isComplete, toE164, type Country } from '../lib/phone';
-import { LIMITS, filterName, validName } from '../lib/validate';
+import { LIMITS, filterHandle, filterName, normalizeHandle, validName } from '../lib/validate';
 import { Field } from '../pages/ContactPage';
 import { Captcha, captchaEnabled, type CaptchaHandle } from './Captcha';
 import { Check, PrefsPicker } from './Footer';
@@ -91,6 +91,8 @@ export function RegisterDrawer() {
   const [name, setName] = useState('');
   const [prefs, setPrefs] = useState<string[]>([]);
   const [marketing, setMarketing] = useState(false);
+  const [tgHandle, setTgHandle] = useState('');
+  const [igHandle, setIgHandle] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -147,6 +149,8 @@ export function RegisterDrawer() {
       setName(profile.name);
       setPrefs(profile.prefs);
       setMarketing(profile.marketing);
+      setTgHandle(filterHandle(profile.telegram));
+      setIgHandle(filterHandle(profile.instagram));
     }
   }, [view, profile]);
 
@@ -297,8 +301,11 @@ export function RegisterDrawer() {
   function onSaveProfile(e: FormEvent) {
     e.preventDefault();
     if (!validName(name)) return setError(t('reg.name_required'));
+    const telegram = normalizeHandle(tgHandle);
+    const instagram = normalizeHandle(igHandle);
+    if (telegram === null || instagram === null) return setError(t('cart.error_telegram'));
     run(async () => {
-      const { error } = await auth.updateProfile({ name: name.trim(), prefs, marketing });
+      const { error } = await auth.updateProfile({ name: name.trim(), prefs, marketing, telegram, instagram });
       if (error) return setError(t('auth.err.generic'));
       // Сохранили — возвращаемся туда, откуда открыли панель, и показываем «Сохранено»
       auth.flash(t('reg.saved'));
@@ -516,6 +523,40 @@ export function RegisterDrawer() {
                     maxLength={LIMITS.name}
                     autoComplete="name"
                   />
+                </Field>
+                <Field label={t('reg.telegram')}>
+                  <div className="flex items-center border-b border-ink/40 focus-within:border-ink transition-colors">
+                    <span className="font-mono text-[13px] text-ink/70 pr-1 select-none" aria-hidden="true">@</span>
+                    <input
+                      className="flex-1 min-w-0 h-11 bg-transparent font-mono text-[13px] placeholder:text-mute focus:outline-none"
+                      value={tgHandle}
+                      onChange={(e) => setTgHandle(filterHandle(e.target.value))}
+                      placeholder="username"
+                      maxLength={LIMITS.telegram}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                    />
+                  </div>
+                  <p className="font-mono text-[10.5px] text-mute leading-[1.5] mt-1.5">
+                    {profile?.tgUsername && !tgHandle ? t('reg.telegram_from_bot').replace('{u}', profile.tgUsername) : t('reg.telegram_hint')}
+                  </p>
+                </Field>
+                <Field label={t('reg.instagram')}>
+                  <div className="flex items-center border-b border-ink/40 focus-within:border-ink transition-colors">
+                    <span className="font-mono text-[13px] text-ink/70 pr-1 select-none" aria-hidden="true">@</span>
+                    <input
+                      className="flex-1 min-w-0 h-11 bg-transparent font-mono text-[13px] placeholder:text-mute focus:outline-none"
+                      value={igHandle}
+                      onChange={(e) => setIgHandle(filterHandle(e.target.value))}
+                      placeholder="username"
+                      maxLength={LIMITS.telegram}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                    />
+                  </div>
+                  
                 </Field>
                 <div>
                   <span className="field-label">{t('reg.pref')}</span>

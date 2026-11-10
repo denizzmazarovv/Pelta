@@ -16,6 +16,12 @@ export type Profile = {
   phone: string; // подтверждённый номер, +998XXXXXXXXX
   prefs: string[]; // 'women' | 'men'
   marketing: boolean;
+  /** Telegram для связи, «@ник» (если клиент не указал — подставляется ник из бота входа) */
+  telegram: string;
+  /** Instagram для связи, «@ник» */
+  instagram: string;
+  /** Ник, который бот входа видел в Telegram (только для подсказки) */
+  tgUsername: string;
 };
 
 type Result = { error: AuthError | Error | null };
@@ -36,7 +42,7 @@ type AuthContextType = {
   verifyCode: (phoneE164: string, code: string) => Promise<Result>;
   /** Сессия, полученная после подтверждения входа в Telegram-боте. */
   applySession: (tokens: { access_token: string; refresh_token: string }) => Promise<Result>;
-  updateProfile: (p: Pick<Profile, 'name' | 'prefs' | 'marketing'>) => Promise<Result>;
+  updateProfile: (p: Pick<Profile, 'name' | 'prefs' | 'marketing'> & Partial<Pick<Profile, 'telegram' | 'instagram'>>) => Promise<Result>;
   signOut: (everywhere?: boolean) => Promise<void>;
   /** Удалить аккаунт и личные данные (заказы остаются без привязки к аккаунту — для учёта продаж). */
   deleteAccount: () => Promise<Result>;
@@ -92,7 +98,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     supabase.rpc('pn_my_status').then(({ data }) => setStatus((data as MemberStatus | null) ?? null));
     const { data } = await supabase
       .from('profiles')
-      .select('full_name, prefs, marketing')
+      .select('full_name, prefs, marketing, telegram, instagram, tg_username')
       .eq('id', s.user.id)
       .maybeSingle();
     setProfile({
@@ -100,6 +106,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       phone: plusPhone(s.user.phone),
       prefs: data?.prefs ?? [],
       marketing: !!data?.marketing,
+      telegram: data?.telegram ?? '',
+      instagram: data?.instagram ?? '',
+      tgUsername: data?.tg_username ?? '',
     });
   }, []);
 
@@ -168,7 +177,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (!supabase || !session) return { error: NOT_CONFIGURED };
       const { error } = await supabase
         .from('profiles')
-        .update({ full_name: p.name || null, prefs: p.prefs, marketing: p.marketing })
+        .update({
+          full_name: p.name || null,
+          prefs: p.prefs,
+          marketing: p.marketing,
+          ...(p.telegram !== undefined ? { telegram: p.telegram || null } : {}),
+          ...(p.instagram !== undefined ? { instagram: p.instagram || null } : {}),
+        })
         .eq('id', session.user.id);
       if (!error) await loadProfile(session);
       return { error: error ? new Error(error.message) : null };
