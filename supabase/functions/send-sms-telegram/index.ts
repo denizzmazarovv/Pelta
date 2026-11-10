@@ -27,8 +27,10 @@
  *  - номер в базе: хеш для поиска и шифр AES-GCM (нужен для автоматического входа);
  *  - лимиты: на номер 5 кодов в час и 10 в сутки, на весь сайт OTP_DAILY_LIMIT в сутки.
  *
- * Контакты: при каждом сообщении знакомого клиента, отправке номера и входе бот записывает
- * его Telegram ID и @ник в профиль (pn_bot_set_telegram) — для ссылки на чат в заказах.
+ * Контакты: при каждом сообщении знакомого клиента, отправке номера, входе и коде входа бот
+ * записывает его Telegram ID и все активные @ники в профиль (pn_bot_set_telegram) — для ссылок
+ * на чат в таблице и заказах. Сайт → ?action=sync_tg { token } — разовая синхронизация всех
+ * клиентов бота; token одноразовый, его хеш заранее записывается в pn_bot_jobs из SQL Editor.
  *
  * Секреты (Edge Functions → Secrets):
  *  SEND_SMS_HOOK_SECRET     — из Authentication → Hooks (вид v1,whsec_...)
@@ -128,13 +130,14 @@ function safeEqual(a: string, b: string) {
   return r === 0;
 }
 
+type TgResult = { ok: boolean; description?: string; result?: { username?: string; active_usernames?: string[] } };
 async function tg(method: string, body: Record<string, unknown>) {
   const res = await fetch(`https://api.telegram.org/bot${env('TELEGRAM_BOT_TOKEN')}/${method}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  return (await res.json().catch(() => ({ ok: false }))) as { ok: boolean; description?: string };
+  return (await res.json().catch(() => ({ ok: false }))) as TgResult;
 }
 
 // ---------- Тексты бота ----------
@@ -221,13 +224,32 @@ const ENTER_TEXTS = new Set(Object.values(T).map((t) => t.enter));
 
 type Client = ReturnType<typeof db>;
 
-/** Записать Telegram ID и @ник клиента в профиль (по номеру). Ошибки не мешают входу. */
-async function saveTelegram(client: Client, phone: string, tgId: number | undefined, username: string | undefined) {
-  if (!tgId) return;
+/** Все активные @ники аккаунта: у одного аккаунта Telegram их может быть несколько. */
+async function usernamesOf(tgId: number, known?: string): Promise<string[]> {
+  const names: string[] = known ? [known] : [];
   try {
-    await client.rpc('pn_bot_set_telegram', { p_phone: phone, p_tg_id: tgId, p_username: username ?? null });
+    const r = await tg('getChat', { chat_id: tgId });
+    if (r.ok && r.result) {
+      if (r.result.username) names.push(r.result.username);
+      names.push(...(r.result.active_usernames ?? []));
+    }
   } catch {
     /* ignore */
+  }
+  const seen = new Set<string>();
+  return names.filter((n) => /^[A-Za-z0-9_]{3,32}$/.test(n) && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())).slice(0, 10);
+}
+
+/** Записать Telegram ID и все @ники клиента в профиль (по номеру). Ошибки не мешают входу. */
+async function saveTelegram(client: Client, phone: string, tgId: number | undefined, username: string | undefined) {
+  if (!tgId) return false;
+  try {
+    const names = await usernamesOf(tgId, username);
+    await client.from('pn_telegram_links').update({ tg_username: names[0] ?? null }).eq('chat_id', tgId);
+    const { data } = await client.rpc('pn_bot_set_telegram', { p_phone: phone, p_tg_id: tgId, p_usernames: names });
+    return data === true;
+  } catch {
+    return false;
   }
 }
 
@@ -348,10 +370,7 @@ async function handleTelegram(req: Request) {
   const knownPhone = known.data?.phone_enc ? await decrypt(known.data.phone_enc) : null;
 
   // Знакомый клиент написал боту («Старт» и т. п.) — обновляем его Telegram в профиле
-  if (knownPhone) {
-    await client.from('pn_telegram_links').update({ tg_username: msg.from?.username ?? null }).eq('chat_id', chatId);
-    await saveTelegram(client, knownPhone, msg.from?.id, msg.from?.username);
-  }
+  if (knownPhone) await saveTelegram(client, knownPhone, msg.from?.id, msg.from?.username);
 
   // Вход с сайта: /start L_<ключ>
   const m = text.match(/^\/start\s+L_([A-Za-z0-9_-]{40,60})$/);
@@ -486,7 +505,52 @@ async function handleHook(req: Request) {
     }
     return fail(502, 'SEND_FAILED');
   }
+  // Код ушёл в чат клиента — заодно обновляем его Telegram в профиле (в фоне, чтобы не задерживать вход)
+  background(
+    (async () => {
+      await client.from('pn_telegram_links').update({ phone_enc: await encrypt(phone) }).eq('phone_hash', hash).is('phone_enc', null);
+      await saveTelegram(client, phone, link.chat_id, undefined);
+    })(),
+  );
   return json({});
+}
+
+/** Фоновая задача: Supabase дожидается её после ответа. */
+function background(p: Promise<unknown>) {
+  const rt = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime;
+  if (rt?.waitUntil) rt.waitUntil(p.catch(() => null));
+  else p.catch(() => null);
+}
+
+// ---------- 4. Разовая синхронизация: Telegram всех клиентов бота в профили ----------
+async function handleSync(req: Request) {
+  const reply = (body: Record<string, unknown>) => json(body, 200, CORS);
+  const body = await req.json().catch(() => null);
+  const token = body?.token;
+  if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{32,80}$/.test(token)) return reply({ status: 'bad_request' });
+  const client = db();
+  const { data: job } = await client
+    .from('pn_bot_jobs')
+    .delete()
+    .eq('token_hash', await sha256(token))
+    .gt('created_at', new Date(Date.now() - 3600 * 1000).toISOString())
+    .select('token_hash');
+  if (!job?.length) return reply({ status: 'forbidden' });
+
+  const { data: links } = await client.from('pn_telegram_links').select('chat_id, phone_enc').limit(2000);
+  let updated = 0;
+  let noPhone = 0;
+  let noAccount = 0;
+  for (const l of (links ?? []) as { chat_id: number; phone_enc: string | null }[]) {
+    const phone = l.phone_enc ? await decrypt(l.phone_enc) : null;
+    if (!phone) {
+      noPhone++;
+      continue;
+    }
+    if (await saveTelegram(client, phone, l.chat_id, undefined)) updated++;
+    else noAccount++;
+  }
+  return reply({ status: 'ok', total: links?.length ?? 0, updated, no_phone: noPhone, no_account: noAccount });
 }
 
 // ---------- 3. Сайт: забрать вход, подтверждённый в боте ----------
@@ -581,6 +645,7 @@ Deno.serve(async (req) => {
   if (req.headers.has('x-telegram-bot-api-secret-token')) return handleTelegram(req);
   if (req.headers.has('webhook-signature')) return handleHook(req);
   if (new URL(req.url).searchParams.get('action') === 'forget') return handleForget(req);
+  if (new URL(req.url).searchParams.get('action') === 'sync_tg') return handleSync(req);
   const body = await req.json().catch(() => null);
   return handleClaim(body);
 });

@@ -16,7 +16,8 @@ const ORDERS_HEADER = ["Дата и время", "Имя клиента", "Те�
 const ORDER_STATUSES = ["Новый", "Подтверждён", "Отправлен", "Выполнен", "Отменён"];
 
 const USERS_SHEET = "Users PeltaNera";
-const USERS_HEADER = ["ID", "Дата регистрации", "Имя", "Номер", "Статус", "Подтверждён", "Роль", "Уровень", "Покупок", "Код запрошен", "Интересы", "Рассылка", "Баллы", "Telegram", "Telegram ID", "Instagram"];
+// Рядом с номером — ссылки на чат и все @ники клиента в Telegram (из бота и указанные на сайте)
+const USERS_HEADER = ["ID", "Дата регистрации", "Имя", "Номер", "Чат Telegram", "Telegram", "Telegram ID", "Instagram", "Статус", "Подтверждён", "Роль", "Уровень", "Покупок", "Код запрошен", "Интересы", "Рассылка", "Баллы"];
 const ROLES = ["VIP", "CEO"];
 
 // Ссылки на закрытые Telegram-каналы ролей: вставляете в колонку «Ссылка на закрытый канал»
@@ -52,11 +53,56 @@ function cell_(v) {
   return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
 }
 
-// Ник Telegram / Instagram → ячейка-ссылка (ник проверен, поэтому формула безопасна)
-function tgCell_(handle) {
-  const h = String(handle || "");
-  return /^@[A-Za-z0-9_]{3,32}$/.test(h) ? '=HYPERLINK("https://t.me/' + h.slice(1) + '","' + h + '")' : cell_(clean_(h, 40));
+// Все аккаунты Telegram клиента: ссылки на чат, @ники и ID.
+// accounts — [{ id, usernames: [...] }] из бота, typed — ник, который клиент указал сам.
+function telegramInfo_(accounts, typed) {
+  const ok = function (n) { return /^[A-Za-z0-9_]{3,32}$/.test(String(n)); };
+  const names = [], ids = [], links = [], seen = {};
+  const add = function (n) {
+    const k = String(n).toLowerCase();
+    if (seen[k]) return;
+    seen[k] = true;
+    names.push("@" + n);
+    links.push({ text: "t.me/" + n, url: "https://t.me/" + n });
+  };
+  (Array.isArray(accounts) ? accounts : []).forEach(function (a) {
+    if (!a || !/^\d{1,20}$/.test(String(a.id))) return;
+    ids.push(String(a.id));
+    const own = (Array.isArray(a.usernames) ? a.usernames : []).filter(ok);
+    own.forEach(add);
+    if (!own.length) links.push({ text: "чат по ID " + a.id, url: "tg://user?id=" + a.id });
+  });
+  const t = clean_(typed || "", 40);
+  if (/^@[A-Za-z0-9_]{3,32}$/.test(t)) add(t.slice(1));
+  else if (t && !seen[t.toLowerCase()]) names.push(t);
+  return { names: names.join(", "), ids: ids.join(", "), links: links };
 }
+
+// Ячейка с несколькими ссылками (по одной на строку). Ссылки tg:// таблица может не принять —
+// тогда остаются только ссылки t.me, а чат по ID виден текстом.
+function setLinks_(range, links) {
+  const build = function (list, withTg) {
+    const text = list.map(function (l) { return l.text; }).join("\n");
+    const b = SpreadsheetApp.newRichTextValue().setText(text);
+    let pos = 0;
+    list.forEach(function (l) {
+      if (withTg || /^https:/.test(l.url)) b.setLinkUrl(pos, pos + l.text.length, l.url);
+      pos += l.text.length + 1;
+    });
+    return b.build();
+  };
+  if (!links.length) { range.clearContent(); return; }
+  try { range.setRichTextValue(build(links, true)); }
+  catch (err) { range.setRichTextValue(build(links, false)); }
+}
+
+// Аккаунты из события: новый формат (tg_accounts) или один аккаунт (tg_id / tg_username)
+function accountsOf_(u) {
+  if (Array.isArray(u.tg_accounts) && u.tg_accounts.length) return u.tg_accounts;
+  return u.tg_id ? [{ id: u.tg_id, usernames: u.tg_username ? [u.tg_username] : [] }] : [];
+}
+
+// Ник Instagram → ячейка-ссылка (ник проверен, поэтому формула безопасна)
 function igCell_(handle) {
   const h = String(handle || "");
   return /^@[A-Za-z0-9._]{1,30}$/.test(h) ? '=HYPERLINK("https://instagram.com/' + h.slice(1) + '","' + h + '")' : cell_(clean_(h, 40));
@@ -147,7 +193,24 @@ function sheetWithHeader_(name, header) {
   }
   if (width > header.length) sheet.getRange(1, header.length + 1, 1, width - header.length).clearContent();
   sheet.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight("bold");
+  // Колонки переехали: выпадающие списки, пометки и подсветку ставим заново на свои места
+  if (sheet.getMaxRows() > 1 && (name === USERS_SHEET || name === ORDERS_SHEET)) {
+    sheet.getRange(2, 1, sheet.getMaxRows() - 1, Math.max(width, header.length)).clearDataValidations().clearNote().setBackground(null);
+    applyValidation_(sheet, name);
+  }
   return sheet;
+}
+
+// Выпадающие списки: роль клиента и статус заказа
+function applyValidation_(sheet, name) {
+  const rows = Math.max(sheet.getMaxRows() - 1, 1);
+  if (name === USERS_SHEET) {
+    sheet.getRange(2, USERS_HEADER.indexOf("Роль") + 1, rows, 1).setDataValidation(
+      SpreadsheetApp.newDataValidation().requireValueInList(ROLES, true).setAllowInvalid(false).build());
+  } else if (name === ORDERS_SHEET) {
+    sheet.getRange(2, ORDERS_HEADER.indexOf("Статус") + 1, rows, 1).setDataValidation(
+      SpreadsheetApp.newDataValidation().requireValueInList(ORDER_STATUSES, true).setAllowInvalid(false).build());
+  }
 }
 
 // ====================
@@ -239,7 +302,7 @@ function handleDeleted_(d) {
     if (found) {
       const row = found.getRow();
       const col = function (h) { return USERS_HEADER.indexOf(h) + 1; };
-      ["Имя", "Номер", "Роль", "Уровень", "Интересы", "Рассылка", "Код запрошен", "Баллы", "Telegram", "Telegram ID", "Instagram"].forEach(function (h) {
+      ["Имя", "Номер", "Чат Telegram", "Telegram", "Telegram ID", "Instagram", "Роль", "Уровень", "Интересы", "Рассылка", "Код запрошен", "Баллы"].forEach(function (h) {
         users.getRange(row, col(h)).clearContent().setNote("").setBackground(null);
       });
       users.getRange(row, col("Статус")).setValue("🗑 Удалён " + fmt_(new Date().toISOString()));
@@ -274,11 +337,16 @@ function handleUserEvent_(eventId) {
     const old = found ? sheet.getRange(row, 1, 1, USERS_HEADER.length).getValues()[0] : [];
     const wasConfirmed = String(old[col("Статус")] || "").indexOf("✅") === 0;
 
+    const tgi = telegramInfo_(accountsOf_(u), u.telegram);
     const values = [
       u.id,
       fmt_(u.created_at),
       cell_(clean_(u.name || old[col("Имя")] || "", 40)),
       cell_(u.phone || old[col("Номер")] || ""),
+      "",
+      cell_(tgi.names),
+      cell_(tgi.ids),
+      u.instagram ? igCell_(u.instagram) : "",
       u.confirmed ? "✅ Подтверждён" : "⏳ Не подтверждён",
       fmt_(u.confirmed_at) || old[col("Подтверждён")] || "",
       u.role ? String(u.role).toUpperCase() : "",
@@ -287,12 +355,10 @@ function handleUserEvent_(eventId) {
       fmt_(u.last_code_at) || old[col("Код запрошен")] || "",
       Array.isArray(u.prefs) ? prefsLabel_(u.prefs) : old[col("Интересы")] || "",
       typeof u.marketing === "boolean" ? (u.marketing ? "Да" : "Нет") : old[col("Рассылка")] || "",
-      typeof u.points === "number" ? u.points : old[col("Баллы")] || 0,
-      u.telegram ? tgCell_(u.telegram) : "",
-      u.tg_id ? String(u.tg_id) : "",
-      u.instagram ? igCell_(u.instagram) : ""
+      typeof u.points === "number" ? u.points : old[col("Баллы")] || 0
     ];
     sheet.getRange(row, 1, 1, values.length).setValues([values]);
+    setLinks_(sheet.getRange(row, col("Чат Telegram") + 1), tgi.links);
     sheet.getRange(row, col("Роль") + 1).setNote("").setBackground(null);
     sheet.getRange(row, col("Баллы") + 1).setNote("").setBackground(null);
     isNew = u.kind === "confirmed" && u.confirmed && !wasConfirmed;
@@ -459,15 +525,11 @@ function setupPeltaAdmin() {
   const exists = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === "onSheetEdit"; });
   if (!exists) ScriptApp.newTrigger("onSheetEdit").forSpreadsheet(book).onEdit().create();
 
-  const users = sheetWithHeader_(USERS_SHEET, USERS_HEADER);
-  users.getRange(2, USERS_HEADER.indexOf("Роль") + 1, Math.max(users.getMaxRows() - 1, 1), 1).setDataValidation(
-    SpreadsheetApp.newDataValidation().requireValueInList(ROLES, true).setAllowInvalid(false).build());
+  applyValidation_(sheetWithHeader_(USERS_SHEET, USERS_HEADER), USERS_SHEET);
   // Лист ролей: заполняем из базы
   fillRolesSheet_(key);
 
-  const orders = sheetWithHeader_(ORDERS_SHEET, ORDERS_HEADER);
-  orders.getRange(2, ORDERS_HEADER.indexOf("Статус") + 1, Math.max(orders.getMaxRows() - 1, 1), 1).setDataValidation(
-    SpreadsheetApp.newDataValidation().requireValueInList(ORDER_STATUSES, true).setAllowInvalid(false).build());
+  applyValidation_(sheetWithHeader_(ORDERS_SHEET, ORDERS_HEADER), ORDERS_SHEET);
   Logger.log("Готово");
 }
 
@@ -536,16 +598,20 @@ function doPost(e) {
       cell_(order.summary),
       "Новый",
       order.id,
-      ord.tg_username ? tgCell_("@" + ord.tg_username) : ord.telegram ? tgCell_(ord.telegram) : (ord.tg_id ? "Telegram ID " + ord.tg_id : "")
+      ""
     ]);
+    // Связь: ссылки на все чаты покупателя в Telegram
+    const tgi = telegramInfo_(accountsOf_(ord), ord.telegram);
+    const orderRow = sheet.createTextFinder(String(order.id)).matchEntireCell(true).findAll()
+      .filter(function (c) { return c.getColumn() === ORDERS_HEADER.indexOf("ID") + 1; }).pop();
+    if (orderRow) setLinks_(sheet.getRange(orderRow.getRow(), ORDERS_HEADER.indexOf("Связь") + 1), tgi.links);
 
-    // Связь с покупателем: ссылка на чат в Telegram (главное) и Instagram
-    const contact = [];
-    if (ord.tg_username) contact.push('<a href="https://t.me/' + html_(ord.tg_username) + '">✉️ Написать в Telegram @' + html_(ord.tg_username) + "</a>");
-    else if (ord.tg_id) contact.push('<a href="tg://user?id=' + Number(ord.tg_id) + '">✉️ Написать в Telegram</a>');
-    if (ord.telegram && (!ord.tg_username || String(ord.telegram).toLowerCase() !== "@" + String(ord.tg_username).toLowerCase())) {
-      contact.push("Telegram/Instagram из заказа: " + html_(clean_(ord.telegram, 40)));
-    }
+    // Связь с покупателем в сообщении: все чаты Telegram (главное) и Instagram
+    const contact = tgi.links.map(function (l) {
+      return '<a href="' + html_(l.url) + '">✉️ ' + (/^https:/.test(l.url) ? "@" + html_(l.text.slice(5)) : "Написать (" + html_(l.text) + ")") + "</a>";
+    });
+    const typed = clean_(ord.telegram || "", 40);
+    if (typed && !/^@[A-Za-z0-9_]{3,32}$/.test(typed)) contact.push("Указано в заказе: " + html_(typed));
     if (ord.instagram && /^@[A-Za-z0-9._]{1,30}$/.test(ord.instagram)) {
       contact.push('<a href="https://instagram.com/' + html_(String(ord.instagram).slice(1)) + '">📷 Instagram ' + html_(ord.instagram) + "</a>");
     }
