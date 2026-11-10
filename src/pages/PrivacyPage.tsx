@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useLang } from '../context/LangContext';
 import { useConsent } from '../context/ConsentContext';
 import { POLICIES, type Block } from '../lib/privacy';
@@ -33,6 +34,12 @@ export default function PrivacyPage({ kind = 'privacy' }: { kind?: 'privacy' | '
   const { openSettings } = useConsent();
   const p = (kind === 'terms' ? TERMS : POLICIES)[lang];
   const isPrivacy = kind === 'privacy';
+
+  // Ссылка вида /terms#loyalty — сразу к нужному разделу
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (id) setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }), 50);
+  }, [kind]);
 
   return (
     <div className="px-5 sm:px-10 lg:px-14 py-14 lg:py-20">

@@ -3,7 +3,7 @@ import { useCart } from '../context/CartContext';
 import { useLang } from '../context/LangContext';
 import { useProfile } from '../context/ProfileContext';
 import { formatNumber, formatPrice } from '../lib/format';
-import { maxPointsFor } from '../lib/tiers';
+import { maxPointsFor, pointsOf, pointsPctOf } from '../lib/tiers';
 import { useCatalog } from '../context/CatalogContext';
 import { Price } from './Price';
 import { href } from '../lib/router';
@@ -41,6 +41,33 @@ export function CartDrawer() {
   const pointsAvailable = session ? maxPointsFor(member, total) : 0;
   const pointsSpent = usePoints ? pointsAvailable : 0;
   const toPay = total - pointsSpent;
+  // Баланс и сколько баллов придёт за этот заказ (окончательно — после выполнения, как на сервере)
+  const balance = pointsOf(member);
+  const earnPct = pointsPctOf(member);
+  const earnFor = (sum: number) => Math.round((sum * earnPct) / 100);
+  const pointsBox = (pay: number, spent: number) =>
+    session && member ? (
+      <div className="border border-ink/15 px-4 py-3 font-mono text-[11.5px] space-y-1.5">
+        <div className="flex justify-between gap-4">
+          <span className="text-ink/70">{t(spent > 0 ? 'points.cart_left' : 'points.cart_balance')}</span>
+          <span className="tabular-nums">{formatNumber(balance - spent)}</span>
+        </div>
+        {earnPct > 0 ? (
+          <div className="flex justify-between gap-4">
+            <span className="text-ink/70">{t('points.cart_earn').replace('{pct}', String(earnPct))}</span>
+            <span className="tabular-nums text-burgundy">+{formatNumber(earnFor(pay))}</span>
+          </div>
+        ) : (
+          <p className="text-mute">{t('points.cart_none')}</p>
+        )}
+        <p className="text-mute text-[10.5px] leading-[1.5]">
+          {t('points.cart_note')}{' '}
+          <a href={`${href.terms}#loyalty`} onClick={close} className="underline underline-offset-2">
+            {t('points.terms_link')}
+          </a>
+        </p>
+      </div>
+    ) : null;
 
   useEffect(() => {
     if (isOpen) {
@@ -288,6 +315,8 @@ export function CartDrawer() {
               </label>
             )}
 
+            {pointsBox(toPay, pointsSpent)}
+
             <div>
               <label className="flex items-start gap-2 font-mono text-[11px] leading-[1.5] cursor-pointer select-none">
                 <input
@@ -359,6 +388,7 @@ export function CartDrawer() {
                 <span className="nav-caps">{t('cart.total')}</span>
                 <Price base={baseTotal} final={total} className="font-mono text-[15px]" />
               </div>
+              {pointsBox(total, 0)}
               <button onClick={() => setCheckout(true)} className="btn-ink">
                 {t('cart.checkout')}
               </button>

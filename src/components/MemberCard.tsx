@@ -8,8 +8,8 @@ import { formatNumber } from '../lib/format';
 import { TierBadge } from './TierBadge';
 
 /**
- * Привилегии клиента в профиле: скрыты за кнопкой. Внутри — статус, баллы,
- * прогресс и, для VIP / CEO, ссылка на закрытый Telegram-канал (её отдаёт только сервер).
+ * Привилегии в личном кабинете: строка «Привилегии ›» со стрелкой, без рамки.
+ * По нажатию раскрываются подробности: уровень, баллы, прогресс, роль, закрытый доступ.
  */
 export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
   const { t, lang } = useLang();
@@ -31,26 +31,29 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
   const hasPrivate = status.links?.length > 0 || categories.includes('exclusive');
 
   return (
-    <section className="border border-ink/15">
+    <section>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="w-full h-12 px-4 flex items-center justify-between gap-3 text-left"
+        className="group w-full flex items-center justify-between gap-3 py-1 text-left"
       >
         <span className="flex items-center gap-2 nav-caps text-[14px]">
           {t('tier.privileges')}
           <TierBadge tier={role} />
         </span>
-        <svg
-          width="9"
-          height="9"
-          viewBox="0 0 8 8"
-          aria-hidden="true"
-          className={`shrink-0 transition-transform duration-300 ${open ? 'rotate-90' : ''}`}
-        >
-          <path d="M2 1 L6 4 L2 7" fill="none" stroke="currentColor" strokeWidth="1.3" />
-        </svg>
+        <span className="flex items-center gap-2 font-mono text-[12px] text-ink/70 group-hover:text-ink">
+          {tierTitle(tier)} · {formatNumber(points)} {t('points.unit')}
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 8 8"
+            aria-hidden="true"
+            className={`shrink-0 transition-transform duration-300 ${open ? 'rotate-90' : ''}`}
+          >
+            <path d="M2 1 L6 4 L2 7" fill="none" stroke="currentColor" strokeWidth="1.3" />
+          </svg>
+        </span>
       </button>
 
       <div
@@ -59,7 +62,7 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
         }`}
       >
         <div className="overflow-hidden">
-          <div className="px-4 pb-4 space-y-4 border-t border-ink/10 pt-4">
+          <div className="pt-4 space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="field-label">{t('tier.your_level')}</p>
@@ -80,8 +83,6 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
                 </p>
               )}
             </div>
-
-            <p className="font-mono text-[12px] leading-[1.6] text-ink/75">{t('tier.desc_level')}</p>
 
             <p className="font-mono text-[12px] text-ink/70">
               {t('tier.purchases')}: {done}
@@ -126,6 +127,10 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
                 )}
               </div>
             )}
+
+            <a href={`${href.terms}#loyalty`} onClick={onNavigate} className="inline-block font-mono text-[11px] link-u text-ink/70">
+              {t('points.terms_link')}
+            </a>
           </div>
         </div>
       </div>
