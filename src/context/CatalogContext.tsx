@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { CATEGORIES, DEFAULT_COLOR, products as staticProducts, type Category, type Product } from '../lib/products';
-import { discounted, discountOf } from '../lib/tiers';
 import { useProfile } from './ProfileContext';
 
 /**
@@ -109,11 +108,8 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
 
   const find = useCallback((id: string) => products.find((p) => p.id === id), [products]);
 
-  const pct = discountOf(status);
-  const priceOf = useCallback(
-    (p: Product): Price => ({ base: p.price, final: discounted(p.price, pct), discount: pct }),
-    [pct]
-  );
+  // Цена одна для всех: скидок нет, вместо них — баллы за выполненные заказы
+  const priceOf = useCallback((p: Product): Price => ({ base: p.price, final: p.price, discount: 0 }), []);
 
   return (
     <CatalogContext.Provider value={{ products, categories, find, priceOf, ready }}>{children}</CatalogContext.Provider>

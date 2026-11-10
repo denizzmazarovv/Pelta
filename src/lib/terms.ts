@@ -11,7 +11,7 @@ import type { Policy } from './privacy';
  * Перед публикацией изменений покажите текст юристу.
  */
 
-export const TERMS_DATE = '2026-10-29';
+export const TERMS_DATE = '2026-11-10';
 
 const STATUS: Record<Lang, Record<'self' | 'ip', string>> = {
   ru: { self: 'самозанятый', ip: 'индивидуальный предприниматель' },
@@ -36,7 +36,7 @@ const contacts = (l: { email: string; phone: string; city: string }) => [
 
 const uz: Policy = {
   title: 'Ommaviy oferta',
-  updated: '2026-yil 29-oktabr tahriri',
+  updated: '2026-yil 10-noyabr tahriri',
   toc: 'Mundarija',
   intro:
     'Bu peltanera.com sayti orqali Pelta Nera buyumlarini oldi-sotdi shartnomasini tuzish taklifi (ommaviy oferta). Buyurtma berib, shartlarga roziligingizni belgilasangiz, siz ushbu ofertani qabul qilasiz. Asosiy matn — o‘zbek tilida; rus va ingliz tilidagi matnlar — tarjima.',
@@ -64,7 +64,7 @@ const uz: Policy = {
       title: '3. Narxlar',
       body: [
         'Narxlar milliy valyutada — so‘mda ko‘rsatilgan va buyurtma berilgan paytda amal qiladi. Yetkazib berish narxi buyum narxiga kirmaydi va buyurtma tasdiqlanganda aytiladi.',
-        'Sodiqlik dasturi chegirmalari avtomatik hisoblanadi va savatda ko‘rsatiladi.',
+        'Narx barcha xaridorlar uchun bir xil. To‘plangan ballar bilan buyurtma narxini kamaytirish mumkin (8-bo‘lim).',
       ],
     },
     {
@@ -114,12 +114,37 @@ const uz: Policy = {
     },
     {
       id: 'loyalty',
-      title: '8. Sodiqlik dasturi',
+      title: "8. Sodiqlik dasturi va ballar",
       body: [
-        'Member, Silver, Gold va Brilliant darajalari bajarilgan buyurtmalar soniga qarab avtomatik beriladi. Har bir daraja uchun nechta buyurtma kerakligi va chegirma miqdori profilda ko‘rsatilgan.',
-        'VIP va CEO rollarini sotuvchi o‘z qarori bilan beradi; ular o‘z chegirmasi va yopiq kolleksiyalar hamda kanallarga kirish imkonini beradi.',
-        'Chegirmalar qo‘shilmaydi: eng kattasi qo‘llaniladi. Chegirma faqat saytda amal qiladi, pulga almashtirilmaydi va boshqa shaxsga berilmaydi.',
-        'Sotuvchi dastur shartlarini saytda e’lon qilib o‘zgartirishi mumkin; o‘zgarishlar tasdiqlangan buyurtmalarga ta’sir qilmaydi. Suiiste’mol holatida (masalan, soxta buyurtmalar) daraja yoki rol olib qo‘yilishi mumkin.',
+        "Darajalar va rollar:",
+        [
+          "Member, Silver, Gold va Brilliant darajalari bajarilgan buyurtmalar soniga qarab avtomatik beriladi; VIP va CEO rollarini sotuvchi o‘z qarori bilan beradi;",
+          "daraja yoki rol ball foizini va yopiq kolleksiyalar hamda kanallarga kirishni belgilaydi; daraja va rol foizlaridan kattasi amal qiladi;",
+          "nechta buyurtma kerakligi va ball foizi profilda ko‘rsatilgan.",
+        ],
+        "Ballar qanday beriladi:",
+        [
+          "ballar buyurtma bajarilgandan (topshirilgan va to‘langan) so‘ng beriladi — pul bilan haqiqatda to‘langan summaning foizi sifatida;",
+          "ballar bilan qoplangan qism va yetkazib berish uchun ball berilmaydi.",
+        ],
+        "Ballardan qanday foydalaniladi:",
+        [
+          "1 ball keyingi buyurtmada 1 so‘m chegirma beradi;",
+          "ballar bilan buyurtmadagi buyumlar narxining ko‘pi bilan 50 foizini kamaytirish mumkin; yetkazib berish ballar bilan to‘lanmaydi;",
+          "ballar oxirgi bajarilgan buyurtmadan 12 oy o‘tgach kuyadi; har bir bajarilgan xarid barcha ballar muddatini yana 12 oyga uzaytiradi.",
+        ],
+        "Ballar pul emas:",
+        [
+          "ballar pul mablag‘i, elektron pul, valyuta, qimmatli qog‘oz yoki to‘lov vositasi emas; ular faqat sotuvchidan chegirma olish huquqini beruvchi hisob birliklaridir;",
+          "ballar sotib olinmaydi, sotilmaydi, pulga almashtirilmaydi, naqd yoki kartaga to‘lanmaydi, boshqa shaxsga berilmaydi va meros bo‘lib o‘tmaydi.",
+        ],
+        "Bekor qilish va qaytarish:",
+        [
+          "buyurtma bekor qilinsa, ishlatilgan ballar qaytariladi;",
+          "buyum qaytarilganda pul haqiqatda to‘langan summa miqdorida qaytariladi, ishlatilgan ballar tiklanadi, shu buyurtma uchun berilgan ballar bekor qilinadi;",
+          "akkaunt o‘chirilganda ballar kompensatsiyasiz bekor qilinadi.",
+        ],
+        "Sotuvchi dastur shartlarini saytda e’lon qilib o‘zgartirishi mumkin; berilgan ballar kuyish muddatigacha saqlanadi. Suiiste’mol holatida (masalan, soxta buyurtmalar) ballar, daraja yoki rol bekor qilinishi mumkin.",
       ],
     },
     {
@@ -149,7 +174,7 @@ const uz: Policy = {
 
 const ru: Policy = {
   title: 'Публичная оферта',
-  updated: 'Редакция от 29 октября 2026',
+  updated: 'Редакция от 10 ноября 2026',
   toc: 'Содержание',
   intro:
     'Это предложение (публичная оферта) заключить договор купли-продажи изделий Pelta Nera через сайт peltanera.com. Оформляя заказ и отмечая согласие с условиями, вы принимаете эту оферту. Основной текст — на узбекском языке; русская и английская версии — переводы.',
@@ -177,7 +202,7 @@ const ru: Policy = {
       title: '3. Цены',
       body: [
         'Цены указаны в национальной валюте — сумах — и действуют на момент оформления заказа. Стоимость доставки не входит в цену и сообщается при подтверждении заказа.',
-        'Скидки программы лояльности рассчитываются автоматически и показаны в корзине.',
+        'Цена одинакова для всех покупателей. Накопленными баллами можно уменьшить цену заказа (раздел 8).',
       ],
     },
     {
@@ -227,12 +252,37 @@ const ru: Policy = {
     },
     {
       id: 'loyalty',
-      title: '8. Программа лояльности',
+      title: "8. Программа лояльности и баллы",
       body: [
-        'Уровни Member, Silver, Gold и Brilliant присваиваются автоматически по числу выполненных заказов. Сколько заказов нужно и какая скидка у каждого уровня — видно в профиле.',
-        'Роли VIP и CEO назначает продавец по своему решению; они дают свою скидку и доступ к закрытым коллекциям и каналам.',
-        'Скидки не суммируются: применяется наибольшая. Скидка действует только на сайте, не обменивается на деньги и не передаётся другим людям.',
-        'Продавец может менять условия программы, публикуя их на сайте; изменения не затрагивают уже подтверждённые заказы. При злоупотреблениях (например, фиктивных заказах) уровень или роль может быть снят.',
+        "Уровни и роли:",
+        [
+          "уровни Member, Silver, Gold и Brilliant присваиваются автоматически по числу выполненных заказов; роли VIP и CEO назначает продавец по своему решению;",
+          "уровень или роль определяет процент баллов и доступ к закрытым коллекциям и каналам; действует больший из процентов уровня и роли;",
+          "сколько заказов нужно и какой процент баллов — видно в профиле.",
+        ],
+        "Как начисляются баллы:",
+        [
+          "баллы начисляются после того, как заказ выполнен (передан и оплачен), — как процент от суммы, фактически оплаченной деньгами;",
+          "за часть заказа, закрытую баллами, и за доставку баллы не начисляются.",
+        ],
+        "Как используются баллы:",
+        [
+          "1 балл даёт скидку 1 сум на следующий заказ;",
+          "баллами можно уменьшить не более 50 процентов цены изделий в заказе; доставка баллами не оплачивается;",
+          "баллы сгорают через 12 месяцев после последнего выполненного заказа; каждая выполненная покупка продлевает срок всех баллов ещё на 12 месяцев.",
+        ],
+        "Баллы — не деньги:",
+        [
+          "баллы не являются денежными средствами, электронными деньгами, валютой, ценной бумагой или средством платежа; это учётные единицы, которые дают только право на скидку у продавца;",
+          "баллы не покупаются, не продаются, не обмениваются на деньги, не выплачиваются наличными или на карту, не передаются другим лицам и не переходят по наследству.",
+        ],
+        "Отмена и возврат:",
+        [
+          "если заказ отменён, списанные баллы возвращаются;",
+          "при возврате изделия деньги возвращаются в размере фактически оплаченной суммы, списанные баллы восстанавливаются, а баллы, начисленные за этот заказ, аннулируются;",
+          "при удалении аккаунта баллы аннулируются без компенсации.",
+        ],
+        "Продавец может менять условия программы, публикуя их на сайте; уже начисленные баллы сохраняются до срока сгорания. При злоупотреблениях (например, фиктивных заказах) баллы, уровень или роль могут быть аннулированы.",
       ],
     },
     {
@@ -262,7 +312,7 @@ const ru: Policy = {
 
 const en: Policy = {
   title: 'Terms of Sale',
-  updated: 'Version of 29 October 2026',
+  updated: 'Version of 10 November 2026',
   toc: 'Contents',
   intro:
     'This is an offer (public offer) to conclude a contract for the sale of Pelta Nera goods through peltanera.com. By placing an order and ticking your agreement with these terms, you accept this offer. The Uzbek text is the main version; the Russian and English versions are translations.',
@@ -290,7 +340,7 @@ const en: Policy = {
       title: '3. Prices',
       body: [
         'Prices are shown in the national currency, Uzbek soums (UZS), and apply at the time the order is placed. Delivery is not included in the price and is quoted when the order is confirmed.',
-        'Loyalty programme discounts are calculated automatically and shown in the bag.',
+        'The price is the same for every buyer. Points you have collected can reduce the price of an order (section 8).',
       ],
     },
     {
@@ -340,12 +390,37 @@ const en: Policy = {
     },
     {
       id: 'loyalty',
-      title: '8. Loyalty programme',
+      title: "8. Loyalty programme and points",
       body: [
-        'Member, Silver, Gold and Brilliant levels are assigned automatically by the number of completed orders. The number of orders needed and the discount for each level are shown in your profile.',
-        'VIP and CEO roles are assigned by the seller at its discretion; they give their own discount and access to private collections and channels.',
-        'Discounts do not add up: the largest one applies. A discount is valid only on the website, cannot be exchanged for money and cannot be transferred to another person.',
-        'The seller may change the programme terms by publishing them on the website; changes do not affect orders already confirmed. In case of abuse (for example, fake orders) a level or role may be withdrawn.',
+        "Levels and roles:",
+        [
+          "Member, Silver, Gold and Brilliant levels are assigned automatically by the number of completed orders; VIP and CEO roles are assigned by the seller at its discretion;",
+          "a level or role sets the points rate and access to private collections and channels; the larger of the level and role rates applies;",
+          "the number of orders needed and the points rate are shown in your profile.",
+        ],
+        "How points are earned:",
+        [
+          "points are credited after an order is completed (handed over and paid), as a percentage of the amount actually paid in money;",
+          "no points are earned on the part of an order covered by points or on delivery.",
+        ],
+        "How points are used:",
+        [
+          "1 point gives a discount of 1 UZS on a later order;",
+          "points can reduce no more than 50 per cent of the price of the goods in an order; delivery cannot be paid with points;",
+          "points expire 12 months after your last completed order; each completed purchase extends all points for another 12 months.",
+        ],
+        "Points are not money:",
+        [
+          "points are not funds, electronic money, currency, securities or a means of payment; they are accounting units that only give the right to a discount from the seller;",
+          "points cannot be bought, sold, exchanged for money, paid out in cash or to a card, transferred to another person or inherited.",
+        ],
+        "Cancellations and returns:",
+        [
+          "if an order is cancelled, the points used are returned;",
+          "when an item is returned, money is refunded in the amount actually paid, the points used are restored and the points earned on that order are cancelled;",
+          "when an account is deleted, points are cancelled without compensation.",
+        ],
+        "The seller may change the programme terms by publishing them on the website; points already credited are kept until their expiry date. In case of abuse (for example, fake orders) points, a level or a role may be withdrawn.",
       ],
     },
     {

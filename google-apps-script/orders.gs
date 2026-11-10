@@ -1,7 +1,8 @@
 // ====================
 // PELTA NERA — заказы, клиенты, рассылка, роли
 // Заказ принимается только от клиента, вошедшего на сайт по номеру телефона.
-// Цены, скидка уровня и номер заказа считает база Supabase (pn_create_order).
+// Цены, баллы и номер заказа считает база Supabase (pn_create_order). Скидок нет:
+// за выполненный заказ клиент получает баллы и может уменьшить ими цену следующего заказа.
 // Роль клиента (колонка «Роль») и статус заказа (колонка «Статус») отсюда передаются
 // в базу с секретным ключом скрипта — с сайта их изменить нельзя.
 // ====================
@@ -15,12 +16,14 @@ const ORDERS_HEADER = ["Дата и время", "Имя клиента", "Те�
 const ORDER_STATUSES = ["Новый", "Подтверждён", "Отправлен", "Выполнен", "Отменён"];
 
 const USERS_SHEET = "Users PeltaNera";
-const USERS_HEADER = ["ID", "Дата регистрации", "Имя", "Номер", "Статус", "Подтверждён", "Роль", "Уровень", "Покупок", "Код запрошен", "Интересы", "Рассылка"];
+const USERS_HEADER = ["ID", "Дата регистрации", "Имя", "Номер", "Статус", "Подтверждён", "Роль", "Уровень", "Покупок", "Код запрошен", "Интересы", "Рассылка", "Баллы"];
 const ROLES = ["VIP", "CEO"];
 
 // Ссылки на закрытые Telegram-каналы ролей: вставляете в колонку «Ссылка на закрытый канал»
 const ROLES_SHEET = "Roles PeltaNera";
-const ROLES_HEADER = ["Роль", "Ссылка на закрытый канал", "Скидка %", "Нужно покупок"];
+const ROLES_HEADER = ["Роль", "Ссылка на закрытый канал", "Баллы %", "Нужно покупок"];
+// Старые названия колонок: данные под ними переносятся в новые
+const HEADER_ALIASES = { "Баллы %": "Скидка %" };
 
 const NEWS_SHEET = "Newsletter PeltaNera";
 const NEWS_HEADER = ["ID", "Дата подписки", "Email", "Интересы", "Язык"];
@@ -124,7 +127,10 @@ function sheetWithHeader_(name, header) {
   const last = sheet.getLastRow();
   if (last > 1 && cur.some(Boolean)) {
     const data = sheet.getRange(2, 1, last - 1, width).getValues();
-    const idx = header.map(function (h) { return cur.indexOf(h); });
+    const idx = header.map(function (h) {
+      const i = cur.indexOf(h);
+      return i >= 0 || !HEADER_ALIASES[h] ? i : cur.indexOf(HEADER_ALIASES[h]);
+    });
     const moved = data.map(function (r) { return idx.map(function (i) { return i >= 0 ? r[i] : ""; }); });
     sheet.getRange(2, 1, last - 1, width).clearContent();
     sheet.getRange(2, 1, moved.length, header.length).setValues(moved);
@@ -223,7 +229,7 @@ function handleDeleted_(d) {
     if (found) {
       const row = found.getRow();
       const col = function (h) { return USERS_HEADER.indexOf(h) + 1; };
-      ["Имя", "Номер", "Роль", "Уровень", "Интересы", "Рассылка", "Код запрошен"].forEach(function (h) {
+      ["Имя", "Номер", "Роль", "Уровень", "Интересы", "Рассылка", "Код запрошен", "Баллы"].forEach(function (h) {
         users.getRange(row, col(h)).clearContent().setNote("").setBackground(null);
       });
       users.getRange(row, col("Статус")).setValue("🗑 Удалён " + fmt_(new Date().toISOString()));
@@ -270,10 +276,12 @@ function handleUserEvent_(eventId) {
       typeof u.done_orders === "number" ? u.done_orders : old[col("Покупок")] || 0,
       fmt_(u.last_code_at) || old[col("Код запрошен")] || "",
       Array.isArray(u.prefs) ? prefsLabel_(u.prefs) : old[col("Интересы")] || "",
-      typeof u.marketing === "boolean" ? (u.marketing ? "Да" : "Нет") : old[col("Рассылка")] || ""
+      typeof u.marketing === "boolean" ? (u.marketing ? "Да" : "Нет") : old[col("Рассылка")] || "",
+      typeof u.points === "number" ? u.points : old[col("Баллы")] || 0
     ];
     sheet.getRange(row, 1, 1, values.length).setValues([values]);
     sheet.getRange(row, col("Роль") + 1).setNote("").setBackground(null);
+    sheet.getRange(row, col("Баллы") + 1).setNote("").setBackground(null);
     isNew = u.kind === "confirmed" && u.confirmed && !wasConfirmed;
   } finally {
     lock.releaseLock();
@@ -322,6 +330,21 @@ function onSheetEdit(e) {
 
   const header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
   const isUsers = name === USERS_SHEET;
+
+  // Баллы клиента: число в колонке «Баллы» становится его новым остатком
+  const pCol = isUsers ? header.indexOf("Баллы") + 1 : 0;
+  if (pCol > 0 && pCol >= e.range.getColumn() && pCol <= e.range.getLastColumn()) {
+    for (let row = Math.max(2, e.range.getRow()); row <= e.range.getLastRow(); row++) {
+      const uid = String(sheet.getRange(row, 1).getValue() || "").trim();
+      const cell = sheet.getRange(row, pCol);
+      if (!uid) continue;
+      const n = Math.floor(Number(String(cell.getValue()).replace(/\s/g, "")));
+      const r = n >= 0 ? rpc_("pn_sheet_set_points", { p_key: key, p_user: uid, p_points: n }) : { code: 200, body: "bad_points" };
+      if (r.code === 200 && r.body === "ok") cell.setNote("").setBackground(null);
+      else cell.setNote("Не сохранено: " + (r.body === "bad_points" ? "нужно целое число от 0" : r.code === 200 ? r.body : "ошибка " + r.code)).setBackground("#f4cccc");
+    }
+  }
+
   const col = header.indexOf(isUsers ? "Роль" : "Статус") + 1;
   const idCol = isUsers ? 1 : header.indexOf("ID") + 1;
   if (col < 1 || idCol < 1 || col < e.range.getColumn() || col > e.range.getLastColumn()) return;
@@ -357,7 +380,8 @@ function saveRoleLink_(sheet, row, key) {
   else target.setNote("Не сохранено: " + (r.code === 200 ? r.body : "ошибка " + r.code) + " (нужна ссылка вида https://t.me/+...)").setBackground("#f4cccc");
 }
 
-// Скидка % и (для уровней) сколько выполненных покупок нужно. Сразу уходит в базу.
+// Процент баллов (сколько % от оплаченной суммы вернётся баллами) и, для уровней,
+// сколько выполненных покупок нужно. Сразу уходит в базу.
 function saveTier_(sheet, row, key) {
   const role = String(sheet.getRange(row, 1).getValue() || "").trim();
   if (!role) return;
@@ -369,7 +393,7 @@ function saveTier_(sheet, row, key) {
   if (r.code === 200 && r.body === "ok") {
     cells.setNote("").setBackground(null);
   } else {
-    const why = { bad_discount: "скидка должна быть от 0 до 90", bad_orders: "для уровня укажите число покупок (0 и больше)", bad_role: "неизвестная роль" };
+    const why = { bad_discount: "процент баллов должен быть от 0 до 90", bad_orders: "для уровня укажите число покупок (0 и больше)", bad_role: "неизвестная роль" };
     cells.setNote("Не сохранено: " + (why[r.body] || r.body || "ошибка " + r.code)).setBackground("#f4cccc");
   }
 }
@@ -459,7 +483,8 @@ function doPost(e) {
       address: clean_(data.address, 200),
       comment: clean_(data.comment, 480),
       telegram: clean_(data.telegram, 31),
-      lang: clean_(data.lang, 2)
+      lang: clean_(data.lang, 2),
+      use_points: String(Math.max(0, Math.floor(Number(data.use_points) || 0)))
     } }, data.access_token);
     if (r.code !== 200) {
       const msg = String((r.body && r.body.message) || "");
@@ -470,7 +495,7 @@ function doPost(e) {
       return reply_({ status: "error", code: code });
     }
     const ord = r.body;
-    const disc = Number(ord.discount_pct) || 0;
+    const spent = Number(ord.points_spent) || 0;
     const summary = (ord.lines || []).map(function (l) {
       return clean_(l.name, 80) + (l.color ? " (" + clean_(l.color, 40) + ")" : "") + " ×" + l.quantity + " = " +
         money_(l.line_total);
@@ -482,7 +507,7 @@ function doPost(e) {
       phone: ord.phone,
       address: clean_(data.address, 200) || "Не указан",
       comment: clean_(data.comment, 400) || "Нет",
-      total: money_(ord.total) + (disc ? " (скидка " + disc + "%, " + String(ord.tier).toUpperCase() + ")" : ""),
+      total: money_(ord.total) + (spent ? " (списано баллов: " + spent + ", цена без баллов " + money_(ord.subtotal) + ")" : ""),
       summary: summary
     };
 
@@ -523,7 +548,7 @@ ${html_(order.summary)}
 
 🕒 <b>Дата:</b> ${order.date}
 ━━━━━━━━━━━━━━━━━━
-🔔 <i>Статус меняйте в таблице (колонка «Статус»): «Выполнен» засчитывает покупку клиенту</i>`;
+🔔 <i>Статус меняйте в таблице (колонка «Статус»): «Выполнен» засчитывает покупку и начисляет баллы, «Отменён» возвращает списанные баллы</i>`;
 
     const response = UrlFetchApp.fetch(
       `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
@@ -537,7 +562,7 @@ ${html_(order.summary)}
     const result = JSON.parse(response.getContentText());
     if (!result.ok) Logger.log("Telegram API error: " + result.description);
 
-    return reply_({ status: "ok", id: order.id, total: ord.total });
+    return reply_({ status: "ok", id: order.id, total: ord.total, points_spent: spent });
   } catch (err) {
     Logger.log("Ошибка: " + err.toString());
     return reply_({ status: "error", code: "server" });

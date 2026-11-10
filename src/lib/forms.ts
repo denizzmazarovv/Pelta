@@ -100,6 +100,8 @@ export async function saveOrder(o: {
   comment?: string;
   items: OrderItem[];
   total: number;
+  /** Сколько баллов клиент хочет списать (сервер сам ограничит остатком и долей заказа) */
+  usePoints?: number;
   lang: Lang;
 }) {
   const payload = {
@@ -122,7 +124,7 @@ export async function saveOrder(o: {
   const res = await fetch(GOOGLE_CART_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ ...payload, lang: o.lang, access_token: o.accessToken }),
+    body: JSON.stringify({ ...payload, lang: o.lang, use_points: Math.max(0, Math.floor(o.usePoints ?? 0)), access_token: o.accessToken }),
   });
   const out = (await res.json().catch(() => null)) as { status?: string; code?: string } | null;
   if (out?.status !== 'ok') {

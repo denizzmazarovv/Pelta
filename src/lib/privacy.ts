@@ -11,13 +11,13 @@ export type Block = string | string[];
 export type Section = { id: string; title: string; body: Block[] };
 export type Policy = { title: string; updated: string; intro: string; toc: string; sections: Section[] };
 
-export const POLICY_DATE = '2026-10-29';
+export const POLICY_DATE = '2026-11-10';
 
 const E = CONTACTS.email;
 
 const en: Policy = {
   title: 'Privacy Policy',
-  updated: 'Last updated: 29 October 2026',
+  updated: 'Last updated: 10 November 2026',
   toc: 'Contents',
   intro:
     'This policy explains what personal data Pelta Nera collects through peltanera.com, why, where it is stored and what rights you have. We collect only what we need to fulfil your orders, answer your messages and run your account. We do not sell personal data and do not use advertising trackers.',
@@ -50,6 +50,7 @@ const en: Policy = {
           'phone number — used to sign in and to confirm that the number belongs to you;',
           'one-time sign-in codes — delivered to your Telegram by our bot; we do not use passwords;',
           'name, interests (women / men), newsletter preference — only if you fill them in;',
+          'your level, role and loyalty points with the history of how they were earned and used;',
           'IP address and time of sign-in attempts, and a hashed (irreversibly encoded) phone number with the time of each code request — to protect against abuse and code spam.',
         ],
         'Purpose: to provide your account and faster checkout. Legal basis: contract and consent.',
@@ -176,7 +177,7 @@ const en: Policy = {
 
 const ru: Policy = {
   title: 'Политика конфиденциальности',
-  updated: 'Последнее обновление: 29 октября 2026',
+  updated: 'Последнее обновление: 10 ноября 2026',
   toc: 'Содержание',
   intro:
     'Эта политика объясняет, какие персональные данные Pelta Nera получает через сайт peltanera.com, зачем, где они хранятся и какие у вас права. Мы собираем только то, что нужно для выполнения заказа, ответа на сообщение и работы аккаунта. Мы не продаём персональные данные и не используем рекламные трекеры.',
@@ -209,6 +210,7 @@ const ru: Policy = {
           'номер телефона — для входа и подтверждения, что номер принадлежит вам;',
           'одноразовые коды входа — приходят в ваш Telegram от нашего бота; пароли мы не используем;',
           'имя, интересы (женское / мужское), согласие на рассылку — только если вы их укажете;',
+          'уровень, роль и баллы программы лояльности с историей начислений и списаний;',
           'IP-адрес и время попыток входа, а также хеш (необратимо закодированный) номера телефона со временем запроса кода — для защиты от взлома и спама кодами.',
         ],
         'Цель: работа аккаунта и быстрое оформление заказов. Основание: договор и согласие.',
@@ -335,7 +337,7 @@ const ru: Policy = {
 
 const uz: Policy = {
   title: 'Maxfiylik siyosati',
-  updated: 'Oxirgi yangilanish: 2026-yil 29-oktabr',
+  updated: 'Oxirgi yangilanish: 2026-yil 10-noyabr',
   toc: 'Mundarija',
   intro:
     'Ushbu siyosat Pelta Nera peltanera.com sayti orqali qanday shaxsiy ma’lumotlarni, nima maqsadda olishini, ular qayerda saqlanishini va sizning huquqlaringizni tushuntiradi. Biz faqat buyurtmani bajarish, xabaringizga javob berish va hisobingiz ishlashi uchun zarur bo‘lgan ma’lumotlarni yig‘amiz. Biz shaxsiy ma’lumotlarni sotmaymiz va reklama trekerlaridan foydalanmaymiz.',
@@ -368,6 +370,7 @@ const uz: Policy = {
           'telefon raqami — kirish va raqam sizga tegishli ekanini tasdiqlash uchun;',
           'bir martalik kirish kodlari — botimiz orqali Telegram’ingizga keladi; biz parollardan foydalanmaymiz;',
           'ism, qiziqishlar (ayollar / erkaklar uchun), yangiliklarga rozilik — faqat siz kiritsangiz;',
+          'daraja, rol va sodiqlik dasturi ballari hamda ularning berilishi va ishlatilishi tarixi;',
           'IP-manzil va kirishga urinishlar vaqti, shuningdek kod so‘ralgan vaqt bilan telefon raqamining xeshi (qaytarib bo‘lmaydigan kod) — buzib kirish va kod spamidan himoya uchun.',
         ],
         'Maqsad: hisob ishlashi va buyurtmalarni tez rasmiylashtirish. Asos: shartnoma va rozilik.',

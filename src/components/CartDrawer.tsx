@@ -2,7 +2,8 @@ import { useEffect, useState, FormEvent } from 'react';
 import { useCart } from '../context/CartContext';
 import { useLang } from '../context/LangContext';
 import { useProfile } from '../context/ProfileContext';
-import { formatPrice } from '../lib/format';
+import { formatNumber, formatPrice } from '../lib/format';
+import { maxPointsFor } from '../lib/tiers';
 import { useCatalog } from '../context/CatalogContext';
 import { Price } from './Price';
 import { href } from '../lib/router';
@@ -25,7 +26,7 @@ export function CartDrawer() {
   const { t, lang } = useLang();
   const { items, isOpen, close, remove, setQty, total, baseTotal, count, clear } = useCart();
   const { priceOf } = useCatalog();
-  const { profile, session, openRegister, updateProfile } = useProfile();
+  const { profile, session, status: member, refreshStatus, openRegister, updateProfile } = useProfile();
   const profileName = profile?.name?.trim() ?? '';
   const verifiedPhone = profile?.phone ?? '';
   const [checkout, setCheckout] = useState(false);
@@ -35,6 +36,11 @@ export function CartDrawer() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [acceptOffer, setAcceptOffer] = useState(false);
+  const [usePoints, setUsePoints] = useState(false);
+  // Баллы: сколько можно списать в этом заказе и сколько останется оплатить
+  const pointsAvailable = session ? maxPointsFor(member, total) : 0;
+  const pointsSpent = usePoints ? pointsAvailable : 0;
+  const toPay = total - pointsSpent;
 
   useEffect(() => {
     if (isOpen) {
@@ -103,7 +109,8 @@ export function CartDrawer() {
         email: session?.user.email ?? '',
         address: finalText(form.address, LIMITS.address),
         comment,
-        total,
+        total: toPay,
+        usePoints: pointsSpent,
         userId: session?.user.id,
         items: items.map((i) => ({
           id: i.product.id,
@@ -115,6 +122,8 @@ export function CartDrawer() {
         lang,
       });
       setStatus('success');
+      setUsePoints(false);
+      refreshStatus();
       clear();
     } catch (err) {
       setStatus('idle');
@@ -254,11 +263,30 @@ export function CartDrawer() {
                   <span className="whitespace-nowrap">{formatPrice(priceOf(i.product).final * i.quantity, lang)}</span>
                 </div>
               ))}
+              {pointsSpent > 0 && (
+                <div className="flex justify-between gap-4 pt-2 mt-2 border-t border-ink/20">
+                  <span>{t('points.applied')}</span>
+                  <span className="whitespace-nowrap">−{formatPrice(pointsSpent, lang)}</span>
+                </div>
+              )}
               <div className="flex justify-between pt-2 mt-2 border-t border-ink/20 text-[13px] font-medium">
-                <span>{t('cart.total')}</span>
-                <Price base={baseTotal} final={total} />
+                <span>{t(pointsSpent > 0 ? 'points.to_pay' : 'cart.total')}</span>
+                <span className="whitespace-nowrap">{formatPrice(toPay, lang)}</span>
               </div>
             </div>
+
+            {pointsAvailable > 0 && (
+              <label className="flex items-start gap-2 font-mono text-[11px] leading-[1.5] cursor-pointer select-none">
+                <input type="checkbox" checked={usePoints} onChange={(e) => setUsePoints(e.target.checked)} className="sr-only peer" />
+                <span className="peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 rounded-full mt-[2px]">
+                  <Check checked={usePoints} />
+                </span>
+                <span>
+                  {t('points.spend').replace('{n}', formatNumber(pointsAvailable))}
+                  <span className="block text-mute">{t('points.spend_note')}</span>
+                </span>
+              </label>
+            )}
 
             <div>
               <label className="flex items-start gap-2 font-mono text-[11px] leading-[1.5] cursor-pointer select-none">

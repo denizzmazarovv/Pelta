@@ -3,15 +3,16 @@ import { useLang } from '../context/LangContext';
 import { useProfile } from '../context/ProfileContext';
 import { useCatalog } from '../context/CatalogContext';
 import { href } from '../lib/router';
-import { discountOf, roleOf, tierTitle } from '../lib/tiers';
+import { pointsOf, pointsPctOf, roleOf, tierTitle } from '../lib/tiers';
+import { formatNumber } from '../lib/format';
 import { TierBadge } from './TierBadge';
 
 /**
- * Привилегии клиента в профиле: скрыты за кнопкой. Внутри — статус, скидка,
+ * Привилегии клиента в профиле: скрыты за кнопкой. Внутри — статус, баллы,
  * прогресс и, для VIP / CEO, ссылка на закрытый Telegram-канал (её отдаёт только сервер).
  */
 export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const { status } = useProfile();
   const { categories } = useCatalog();
   const [open, setOpen] = useState(false);
@@ -20,7 +21,9 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
   const tier = status.tier;
   const role = roleOf(status);
   const done = status.done_orders ?? 0;
-  const pct = discountOf(status);
+  const pct = pointsPctOf(status);
+  const points = pointsOf(status);
+  const expire = status.points_expire_at ? new Date(status.points_expire_at) : null;
   const next = status.next;
   const need = next?.min_orders != null ? Math.max(0, next.min_orders - done) : 0;
   const progress = next?.min_orders ? Math.min(100, Math.round((done / next.min_orders) * 100)) : 100;
@@ -62,11 +65,19 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
                 <p className="field-label">{t('tier.your_level')}</p>
                 <p className="font-mono text-[15px] mt-1">{tierTitle(tier)}</p>
               </div>
-              {pct > 0 && (
-                <div className="text-right">
-                  <p className="field-label">{t('tier.discount')}</p>
-                  <p className="font-mono text-[15px] mt-1">−{pct}%</p>
-                </div>
+              <div className="text-right">
+                <p className="field-label">{t('points.balance')}</p>
+                <p className="font-mono text-[15px] mt-1 tabular-nums">{formatNumber(points)}</p>
+              </div>
+            </div>
+
+            <div className="font-mono text-[11px] leading-[1.6] text-ink/75 space-y-1">
+              {pct > 0 && <p>{t('points.rate').replace('{pct}', String(pct))}</p>}
+              <p>{t('points.use')}</p>
+              {points > 0 && expire && (
+                <p className="text-mute">
+                  {t('points.expire').replace('{date}', expire.toLocaleDateString(lang === 'en' ? 'en-GB' : lang === 'uz' ? 'uz-UZ' : 'ru-RU'))}
+                </p>
               )}
             </div>
 
@@ -83,7 +94,7 @@ export function MemberCard({ onNavigate }: { onNavigate?: () => void }) {
                 </div>
                 <p className="font-mono text-[11px] text-ink/70 mt-2">
                   {t('tier.to_next').replace('{n}', String(need)).replace('{level}', tierTitle(next))}
-                  {Number(next.discount_pct) > 0 ? ` (−${Number(next.discount_pct)}%)` : ''}
+                  {Number(next.discount_pct) > 0 ? ` (${t('points.rate_short').replace('{pct}', String(Number(next.discount_pct)))})` : ''}
                 </p>
               </div>
             )}
