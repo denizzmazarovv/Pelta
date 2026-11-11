@@ -32,6 +32,13 @@
  * на чат в таблице и заказах. Сайт → ?action=sync_tg { token } — разовая синхронизация всех
  * клиентов бота; token одноразовый, его хеш заранее записывается в pn_bot_jobs из SQL Editor.
  *
+ * Мини-приложение (сайт внутри Telegram): Сайт → { action: "webapp", initData, create } —
+ * Telegram подписывает данные о том, кто открыл приложение (initData, подпись проверяется
+ * токеном бота). Если номер этого аккаунта уже подтверждён в боте — сразу выдаётся сессия.
+ * Если нет — сайт просит «Поделиться номером» (requestContact), бот сохраняет номер, и
+ * сайт повторяет запрос. Новый аккаунт создаётся только при create: true (клиент дал согласие).
+ * ?action=setup_menu { token } — один раз: кнопка «Магазин» в меню бота (тот же одноразовый ключ).
+ *
  * Секреты (Edge Functions → Secrets):
  *  SEND_SMS_HOOK_SECRET     — из Authentication → Hooks (вид v1,whsec_...)
  *  TELEGRAM_BOT_TOKEN       — от @BotFather
@@ -47,6 +54,8 @@ const PER_HOUR = 5;
 const PER_DAY = 10;
 const LOGIN_TTL_MS = 10 * 60 * 1000;
 const siteUrl = () => (Deno.env.get('SITE_URL') || 'https://peltanera.com').replace(/\/+$/, '');
+/** Адрес мини-приложения: тот же сайт, с пометкой «открыто в Telegram» */
+const shopUrl = () => `${siteUrl()}/?tgapp=1`;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -152,7 +161,8 @@ const T: Record<L, Record<string, string>> = {
       '🔐 Вход на сайт peltanera.com\n\nВойти как {phone}? Нажмите «✅ Войти на сайт».\n\nЕсли вы сейчас не входите на сайт Pelta Nera — ничего не нажимайте.',
     share: '📱 Поделиться номером',
     enter: '✅ Войти на сайт',
-    done: '✅ Номер подтверждён.\n\nВернитесь на сайт и войдите по номеру — код придёт в этот чат.',
+    done: '✅ Номер подтверждён.\n\nВернитесь на сайт и войдите по номеру — код придёт в этот чат. Или откройте магазин прямо в Telegram.',
+    shop: '🛍 Открыть магазин',
     loggedIn: '✅ Готово! Вы вошли на сайт Pelta Nera.\n\nВернитесь в браузер — страница обновится сама.',
     expired: 'Ссылка для входа устарела. Нажмите «Войти через Telegram» на сайте ещё раз.',
     back: '↩️ Вернуться на сайт',
@@ -177,7 +187,8 @@ const T: Record<L, Record<string, string>> = {
       '🔐 peltanera.com saytiga kirish\n\n{phone} sifatida kirasizmi? «✅ Saytga kirish» tugmasini bosing.\n\nAgar hozir Pelta Nera saytiga kirmayotgan bo‘lsangiz — hech narsani bosmang.',
     share: '📱 Raqamni ulashish',
     enter: '✅ Saytga kirish',
-    done: '✅ Raqam tasdiqlandi.\n\nSaytga qayting va raqam orqali kiring — kod shu chatga keladi.',
+    done: '✅ Raqam tasdiqlandi.\n\nSaytga qayting va raqam orqali kiring — kod shu chatga keladi. Yoki do‘konni to‘g‘ridan-to‘g‘ri Telegramda oching.',
+    shop: '🛍 Do‘konni ochish',
     loggedIn: '✅ Tayyor! Siz Pelta Nera saytiga kirdingiz.\n\nBrauzerga qayting — sahifa o‘zi yangilanadi.',
     expired: 'Kirish havolasi eskirgan. Saytda «Telegram orqali kirish» tugmasini qayta bosing.',
     back: '↩️ Saytga qaytish',
@@ -202,7 +213,8 @@ const T: Record<L, Record<string, string>> = {
       '🔐 Sign in to peltanera.com\n\nSign in as {phone}? Tap “✅ Sign in to the website”.\n\nIf you are not signing in to Pelta Nera right now, do not tap anything.',
     share: '📱 Share my number',
     enter: '✅ Sign in to the website',
-    done: '✅ Number confirmed.\n\nGo back to the website and sign in with your number — the code will arrive in this chat.',
+    done: '✅ Number confirmed.\n\nGo back to the website and sign in with your number — the code will arrive in this chat. Or open the shop right here in Telegram.',
+    shop: '🛍 Open the shop',
     loggedIn: '✅ Done! You are signed in to Pelta Nera.\n\nGo back to your browser — the page will update by itself.',
     expired: 'This sign-in link has expired. Tap “Sign in with Telegram” on the website again.',
     back: '↩️ Back to the website',
@@ -344,7 +356,9 @@ async function handleTelegram(req: Request) {
     await tg('sendMessage', {
       chat_id: chatId,
       text: t.done,
-      reply_markup: { inline_keyboard: [[{ text: t.back, url: `${siteUrl()}/#/login` }]] },
+      reply_markup: {
+        inline_keyboard: [[{ text: t.shop, web_app: { url: shopUrl() } }], [{ text: t.back, url: `${siteUrl()}/#/login` }]],
+      },
     });
     return json({ ok: true });
   }
@@ -522,20 +536,35 @@ function background(p: Promise<unknown>) {
   else p.catch(() => null);
 }
 
-// ---------- 4. Разовая синхронизация: Telegram всех клиентов бота в профили ----------
-async function handleSync(req: Request) {
-  const reply = (body: Record<string, unknown>) => json(body, 200, CORS);
-  const body = await req.json().catch(() => null);
-  const token = body?.token;
-  if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{32,80}$/.test(token)) return reply({ status: 'bad_request' });
-  const client = db();
+// ---------- 4. Разовые действия по одноразовому ключу (хеш ключа записывается в pn_bot_jobs) ----------
+async function takeJob(client: Client, token: unknown): Promise<'ok' | 'bad_request' | 'forbidden'> {
+  if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{32,80}$/.test(token)) return 'bad_request';
   const { data: job } = await client
     .from('pn_bot_jobs')
     .delete()
     .eq('token_hash', await sha256(token))
     .gt('created_at', new Date(Date.now() - 3600 * 1000).toISOString())
     .select('token_hash');
-  if (!job?.length) return reply({ status: 'forbidden' });
+  return job?.length ? 'ok' : 'forbidden';
+}
+
+/** Кнопка «Магазин» в меню бота: открывает сайт как мини-приложение */
+async function handleSetupMenu(req: Request) {
+  const reply = (body: Record<string, unknown>) => json(body, 200, CORS);
+  const body = await req.json().catch(() => null);
+  const job = await takeJob(db(), body?.token);
+  if (job !== 'ok') return reply({ status: job });
+  const r = await tg('setChatMenuButton', { menu_button: { type: 'web_app', text: 'Магазин', web_app: { url: shopUrl() } } });
+  return reply({ status: r.ok ? 'ok' : 'error', description: r.description ?? null });
+}
+
+/** Синхронизация: Telegram всех клиентов бота в профили */
+async function handleSync(req: Request) {
+  const reply = (body: Record<string, unknown>) => json(body, 200, CORS);
+  const body = await req.json().catch(() => null);
+  const client = db();
+  const job = await takeJob(client, body?.token);
+  if (job !== 'ok') return reply({ status: job });
 
   const { data: links } = await client.from('pn_telegram_links').select('chat_id, phone_enc').limit(2000);
   let updated = 0;
@@ -639,13 +668,103 @@ async function handleClaim(body: { action?: string; nonce?: unknown } | null) {
   });
 }
 
+// ---------- 5. Мини-приложение: вход по подписи Telegram ----------
+type TgUser = { id: number; username?: string; language_code?: string };
+
+/** Проверка initData: подпись Telegram (HMAC-SHA256 с ключом из токена бота), не старше суток. */
+async function verifyInitData(initData: string): Promise<TgUser | null> {
+  if (!initData || initData.length > 4096) return null;
+  const params = new URLSearchParams(initData);
+  const hash = params.get('hash') ?? '';
+  if (!/^[0-9a-f]{64}$/.test(hash)) return null;
+  params.delete('hash');
+  const check = [...params.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([k, v]) => `${k}=${v}`)
+    .join('\n');
+  const k1 = await crypto.subtle.importKey('raw', enc.encode('WebAppData'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const secret = await crypto.subtle.sign('HMAC', k1, enc.encode(env('TELEGRAM_BOT_TOKEN')));
+  const k2 = await crypto.subtle.importKey('raw', secret, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  if (!safeEqual(hex(await crypto.subtle.sign('HMAC', k2, enc.encode(check))), hash)) return null;
+  const authDate = Number(params.get('auth_date'));
+  if (!authDate || Date.now() / 1000 - authDate > 24 * 3600) return null;
+  try {
+    const user = JSON.parse(params.get('user') ?? 'null');
+    return user && Number.isSafeInteger(user.id) && user.id > 0 ? (user as TgUser) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function handleWebApp(body: { initData?: unknown; create?: unknown } | null) {
+  const reply = (b: Record<string, unknown>) => json(b, 200, CORS);
+  const user = await verifyInitData(typeof body?.initData === 'string' ? body.initData : '');
+  if (!user) return reply({ status: 'bad_auth' });
+
+  const client = db();
+  const { data: link } = await client
+    .from('pn_telegram_links')
+    .select('phone_enc')
+    .eq('chat_id', user.id)
+    .not('phone_enc', 'is', null)
+    .order('linked_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const phone = link?.phone_enc ? await decrypt(link.phone_enc) : null;
+  if (!phone) return reply({ status: 'need_phone' });
+
+  // Запись входа сразу «подтверждена»: личность подтвердил Telegram, номер — бот
+  const b = crypto.getRandomValues(new Uint8Array(32));
+  const nonce = btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const nonceHash = await sha256(nonce);
+  const now = new Date().toISOString();
+  const { error: insError } = await client.from('pn_login_requests').insert({
+    nonce_hash: nonceHash,
+    nonce_enc: await encrypt(nonce),
+    chat_id: user.id,
+    status: 'claiming',
+    checked: true,
+    phone_hash: await phoneHash(phone),
+    confirmed_at: now,
+  });
+  if (insError) return reply({ status: 'retry' });
+  const finish = () =>
+    client.from('pn_login_requests').update({ status: 'done', otp_enc: null, phone_enc: null }).eq('nonce_hash', nonceHash);
+
+  // Supabase создаёт код и вызывает наш хук, который сохраняет код в запись входа
+  const { error: otpError } = await db().auth.signInWithOtp({ phone, options: { shouldCreateUser: body?.create === true } });
+  if (otpError) {
+    await finish();
+    return reply({ status: /signup|not allowed|not found/i.test(otpError.message) ? 'no_account' : 'retry' });
+  }
+  const { data: withOtp } = await client.from('pn_login_requests').select('otp_enc').eq('nonce_hash', nonceHash).maybeSingle();
+  const otp = withOtp?.otp_enc ? await decrypt(withOtp.otp_enc) : null;
+  if (!otp) {
+    await finish();
+    return reply({ status: 'retry' });
+  }
+  const { data: verified, error: verifyError } = await db().auth.verifyOtp({ phone, token: otp, type: 'sms' });
+  await finish();
+  if (verifyError || !verified.session) return reply({ status: 'retry' });
+
+  background(saveTelegram(client, phone, user.id, user.username));
+  return reply({
+    status: 'ok',
+    access_token: verified.session.access_token,
+    refresh_token: verified.session.refresh_token,
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (req.method !== 'POST') return new Response('ok', { status: 200 });
   if (req.headers.has('x-telegram-bot-api-secret-token')) return handleTelegram(req);
   if (req.headers.has('webhook-signature')) return handleHook(req);
   if (new URL(req.url).searchParams.get('action') === 'forget') return handleForget(req);
-  if (new URL(req.url).searchParams.get('action') === 'sync_tg') return handleSync(req);
+  const action = new URL(req.url).searchParams.get('action');
+  if (action === 'sync_tg') return handleSync(req);
+  if (action === 'setup_menu') return handleSetupMenu(req);
   const body = await req.json().catch(() => null);
+  if (body?.action === 'webapp') return handleWebApp(body);
   return handleClaim(body);
 });

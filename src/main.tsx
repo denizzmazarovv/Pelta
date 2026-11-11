@@ -17,9 +17,14 @@ window.scrollTo(0, 0);
 
 // Защита от «кликджекинга»: если сайт открыли внутри чужой страницы (iframe),
 // вместо магазина показываем только ссылку на настоящий сайт.
+// Исключение — Telegram Web (web.telegram.org): там мини-приложение открывается во фрейме.
+const TELEGRAM_WEB = /^https:\/\/web\.telegram\.org$/;
 const framed = (() => {
   try {
-    return window.self !== window.top;
+    if (window.self === window.top) return false;
+    const ancestors = (window.location as Location & { ancestorOrigins?: DOMStringList }).ancestorOrigins;
+    if (ancestors && ancestors.length) return !Array.from(ancestors).every((o) => TELEGRAM_WEB.test(o));
+    return !/^https:\/\/web\.telegram\.org\//.test(document.referrer);
   } catch {
     return true;
   }

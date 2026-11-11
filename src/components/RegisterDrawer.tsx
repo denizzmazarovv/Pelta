@@ -22,6 +22,7 @@ import { Check, PrefsPicker } from './Footer';
 import { MemberCard } from './MemberCard';
 import { Mark } from './Logo';
 import { PhoneInput } from './PhoneInput';
+import { haptic, inTelegram, telegramAppLoginWithPhone } from '../lib/tgApp';
 
 type View = 'phone' | 'telegram' | 'code' | 'account';
 
@@ -279,6 +280,25 @@ export function RegisterDrawer() {
     setView('telegram');
   }
 
+  // Мини-приложение Telegram: вход без кода (Telegram подтверждает, кто открыл магазин)
+  function onTelegramApp() {
+    if (!agree) return setConsentError(t('contact.errors.policy'));
+    run(async () => {
+      setNotice(t('tgapp.waiting'));
+      const r = await telegramAppLoginWithPhone();
+      setNotice('');
+      if (r.status === 'ok') {
+        const { error } = await auth.applySession(r);
+        if (error) return setError(t('auth.err.generic'));
+        haptic('success');
+        if (cart.isOpen) return closeRegister();
+        return setView('account');
+      }
+      haptic('error');
+      return setError(t(r.status === 'denied' ? 'tgapp.denied' : 'tgapp.failed'));
+    });
+  }
+
   // Шаг 2: код → вход
   function onVerify(e: FormEvent) {
     e.preventDefault();
@@ -387,7 +407,16 @@ export function RegisterDrawer() {
                 )}
               </div>
 
-              {telegramEnabled && (
+              {inTelegram && (
+                <div className="space-y-4">
+                  <button type="button" onClick={onTelegramApp} disabled={busy} className="btn-ink">
+                    {t('auth.tg.button')}
+                  </button>
+                  <p className="font-mono text-[11px] leading-[1.7] text-ink/70">{t('tgapp.hint')}</p>
+                </div>
+              )}
+
+              {telegramEnabled && !inTelegram && (
                 <div className="space-y-4">
                   <button type="button" onClick={onTelegram} className="btn-ink">
                     {t('auth.tg.button')}

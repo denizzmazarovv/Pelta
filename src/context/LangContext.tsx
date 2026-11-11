@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, ReactNode } from 'react';
 import { installRouter, navigate, usePath } from '../lib/router';
 import { parsePath, withLang } from '../lib/paths';
+import { telegramLang } from '../lib/tgApp';
 import { Lang, translations } from '../lib/i18n';
 
 type LangContextType = {
@@ -40,7 +41,9 @@ function bootLang() {
       if (/\.uz$/i.test(window.location.hostname)) target = 'uz';
       else {
         const saved = localStorage.getItem(KEY);
+        // Мини-приложение Telegram: при первом открытии — язык Telegram клиента
         if (isLang(saved)) target = saved;
+        else target = telegramLang();
       }
     }
     const path = target && target !== parsed.lang ? withLang(url.pathname, target) : url.pathname;

@@ -18,6 +18,7 @@ import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { ConsentProvider } from './context/ConsentContext';
 import { CookieBanner } from './components/CookieBanner';
+import { TelegramBridge } from './components/TelegramBridge';
 
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 
@@ -48,6 +49,7 @@ function AppContent() {
       <CartDrawer />
       <RegisterDrawer />
       <CookieBanner />
+      <TelegramBridge route={route} menuOpen={menuOpen} closeMenu={closeMenu} />
     </div>
   );
 }

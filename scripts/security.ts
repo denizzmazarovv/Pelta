@@ -17,7 +17,8 @@ const supabaseHost = 'misuvgnzuustjptkvsvx.supabase.co';
 
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' https://challenges.cloudflare.com",
+  // telegram.org — скрипт мини-приложения (подключается только внутри Telegram, см. public/tg.js)
+  "script-src 'self' https://challenges.cloudflare.com https://telegram.org",
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: https://${supabaseHost}`,
   "font-src 'self' data:",
