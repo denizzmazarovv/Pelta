@@ -30,10 +30,11 @@ export function ProductCard({ product, eager = false }: { product: Product; eage
   const name = product[`name_${lang}`];
   const n = product.gallery.length;
   // На светлом фото кнопки тёмно-синие, на тёмном — светлые
-  const fg = product.onLight ? 'text-ink' : 'text-[#f3ece4]';
-  const line = product.onLight ? 'text-ink' : 'text-white';
-  const dot = product.onLight ? 'border-ink' : 'border-white';
-  const dotOn = product.onLight ? 'bg-ink' : 'bg-white';
+  const light = product.onLight || !!product.lightImages?.includes(product.gallery[slide]);
+  const fg = light ? 'text-ink' : 'text-[#f3ece4]';
+  const line = light ? 'text-ink' : 'text-white';
+  const dot = light ? 'border-ink' : 'border-white';
+  const dotOn = light ? 'bg-ink' : 'bg-white';
 
   function go(e: React.MouseEvent, d: number) {
     e.preventDefault();

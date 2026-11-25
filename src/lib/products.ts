@@ -29,6 +29,8 @@ export type Product = {
   exclusive?: boolean;
   /** Фото на прозрачном/светлом фоне: кнопки поверх фото — тёмно-синие. */
   onLight?: boolean;
+  /** Отдельные фото на прозрачном/светлом фоне (кнопки на них тоже тёмно-синие). */
+  lightImages?: string[];
 };
 
 const tan: ColorOption = { id: 'tan', colorKey: 'product.color_tan' };
@@ -56,9 +58,10 @@ export const products: Product[] = [
     image: '/images/products/pelta_denim.jpg',
     gallery: [
       '/images/products/pelta_denim.jpg',
-      '/images/products/cardholder-pelta.svg',
-      '/images/products/belt-classic.svg',
+      '/images/products/denim-front.webp',
+      '/images/products/denim-side.webp',
     ],
+    lightImages: ['/images/products/denim-front.webp', '/images/products/denim-side.webp'],
     colors: [tan, cognac],
     specs: { material: 'product.material_value', dimensions: '105 × 75 × 8 mm', weight: '48 g', handmade: true },
     featured: true,
