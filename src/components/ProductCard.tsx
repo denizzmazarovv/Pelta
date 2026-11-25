@@ -48,7 +48,7 @@ export function ProductCard({ product, eager = false }: { product: Product; eage
     <div className="group relative bg-ash">
     <a href={href.product(product.id)} className="block" aria-label={name}>
       <div
-        className="relative aspect-[7/9] bg-smoke overflow-hidden"
+        className="relative aspect-[7/9] bg-ash overflow-hidden"
         onTouchStart={(e) => (startX.current = e.touches[0].clientX)}
         onTouchEnd={(e) => {
           if (startX.current === null) return;

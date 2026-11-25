@@ -121,7 +121,7 @@ export function ProductPage({ id }: { id: string }) {
         {/* Галерея */}
         <div>
           {/* Мобильная лента */}
-          <div className="lg:hidden flex overflow-x-auto snap-x snap-mandatory hide-scrollbar bg-smoke">
+          <div className="lg:hidden flex overflow-x-auto snap-x snap-mandatory hide-scrollbar bg-paper">
             {product.gallery.map((src, i) => (
               <img
                 key={src + i}
@@ -134,9 +134,9 @@ export function ProductPage({ id }: { id: string }) {
 
           {/* Десктоп: фото столбцом */}
           <div className="hidden lg:flex flex-col gap-[3px] bg-paper">
-            <img src={first} alt={name} className="w-full aspect-[4/5] object-cover bg-smoke" />
+            <img src={first} alt={name} className="w-full aspect-[4/5] object-cover bg-paper" />
             {rest.map((src, i) => (
-              <img key={src + i} src={src} alt="" loading="lazy" className="w-full aspect-[4/5] object-cover bg-smoke" />
+              <img key={src + i} src={src} alt="" loading="lazy" className="w-full aspect-[4/5] object-cover bg-paper" />
             ))}
           </div>
         </div>

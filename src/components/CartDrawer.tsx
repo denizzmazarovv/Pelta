@@ -361,7 +361,7 @@ export function CartDrawer() {
               {items.map((i) => (
                 <li key={i.id} className="flex gap-4 p-5">
                   <a href={href.product(i.product.id)} onClick={close} className="shrink-0">
-                    <img src={i.product.image} alt={name(i.product)} className="w-[84px] aspect-[4/5] object-cover bg-smoke" />
+                    <img src={i.product.image} alt={name(i.product)} className="w-[84px] aspect-[4/5] object-cover bg-paper" />
                   </a>
                   <div className="flex-1 min-w-0 flex flex-col">
                     <p className="font-display uppercase text-[14px] leading-tight">{name(i.product)}</p>
