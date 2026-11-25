@@ -29,6 +29,11 @@ export function ProductCard({ product, eager = false }: { product: Product; eage
   const startX = useRef<number | null>(null);
   const name = product[`name_${lang}`];
   const n = product.gallery.length;
+  // На светлом фото кнопки тёмно-синие, на тёмном — светлые
+  const fg = product.onLight ? 'text-ink' : 'text-[#f3ece4]';
+  const line = product.onLight ? 'text-ink' : 'text-white';
+  const dot = product.onLight ? 'border-ink' : 'border-white';
+  const dotOn = product.onLight ? 'bg-ink' : 'bg-white';
 
   function go(e: React.MouseEvent, d: number) {
     e.preventDefault();
@@ -48,7 +53,7 @@ export function ProductCard({ product, eager = false }: { product: Product; eage
     <div className="group relative bg-ash">
     <a href={href.product(product.id)} className="block" aria-label={name}>
       <div
-        className="relative aspect-[7/9] bg-ash overflow-hidden"
+        className="relative aspect-[7/9] bg-paper overflow-hidden"
         onTouchStart={(e) => (startX.current = e.touches[0].clientX)}
         onTouchEnd={(e) => {
           if (startX.current === null) return;
@@ -82,7 +87,7 @@ export function ProductCard({ product, eager = false }: { product: Product; eage
       <div className="absolute inset-x-0 top-0 aspect-[7/9] pointer-events-none [&>*]:pointer-events-auto">
         <button
           onClick={quickAdd}
-          className={`absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-[#f3ece4] transition-transform duration-300 hover:rotate-45 ${
+          className={`absolute top-3 right-3 w-8 h-8 flex items-center justify-center ${fg} transition-transform duration-300 hover:rotate-45 ${
             added ? 'rotate-45' : ''
           }`}
           aria-label={t('product.quick_add')}
@@ -95,14 +100,14 @@ export function ProductCard({ product, eager = false }: { product: Product; eage
           <>
             <button
               onClick={(e) => go(e, -1)}
-              className="absolute left-0 top-1/2 -translate-y-1/2 w-11 h-16 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              className={`absolute left-0 top-1/2 -translate-y-1/2 w-11 h-16 flex items-center justify-center ${line} opacity-0 group-hover:opacity-100 transition-opacity`}
               aria-label="Previous"
             >
               <SlideArrow dir="l" />
             </button>
             <button
               onClick={(e) => go(e, 1)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-16 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              className={`absolute right-0 top-1/2 -translate-y-1/2 w-11 h-16 flex items-center justify-center ${line} opacity-0 group-hover:opacity-100 transition-opacity`}
               aria-label="Next"
             >
               <SlideArrow dir="r" />
@@ -111,7 +116,7 @@ export function ProductCard({ product, eager = false }: { product: Product; eage
               {product.gallery.map((_, i) => (
                 <span
                   key={i}
-                  className={`w-[6px] h-[4px] rounded-full border border-white ${i === slide ? 'bg-white' : ''}`}
+                  className={`w-[6px] h-[4px] rounded-full border ${dot} ${i === slide ? dotOn : ''}`}
                 />
               ))}
             </div>

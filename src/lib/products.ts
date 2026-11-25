@@ -27,6 +27,8 @@ export type Product = {
   featured: boolean;
   /** Закрытый товар: виден только клиентам с нужным уровнем или ролью. */
   exclusive?: boolean;
+  /** Фото на прозрачном/светлом фоне: кнопки поверх фото — тёмно-синие. */
+  onLight?: boolean;
 };
 
 const tan: ColorOption = { id: 'tan', colorKey: 'product.color_tan' };
@@ -93,6 +95,7 @@ export const products: Product[] = [
     price: 666000,
     image: '/images/products/paint-h.webp',
     gallery: ['/images/products/paint-h.webp'],
+    onLight: true,
     colors: [DEFAULT_COLOR],
     specs: { material: 'product.material_value', dimensions: '110 × 65 × 8 mm', weight: '45 g', handmade: true },
     featured: true,
