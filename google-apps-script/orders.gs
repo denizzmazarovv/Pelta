@@ -617,33 +617,66 @@ function doPost(e) {
     }
     const contactText = contact.length ? contact.join("\n") : "—";
 
-    // Сообщение в Telegram
-    const message =
-`🛍️ <b>НОВЫЙ ЗАКАЗ PELTA NERA №${order.id}</b>
-━━━━━━━━━━━━━━━━━━
+    // Сообщение в Telegram: аккуратная карточка заказа
+    const lines = ord.lines || [];
+    const pieces = lines.reduce(function (n, l) { return n + (Number(l.quantity) || 0); }, 0);
+    const itemText_ = function (l, i) {
+      const unit = Number(l.unit != null ? l.unit : l.price) || 0;
+      return (i + 1) + ". <b>" + html_(clean_(l.name, 80)) + "</b>" + (l.color ? " — " + html_(clean_(l.color, 40)) : "") +
+        "\n      " + l.quantity + " × " + money_(unit) + " = <b>" + money_(l.line_total) + "</b>";
+    };
+    const pct = Number(ord.points_pct) || 0;
+    const earn = Math.round((Number(ord.total) || 0) * pct / 100);
+    const tier = clean_(ord.tier || "", 40).toUpperCase();
+    const langCode = clean_(data.lang || "", 2).toUpperCase();
+    const comment = clean_(data.comment, 400);
 
-👤 <b>Клиент:</b> ${html_(order.name)}
+    const head = [
+      "🛍 <b>НОВЫЙ ЗАКАЗ №" + order.id + "</b>",
+      "<i>Pelta Nera · " + order.date + "</i>",
+      "━━━━━━━━━━━━━━━━━━",
+      "",
+      "👤 <b>КЛИЕНТ</b>",
+      html_(order.name),
+      "📞 " + html_(order.phone) + "  ✅ номер подтверждён",
+      tier ? "⭐ Уровень: " + html_(tier) + (pct ? " · баллы " + pct + "%" : "") : null,
+      langCode ? "🌐 Язык сайта: " + html_(langCode) : null,
+      "",
+      "💬 <b>СВЯЗЬ</b>",
+      contactText,
+      "",
+      "📍 <b>АДРЕС ДОСТАВКИ</b>",
+      html_(order.address),
+      "",
+      "📝 <b>КОММЕНТАРИЙ</b>",
+      comment ? "<blockquote>" + html_(comment) + "</blockquote>" : "Нет",
+      "",
+      "🛒 <b>ТОВАРЫ</b> · " + pieces + " шт."
+    ].filter(function (x) { return x !== null; });
+    const pay = [
+      "",
+      "💰 <b>ОПЛАТА</b>",
+      "Сумма товаров: " + money_(ord.subtotal != null ? ord.subtotal : ord.total),
+      spent ? "Списано баллами: −" + money_(spent) : null,
+      "<b>К оплате: " + money_(ord.total) + "</b>",
+      earn > 0 ? "🎁 После выполнения начислится " + earn.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " баллов (" + pct + "%)" : null,
+      "",
+      "━━━━━━━━━━━━━━━━━━",
+      "🔔 <i>Статус меняйте в таблице (колонка «Статус»): «Выполнен» засчитывает покупку и начисляет баллы, «Отменён» возвращает списанные баллы</i>"
+    ].filter(function (x) { return x !== null; });
 
-📞 <b>Телефон:</b> ✅ подтверждён
-${html_(order.phone)}
-
-📍 <b>Адрес:</b>
-${html_(order.address)}
-
-💬 <b>Связь:</b>
-${contactText}
-
-💬 <b>Комментарий:</b>
-${html_(order.comment)}
-
-🛒 <b>Товары:</b>
-${html_(order.summary)}
-
-💰 <b>Итого:</b> ${html_(order.total)}
-
-🕒 <b>Дата:</b> ${order.date}
-━━━━━━━━━━━━━━━━━━
-🔔 <i>Статус меняйте в таблице (колонка «Статус»): «Выполнен» засчитывает покупку и начисляет баллы, «Отменён» возвращает списанные баллы</i>`;
+    // Лимит Telegram — 4096 символов: если товаров очень много, остальные — в таблице
+    let shown = lines.map(itemText_);
+    const build = function (list, rest) {
+      return head.concat(list, rest ? ["…и ещё " + rest + " поз. — см. таблицу"] : [], pay).join("\n");
+    };
+    let message = build(shown, 0);
+    let cut = 0;
+    while (message.length > 4000 && shown.length > 1) {
+      shown = shown.slice(0, -1);
+      cut++;
+      message = build(shown, cut);
+    }
 
     const response = UrlFetchApp.fetch(
       `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,

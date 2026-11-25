@@ -2684,3 +2684,14 @@ end;
 $$;
 revoke execute on function public.pn_take_sheet_event(uuid) from public;
 grant execute on function public.pn_take_sheet_event(uuid) to anon, authenticated;
+
+-- =====================================================================
+-- 20261125090000_product_paint_h.sql
+-- =====================================================================
+/*
+  Pelta Nera — новый товар: кардхолдер Paint H (ch-03), 666 000 сум (25.11.2026).
+  Запустите целиком: SQL Editor → New query → вставить → Run. Можно запускать повторно.
+  Без этой строки товар виден на сайте, но заказ на него база не примет.
+*/
+insert into public.pn_products (id, price) values ('ch-03', 666000)
+on conflict (id) do nothing;
