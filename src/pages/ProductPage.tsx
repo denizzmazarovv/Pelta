@@ -7,13 +7,14 @@ import { href } from '../lib/router';
 import { CONTACTS } from '../lib/config';
 import { ProductCard } from '../components/ProductCard';
 import { useHeaderHidden } from '../lib/useHeaderHidden';
+import { altFor, PAGE_SIZES, srcSetFor } from '../lib/images';
 
 const SWATCH: Record<string, string> = { tan: '#5a3a22', black: '#151515', cognac: '#8e4a1f' };
 
 function Block({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="mt-8 lg:mt-5">
-      <h3 className="font-mono text-[17px] text-ink/85">{title}</h3>
+      <h2 className="font-mono text-[17px] text-ink/85">{title}</h2>
       <div className="pl-[14px] mt-1 font-mono text-[13px] text-ink/70 leading-[1.7]">{children}</div>
     </div>
   );
@@ -126,7 +127,12 @@ export function ProductPage({ id }: { id: string }) {
               <img
                 key={src + i}
                 src={src}
-                alt={i === 0 ? name : ''}
+                srcSet={srcSetFor(src)}
+                sizes={srcSetFor(src) ? PAGE_SIZES : undefined}
+                alt={altFor(product, lang, i)}
+                loading={i === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                {...(i === 0 ? { fetchpriority: 'high' } : {})}
                 className="w-full shrink-0 snap-center aspect-[4/5] object-cover"
               />
             ))}
@@ -134,9 +140,26 @@ export function ProductPage({ id }: { id: string }) {
 
           {/* Десктоп: фото столбцом */}
           <div className="hidden lg:flex flex-col gap-[3px] bg-paper">
-            <img src={first} alt={name} className="w-full aspect-[4/5] object-cover bg-paper" />
+            <img
+              src={first}
+              srcSet={srcSetFor(first)}
+              sizes={srcSetFor(first) ? PAGE_SIZES : undefined}
+              alt={altFor(product, lang, 0)}
+              loading="lazy"
+              decoding="async"
+              className="w-full aspect-[4/5] object-cover bg-paper"
+            />
             {rest.map((src, i) => (
-              <img key={src + i} src={src} alt="" loading="lazy" className="w-full aspect-[4/5] object-cover bg-paper" />
+              <img
+                key={src + i}
+                src={src}
+                srcSet={srcSetFor(src)}
+                sizes={srcSetFor(src) ? PAGE_SIZES : undefined}
+                alt={altFor(product, lang, i + 1)}
+                loading="lazy"
+                decoding="async"
+                className="w-full aspect-[4/5] object-cover bg-paper"
+              />
             ))}
           </div>
         </div>

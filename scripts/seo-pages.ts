@@ -4,7 +4,19 @@ import type { Plugin } from 'vite';
 import { translations, type Lang } from '../src/lib/i18n';
 import { CATEGORIES, type Product } from '../src/lib/products';
 import { LANG_CODES, pathFor, type Route } from '../src/lib/paths';
-import { BRAND, SITE, abs, findPublicProduct, publicProducts, publicRoutes, seoFor, type Seo } from '../src/lib/seo';
+import {
+  BRAND,
+  CATALOG_TEXT,
+  SITE,
+  abs,
+  findPublicProduct,
+  productPhotos,
+  publicProducts,
+  publicRoutes,
+  seoFor,
+  type Seo,
+} from '../src/lib/seo';
+import { altFor, CARD_SIZES, isPhoto, PAGE_SIZES, srcSetFor } from '../src/lib/images';
 import { formatPrice } from '../src/lib/format';
 
 /**
@@ -26,11 +38,35 @@ function fileFor(path: string): string {
   return decodeURIComponent(path.slice(1)) + '.html';
 }
 
-function head(seo: Seo): string {
+/** Главное фото страницы (LCP): браузер начинает качать его сразу, не дожидаясь скрипта сайта */
+function lcpImage(route: Route): { src: string; sizes: string } | undefined {
+  let p: Product | undefined;
+  let sizes = PAGE_SIZES;
+  if (route.name === 'product') p = findPublicProduct(route.id);
+  else if (route.name === 'catalog') {
+    // Тот же порядок, что в каталоге: сначала избранные
+    const list = publicProducts().filter((x) => route.category === 'all' || x.category === route.category);
+    p = [...list].sort((a, b) => Number(b.featured) - Number(a.featured))[0];
+    sizes = CARD_SIZES;
+  }
+  const src = p?.gallery[0];
+  return src && isPhoto(src) ? { src, sizes } : undefined;
+}
+
+function head(seo: Seo, route: Route): string {
+  const lcp = lcpImage(route);
+  const srcset = lcp && srcSetFor(lcp.src);
   const tags = [
+    ...(lcp
+      ? [
+          `<link rel="preload" as="image" href="${esc(lcp.src)}"` +
+            (srcset ? ` imagesrcset="${esc(srcset)}" imagesizes="${esc(lcp.sizes)}"` : '') +
+            ` fetchpriority="high" />`,
+        ]
+      : []),
     `<title>${esc(seo.title)}</title>`,
     `<meta name="description" content="${esc(seo.description)}" />`,
-    `<meta name="robots" content="${seo.index ? 'index, follow' : 'noindex, follow'}" />`,
+    `<meta name="robots" content="${seo.index ? 'index, follow, max-image-preview:large' : 'noindex, follow'}" />`,
     `<link rel="canonical" href="${esc(abs(seo.path))}" />`,
     ...seo.alternates.map((a) => `<link rel="alternate" hreflang="${a.lang}" href="${esc(a.href)}" />`),
     `<meta property="og:site_name" content="${BRAND}" />`,
@@ -39,6 +75,7 @@ function head(seo: Seo): string {
     `<meta property="og:description" content="${esc(seo.description)}" />`,
     `<meta property="og:url" content="${esc(abs(seo.path))}" />`,
     `<meta property="og:image" content="${esc(seo.image)}" />`,
+    `<meta property="og:image:alt" content="${esc(seo.title)}" />`,
     `<meta property="og:locale" content="${seo.locale}" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${esc(seo.title)}" />`,
@@ -70,8 +107,8 @@ function body(route: Route, lang: Lang, seo: Seo): string {
   switch (route.name) {
     case 'catalog': {
       const list = publicProducts().filter((p) => route.category === 'all' || p.category === route.category);
-      const h1 = route.category === 'all' ? seo.title : tr(lang, `cat.${route.category}`);
-      main = `<h1>${esc(h1)}</h1><p>${esc(seo.description)}</p><ul>${list.map(productItem).join('')}</ul>`;
+      const text = CATALOG_TEXT[lang][route.category];
+      main = `<h1>${esc(text.h1)}</h1><p>${esc(text.intro)}</p><ul>${list.map(productItem).join('')}</ul>`;
       break;
     }
     case 'product': {
@@ -80,10 +117,16 @@ function body(route: Route, lang: Lang, seo: Seo): string {
       main =
         `<p>${link(home, tr(lang, 'nav.home'))} / ${link(pathFor({ name: 'catalog', category: p.category }, lang), tr(lang, `cat.${p.category}`))}</p>` +
         `<h1>${esc(p[`name_${lang}`])}</h1>` +
-        (/\.(jpe?g|png|webp)$/i.test(p.image) ? `<img src="${esc(p.image)}" alt="${esc(p[`name_${lang}`])}" width="320" />` : '') +
+        p.gallery
+          .map((src, i) => ({ src, alt: altFor(p, lang, i) }))
+          .filter((im) => productPhotos(p).includes(im.src))
+          .map((im) => `<img src="${esc(im.src)}" alt="${esc(im.alt)}" width="320" loading="lazy" />`)
+          .join('') +
         `<p>${esc(p[`desc_${lang}`])}</p>` +
         `<p><strong>${formatPrice(p.price, lang)}</strong></p>` +
-        `<ul><li>${esc(tr(lang, s.material))}</li><li>${esc(s.dimensions)}</li><li>${esc(s.weight)}</li></ul>`;
+        `<ul><li>${esc(tr(lang, 'product.material'))}: ${esc(tr(lang, s.material))}</li>` +
+        `<li>${esc(tr(lang, 'product.dimensions'))}: ${esc(s.dimensions)}</li>` +
+        `<li>${esc(tr(lang, 'product.weight'))}: ${esc(s.weight)}</li></ul>`;
       break;
     }
     case 'about':
@@ -119,27 +162,77 @@ function render(template: string, route: Route, lang: Lang): string {
   const seo = seoFor(route, lang, product);
   return template
     .replace(/<html lang="[^"]*">/, `<html lang="${lang}">`)
-    .replace('<!--seo-head-->', head(seo))
+    .replace('<!--seo-head-->', head(seo, route))
     .replace('<div id="root"></div>', `<div id="root">${body(route, lang, seo)}</div>`);
 }
 
+// Дату изменения (lastmod) не пишем: при каждой сборке она была бы «сегодня» у всех страниц,
+// и Google перестал бы ей доверять. Фото товаров перечислены для Google Картинок.
 function sitemap(): string {
-  const today = new Date().toISOString().slice(0, 10);
   const urls = publicRoutes().flatMap((route) =>
     LANG_CODES.map((lang) => {
-      const seo = seoFor(route, lang, route.name === 'product' ? findPublicProduct(route.id) : undefined);
+      const product = route.name === 'product' ? findPublicProduct(route.id) : undefined;
+      const seo = seoFor(route, lang, product);
       const alts = seo.alternates
         .map((a) => `    <xhtml:link rel="alternate" hreflang="${a.lang}" href="${esc(a.href)}"/>`)
         .join('\n');
-      const priority = route.name === 'catalog' ? (route.category === 'all' ? '1.0' : '0.8') : route.name === 'product' ? '0.9' : '0.4';
-      return `  <url>\n    <loc>${esc(abs(seo.path))}</loc>\n    <lastmod>${today}</lastmod>\n    <priority>${priority}</priority>\n${alts}\n  </url>`;
+      const images = product
+        ? productPhotos(product)
+            .map((src) => `\n    <image:image><image:loc>${esc(abs(src))}</image:loc></image:image>`)
+            .join('')
+        : '';
+      return `  <url>\n    <loc>${esc(abs(seo.path))}</loc>\n${alts}${images}\n  </url>`;
     })
   );
   return (
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml"` +
+    ` xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n` +
     urls.join('\n') +
     `\n</urlset>\n`
+  );
+}
+
+/**
+ * Фид товаров для Google Merchant Center (бесплатные товарные объявления в Google Покупках).
+ * Один файл на язык: merchant-feed-ru.xml, merchant-feed-uz.xml, merchant-feed-en.xml.
+ * Попадают только товары с настоящими фото (рисунки-заглушки Merchant Center не принимает).
+ * Цена — из products.ts (совпадает с базой). Стоимость доставки настраивается в самом Merchant Center.
+ */
+function merchantFeed(lang: Lang): string {
+  const items = publicProducts()
+    .filter((p) => productPhotos(p).length > 0)
+    .map((p) => {
+      // Сначала фото на чистом фоне (так Google предпочитает для главного фото товара)
+      const plain = (src: string) => p.onLight || !!p.lightImages?.includes(src);
+      const photos = [...productPhotos(p)].sort((x, y) => Number(plain(y)) - Number(plain(x)));
+      const [main, ...more] = photos.map(abs);
+      const link = abs(pathFor({ name: 'product', id: p.id }, lang));
+      return [
+        '    <item>',
+        `      <g:id>${esc(p.id)}</g:id>`,
+        `      <title>${esc(p[`name_${lang}`])}</title>`,
+        `      <description>${esc(p[`desc_${lang}`])}</description>`,
+        `      <link>${esc(link)}</link>`,
+        `      <g:image_link>${esc(main)}</g:image_link>`,
+        ...more.slice(0, 10).map((m) => `      <g:additional_image_link>${esc(m)}</g:additional_image_link>`),
+        '      <g:availability>in_stock</g:availability>',
+        `      <g:price>${p.price.toFixed(2)} UZS</g:price>`,
+        `      <g:brand>${BRAND}</g:brand>`,
+        '      <g:condition>new</g:condition>',
+        '      <g:identifier_exists>no</g:identifier_exists>',
+        `      <g:product_type>${esc(tr(lang, `cat.${p.category}`))}</g:product_type>`,
+        `      <g:material>${esc(tr(lang, p.specs.material))}</g:material>`,
+        '    </item>',
+      ].join('\n');
+    });
+  return (
+    `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n  <channel>\n` +
+    `    <title>${BRAND}</title>\n    <link>${abs(pathFor({ name: 'catalog', category: 'all' }, lang))}</link>\n` +
+    `    <description>${esc(CATALOG_TEXT[lang].all.description)}</description>\n` +
+    items.join('\n') +
+    `\n  </channel>\n</rss>\n`
   );
 }
 
@@ -181,6 +274,7 @@ export function seoPages(): Plugin {
       );
       write('sitemap.xml', sitemap());
       write('robots.txt', ROBOTS);
+      for (const lang of LANG_CODES) write(`merchant-feed-${lang}.xml`, merchantFeed(lang));
       console.log(`SEO: ${count} страниц, sitemap.xml, robots.txt, 404.html`);
     },
   };

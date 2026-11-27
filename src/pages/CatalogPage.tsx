@@ -6,6 +6,7 @@ import { href } from '../lib/router';
 import { Mark } from '../components/Logo';
 import { ProductCard } from '../components/ProductCard';
 import { useHeaderHidden } from '../lib/useHeaderHidden';
+import { CATALOG_TEXT } from '../lib/seo';
 
 type Sort = 'featured' | 'price_asc' | 'price_desc';
 
@@ -18,7 +19,8 @@ function FilterIcon() {
 }
 
 export function CatalogPage({ category }: { category: Category | 'all' }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const text = CATALOG_TEXT[lang][category];
   const [sort, setSort] = useState<Sort>('featured');
   const [sortOpen, setSortOpen] = useState(false);
   const headerHidden = useHeaderHidden();
@@ -82,6 +84,7 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
                 onClick={() => setSortOpen((o) => !o)}
                 className="nav-caps text-[16px] flex items-center gap-2 px-[5px] py-[4px] border border-transparent hover:border-ink/30 -mr-[5px]"
                 aria-expanded={sortOpen}
+                aria-label={t('sort.label')}
               >
                 <FilterIcon />
                 <span className="hidden sm:inline lg:hidden min-[1400px]:inline">{t('sort.label')}</span>
@@ -123,9 +126,14 @@ export function CatalogPage({ category }: { category: Category | 'all' }) {
         </div>
       )}
 
-      <p className="font-mono text-[11px] text-mute px-[15px] py-6 mt-auto">
-        {list.length} {t('catalog.items')}
-      </p>
+      {/* Внизу страницы: число изделий и одна строка о разделе (заголовок h1 для поисковиков) */}
+      <div className="font-mono text-[11px] text-mute px-[15px] py-6 mt-auto">
+        <p>
+          {list.length} {t('catalog.items')}
+        </p>
+        <h1 className="mt-3 font-normal">{text.h1}</h1>
+        {text.intro && <p className="max-w-[560px]">{text.intro}</p>}
+      </div>
     </div>
   );
 }

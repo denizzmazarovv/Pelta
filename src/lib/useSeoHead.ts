@@ -20,11 +20,12 @@ export function useSeoHead(route: Route, lang: Lang, product: Product | undefine
     const s = seoFor(route, lang, product);
     document.title = s.title;
     meta('name', 'description', s.description);
-    meta('name', 'robots', s.index ? 'index, follow' : 'noindex, follow');
+    meta('name', 'robots', s.index ? 'index, follow, max-image-preview:large' : 'noindex, follow');
     meta('property', 'og:title', s.title);
     meta('property', 'og:description', s.description);
     meta('property', 'og:url', abs(s.path));
     meta('property', 'og:image', s.image);
+    meta('property', 'og:image:alt', s.title);
     meta('property', 'og:type', s.type);
     meta('property', 'og:locale', s.locale);
     meta('name', 'twitter:title', s.title);

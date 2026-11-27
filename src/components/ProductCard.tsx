@@ -6,6 +6,7 @@ import { Price } from './Price';
 import { href } from '../lib/router';
 import type { Product } from '../lib/products';
 import { Mark } from './Logo';
+import { altFor, CARD_SIZES, srcSetFor } from '../lib/images';
 
 function SlideArrow({ dir }: { dir: 'l' | 'r' }) {
   return (
@@ -67,8 +68,12 @@ export function ProductCard({ product, eager = false }: { product: Product; eage
           <img
             key={src + i}
             src={src}
-            alt={i === 0 ? name : ''}
+            srcSet={srcSetFor(src)}
+            sizes={srcSetFor(src) ? CARD_SIZES : undefined}
+            alt={altFor(product, lang, i)}
             loading={eager && i === 0 ? 'eager' : 'lazy'}
+            decoding="async"
+            {...(eager && i === 0 ? { fetchpriority: 'high' } : {})}
             draggable={false}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
               i === slide ? 'opacity-100' : 'opacity-0'
